@@ -1,6 +1,7 @@
 use std::io;
 use std::iter::FromIterator;
 use std::ops::Not;
+use std::str::FromStr;
 
 use libc;
 use strum::IntoEnumIterator;
@@ -115,6 +116,19 @@ impl Cap {
         (1 as u64) << (self as u64)
     }
 }
+
+impl serde::Serialize for Cap {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(&self.to_string())
+    }
+}
+
+impl<'d> serde::Deserialize<'d> for Cap {
+    fn deserialize<D: serde::Deserializer<'d>>(deserializer: D) -> Result<Self, D::Error> {
+        Self::from_str(&String::deserialize(deserializer)?).map_err(serde::de::Error::custom)
+    }
+}
+
 
 
 #[derive(Copy, Clone, Debug)]
