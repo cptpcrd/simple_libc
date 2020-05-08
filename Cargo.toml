@@ -1,0 +1,17 @@
+[package]
+name = "simple_libc"
+version = "0.1.0"
+edition = "2018"
+
+description = "Safe, friendly interfaces to some commonly used Unix libc functions."
+authors = ["cptpcrd"]
+license = "MIT"
+categories = ["api-bindings", "os::unix-apis"]
+repository = "https://github.com/cptpcrd/simple_libc"
+
+[dependencies]
+libc = "0.2"
+bitflags = "1.2"
+strum = "0.18"
+strum_macros = "0.18"
+lazy_static = "1.4"
