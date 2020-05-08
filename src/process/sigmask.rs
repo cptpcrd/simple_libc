@@ -5,26 +5,31 @@ use libc;
 use super::super::signal::Sigset;
 
 
-fn sigmask(how: i32, set: &Sigset) ->io::Result<Sigset> {
+fn sigmask(how: i32, set: Option<&Sigset>) ->io::Result<Sigset> {
     let oldset = Sigset::empty();
 
+    let raw_set: *const libc::sigset_t = match set {
+        Some(s) => &s.raw_set(),
+        None => std::ptr::null(),
+    };
+
     super::super::error::convert(unsafe {
-        libc::pthread_sigmask(how, &set.raw_set(), &mut oldset.raw_set())
+        libc::pthread_sigmask(how, raw_set, &mut oldset.raw_set())
     }, oldset)
 }
 
-pub fn get() -> io::Result<Sigset> {
-    sigmask(0, &Sigset::empty())
+pub fn getmask() -> io::Result<Sigset> {
+    sigmask(0, None)
 }
 
 pub fn setmask(set: &Sigset) -> io::Result<Sigset> {
-    sigmask(libc::SIG_SETMASK, set)
+    sigmask(libc::SIG_SETMASK, Some(set))
 }
 
 pub fn block(set: &Sigset) -> io::Result<Sigset> {
-    sigmask(libc::SIG_BLOCK, set)
+    sigmask(libc::SIG_BLOCK, Some(set))
 }
 
 pub fn unblock(set: &Sigset) -> io::Result<Sigset> {
-    sigmask(libc::SIG_UNBLOCK, set)
+    sigmask(libc::SIG_UNBLOCK, Some(set))
 }
