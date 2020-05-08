@@ -143,6 +143,12 @@ pub fn seteuid(uid: u32) -> io::Result<()> {
     }, ())
 }
 
+pub fn setreuid(ruid: u32, euid: u32) -> io::Result<()> {
+    super::error::convert_nzero(unsafe {
+        libc::setreuid(ruid, euid)
+    }, ())
+}
+
 #[cfg(target_os = "linux")]
 pub fn setresuid(ruid: u32, euid: u32, suid: u32) -> io::Result<()> {
     super::error::convert_nzero(unsafe {
@@ -160,6 +166,12 @@ pub fn setgid(gid: u32) -> io::Result<()> {
 pub fn setegid(gid: u32) -> io::Result<()> {
     super::error::convert_nzero(unsafe {
         libc::setegid(gid)
+    }, ())
+}
+
+pub fn setregid(rgid: u32, egid: u32) -> io::Result<()> {
+    super::error::convert_nzero(unsafe {
+        libc::setregid(rgid, egid)
     }, ())
 }
 
