@@ -12,7 +12,7 @@ use super::super::constants;
 use super::super::error;
 
 
-#[derive(Copy, Clone, Debug, strum_macros::Display, strum_macros::EnumString, strum_macros::EnumIter)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, strum_macros::Display, strum_macros::EnumString, strum_macros::EnumIter)]
 pub enum Cap {
     // POSIX
     #[strum(serialize = "CAP_CHOWN")]
