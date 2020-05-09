@@ -155,3 +155,32 @@ impl Default for Sigset {
         Self::empty()
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_can_catch() {
+        assert!(can_catch(SIGTERM));
+        assert!(!can_catch(SIGKILL));
+        assert!(!can_catch(SIGSTOP));
+    }
+
+    #[test]
+    fn test_sigset() {
+        let mut set = Sigset::empty();
+        assert!(!set.ismember(SIGTERM).unwrap());
+        set.fill();
+        assert!(set.ismember(SIGTERM).unwrap());
+
+        set.clear();
+        assert!(!set.ismember(SIGTERM).unwrap());
+        set.add(SIGTERM).unwrap();
+        assert!(set.ismember(SIGTERM).unwrap());
+
+        set = Sigset::full();
+        assert!(set.ismember(SIGTERM).unwrap());
+    }
+}
