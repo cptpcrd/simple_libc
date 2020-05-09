@@ -49,3 +49,11 @@ pub fn set(t: Target, value: i32) -> io::Result<()> {
         libc::setpriority(which, who, value)
     }, ())
 }
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_get_equals_nice() {
+        assert_eq!(super::nice(0).unwrap(), super::get(super::Target::Process(0)).unwrap());
+    }
+}
