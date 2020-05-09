@@ -1,9 +1,7 @@
 use std::cmp;
-use std::env;
 use std::ffi;
 use std::fs;
 use std::io;
-use std::path::Path;
 use std::os::unix::io::FromRawFd;
 use std::os::unix::ffi::OsStringExt;
 
