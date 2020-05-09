@@ -115,19 +115,6 @@ pub fn execvp<U: Into<Vec<u8>> + Clone + Sized>(arg0: &str, argv: &[U]) -> io::R
 }
 
 
-pub fn split_arg0() -> (Option<String>, Option<String>) {
-    match env::args_os().next() {
-        Some(arg0) => {
-            let arg0_path = Path::new(&arg0);
-            (
-                arg0_path.parent().and_then(|p| p.as_os_str().to_str()).map(|p| p.to_string()),
-                arg0_path.file_name().and_then(|p| p.to_str()).map(|p| p.to_string()),
-            )
-        },
-        None => (None, None),
-    }
-}
-
 
 pub fn close_fd(fd: i32) -> io::Result<()> {
     error::convert_nzero(unsafe { libc::close(fd) }, ())
