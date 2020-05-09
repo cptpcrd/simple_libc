@@ -301,8 +301,8 @@ pub fn fork() -> io::Result<i32> {
 /// current process.
 ///
 /// If this returns, it means an error occurred.
-pub fn execvp<U: Into<Vec<u8>> + Clone + Sized>(arg0: &str, argv: &[U]) -> io::Result<()> {
-    let c_arg0 = ffi::CString::new(arg0)?;
+pub fn execvp<U: Into<Vec<u8>> + Clone + Sized>(prog: &str, argv: &[U]) -> io::Result<()> {
+    let c_prog = ffi::CString::new(prog)?;
 
     let mut c_argv: Vec<*mut libc::c_char> = Vec::with_capacity(argv.len() + 1);
 
@@ -313,7 +313,7 @@ pub fn execvp<U: Into<Vec<u8>> + Clone + Sized>(arg0: &str, argv: &[U]) -> io::R
     c_argv.push(std::ptr::null_mut());
 
     unsafe {
-        libc::execvp(c_arg0.as_ptr(), c_argv.as_ptr() as *const *const i8);
+        libc::execvp(c_prog.as_ptr(), c_argv.as_ptr() as *const *const i8);
     }
 
     for arg in c_argv {
