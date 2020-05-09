@@ -6,11 +6,11 @@ use bitflags::bitflags;
 
 pub enum Action {
     /// Reboot the system
-    Reboot,
+    ForceReboot,
     /// Halt the system
-    Halt,
+    ForceHalt,
     /// Halt the system and attempt to power it down
-    PowerOff,
+    ForcePowerOff,
 }
 
 bitflags! {
@@ -40,9 +40,9 @@ cfg_if::cfg_if! {
 
         pub fn perform_action(action: &Action, flags: ActionFlags) -> io::Result<()> {
             let reboot_flags = match action {
-                Action::Reboot => libc::LINUX_REBOOT_CMD_RESTART,
-                Action::Halt => libc::LINUX_REBOOT_CMD_HALT,
-                Action::PowerOff => libc::LINUX_REBOOT_CMD_POWER_OFF,
+                Action::ForceReboot => libc::LINUX_REBOOT_CMD_RESTART,
+                Action::ForceHalt => libc::LINUX_REBOOT_CMD_HALT,
+                Action::ForcePowerOff => libc::LINUX_REBOOT_CMD_POWER_OFF,
             };
 
             // Linux does not sync() by default, so we need to do it manually
@@ -58,9 +58,9 @@ cfg_if::cfg_if! {
     else if #[cfg(any(target_os = "freebsd", target_os = "openbsd", target_os = "dragonfly", target_os = "netbsd"))] {
         pub fn perform_action(action: &Action, flags: ActionFlags) -> io::Result<()> {
             let mut reboot_flags = match action {
-                Action::Reboot => libc::RB_AUTOBOOT,
-                Action::Halt => libc::RB_HALT,
-                Action::PowerOff => libc::RB_HALT | libc::RB_POWERDOWN,
+                Action::ForceReboot => libc::RB_AUTOBOOT,
+                Action::ForceHalt => libc::RB_HALT,
+                Action::ForcePowerOff => libc::RB_HALT | libc::RB_POWERDOWN,
             };
 
             if flags.contains(ActionFlags::NOSYNC) {
