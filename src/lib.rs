@@ -86,38 +86,6 @@ pub fn pipe2(flags: i32) -> io::Result<(fs::File, fs::File)> {
 }
 
 
-pub fn fork() -> io::Result<i32> {
-    error::convert_neg_ret(unsafe { libc::fork() })
-}
-
-pub fn execvp<U: Into<Vec<u8>> + Clone + Sized>(arg0: &str, argv: &[U]) -> io::Result<()> {
-    let c_arg0 = ffi::CString::new(arg0)?;
-
-    let mut c_argv: Vec<*mut libc::c_char> = Vec::with_capacity(argv.len() + 1);
-
-    for arg in argv {
-        c_argv.push(ffi::CString::new(arg.clone())?.into_raw())
-    }
-
-    c_argv.push(std::ptr::null_mut());
-
-    unsafe {
-        libc::execvp(c_arg0.as_ptr(), c_argv.as_ptr() as *const *const i8);
-    }
-
-    for arg in c_argv {
-        if arg != std::ptr::null_mut() {
-            unsafe {
-                let _ = ffi::CString::from_raw(arg);
-            }
-        }
-    }
-
-    Err(io::Error::last_os_error().into())
-}
-
-
-
 pub fn close_fd(fd: i32) -> io::Result<()> {
     error::convert_nzero(unsafe { libc::close(fd) }, ())
 }
