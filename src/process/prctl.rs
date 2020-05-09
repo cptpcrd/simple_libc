@@ -534,3 +534,84 @@ pub mod secbits {
         super::prctl(libc::PR_GET_SECUREBITS, 0, 0, 0, 0).map(|f| SecFlags::from_bits_truncate(f as u64))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use super::super::super::constants;
+
+    #[test]
+    fn test_cap_iter() {
+        assert_eq!(Cap::iter().last().map(|x| x as isize), Some(constants::CAP_MAX));
+
+        assert_eq!(Cap::iter().map(|x| x as isize).last(), Some(constants::CAP_MAX));
+    }
+
+    #[test]
+    fn test_capset_empty() {
+        let mut set = CapSet::full();
+        for cap in Cap::iter() {
+            set.drop(cap);
+        }
+        assert_eq!(set.bits, 0);
+
+        set = CapSet::empty();
+        assert_eq!(set.bits, 0);
+
+        set = CapSet::full();
+        set.clear();
+        assert_eq!(set.bits, 0);
+
+        assert!(!Cap::iter().any(|c| set.has(c)));
+    }
+
+    #[test]
+    fn test_capset_full() {
+        let mut set = CapSet::empty();
+        for cap in Cap::iter() {
+            set.add(cap);
+        }
+        assert_eq!(set.bits, CAP_BITMASK);
+
+        set = CapSet::full();
+        assert_eq!(set.bits, CAP_BITMASK);
+
+        set = CapSet::empty();
+        set.fill();
+        assert_eq!(set.bits, CAP_BITMASK);
+
+        assert!(Cap::iter().all(|c| set.has(c)));
+    }
+
+    #[test]
+    fn test_capset_add_drop() {
+        let mut set = CapSet::empty();
+        set.add(Cap::Chown);
+        assert!(set.has(Cap::Chown));
+
+        set.drop(Cap::Chown);
+        assert!(!set.has(Cap::Chown));
+
+        set.set_state(Cap::Chown, true);
+        assert!(set.has(Cap::Chown));
+
+        set.set_state(Cap::Chown, false);
+        assert!(!set.has(Cap::Chown));
+    }
+
+    #[test]
+    fn test_capset_add_drop_multi() {
+        let mut set = CapSet::empty();
+        set.add_multi(vec![Cap::Fowner, Cap::Chown, Cap::Kill]);
+
+        // Iteration order is not preserved, but it should be consistent.
+        assert_eq!(set.into_iter().collect::<Vec<Cap>>(), vec![Cap::Chown, Cap::Fowner, Cap::Kill]);
+        assert_eq!(set.iter().collect::<Vec<Cap>>(), vec![Cap::Chown, Cap::Fowner, Cap::Kill]);
+
+        set.drop_multi(vec![Cap::Fowner, Cap::Chown]);
+        assert_eq!(set.iter().collect::<Vec<Cap>>(), vec![Cap::Kill]);
+
+        set.drop_multi(vec![Cap::Kill]);
+        assert_eq!(set.iter().collect::<Vec<Cap>>(), vec![]);
+    }
+}
