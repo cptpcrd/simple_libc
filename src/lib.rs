@@ -66,12 +66,8 @@ pub fn pipe_raw() -> io::Result<(i32, i32)> {
 }
 
 pub fn pipe() -> io::Result<(fs::File, fs::File)> {
-    match pipe_raw() {
-        Ok((r, w)) => unsafe {
-            Ok((fs::File::from_raw_fd(r), fs::File::from_raw_fd(w)))
-        },
-        Err(e) => Err(e),
-    }
+    let (r, w) = pipe_raw()?;
+    unsafe { Ok((fs::File::from_raw_fd(r), fs::File::from_raw_fd(w))) }
 }
 
 pub fn pipe2_raw(flags: i32) -> io::Result<(i32, i32)> {
@@ -83,12 +79,8 @@ pub fn pipe2_raw(flags: i32) -> io::Result<(i32, i32)> {
 }
 
 pub fn pipe2(flags: i32) -> io::Result<(fs::File, fs::File)> {
-    match pipe2_raw(flags) {
-        Ok((r, w)) => unsafe {
-            Ok((fs::File::from_raw_fd(r), fs::File::from_raw_fd(w)))
-        },
-        Err(e) => Err(e),
-    }
+    let (r, w) = pipe2_raw(flags)?;
+    unsafe { Ok((fs::File::from_raw_fd(r), fs::File::from_raw_fd(w))) }
 }
 
 
