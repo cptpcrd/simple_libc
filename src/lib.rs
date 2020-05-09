@@ -68,7 +68,13 @@ pub fn pipe() -> io::Result<(fs::File, fs::File)> {
     unsafe { Ok((fs::File::from_raw_fd(r), fs::File::from_raw_fd(w))) }
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(any(
+    target_os = "linux",
+    target_os = "freebsd",
+    target_os = "openbsd",
+    target_os = "netbsd",
+    target_os = "dragonfly",
+))]
 pub fn pipe2_raw(flags: i32) -> io::Result<(i32, i32)> {
     let mut fds: [i32; 2] = [0; 2];
 
@@ -77,7 +83,13 @@ pub fn pipe2_raw(flags: i32) -> io::Result<(i32, i32)> {
     }, fds).map(|fds| (fds[0], fds[1]))
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(any(
+    target_os = "linux",
+    target_os = "freebsd",
+    target_os = "openbsd",
+    target_os = "netbsd",
+    target_os = "dragonfly",
+))]
 pub fn pipe2(flags: i32) -> io::Result<(fs::File, fs::File)> {
     let (r, w) = pipe2_raw(flags)?;
     unsafe { Ok((fs::File::from_raw_fd(r), fs::File::from_raw_fd(w))) }
