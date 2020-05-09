@@ -32,27 +32,6 @@ pub fn geteuid() -> u32 {
     unsafe { libc::geteuid() }
 }
 
-#[cfg(target_os = "linux")]
-pub fn getresuid() -> (u32, u32, u32) {
-    let mut ruid: u32 = 0;
-    let mut euid: u32 = 0;
-    let mut suid: u32 = 0;
-
-    unsafe { libc::getresuid(&mut ruid, &mut euid, &mut suid); }
-    (ruid, euid, suid)
-}
-
-/// Gets the real and effective user IDs via the most efficient method possible.
-pub fn getreuid() -> (u32, u32) {
-    if cfg!(target_os = "linux") {
-        let (ruid, euid, _) = getresuid();
-        (ruid, euid)
-    }
-    else {
-        (getuid(), geteuid())
-    }
-}
-
 
 #[inline]
 pub fn getgid() -> u32 {
@@ -62,27 +41,6 @@ pub fn getgid() -> u32 {
 #[inline]
 pub fn getegid() -> u32 {
     unsafe { libc::getegid() }
-}
-
-#[cfg(target_os = "linux")]
-pub fn getresgid() -> (u32, u32, u32) {
-    let mut rgid: u32 = 0;
-    let mut egid: u32 = 0;
-    let mut sgid: u32 = 0;
-
-    unsafe { libc::getresgid(&mut rgid, &mut egid, &mut sgid); }
-    (rgid, egid, sgid)
-}
-
-/// Gets the real and effective group IDs via the most efficient method possible.
-pub fn getregid() -> (u32, u32) {
-    if cfg!(target_os = "linux") {
-        let (rgid, egid, _) = getresgid();
-        (rgid, egid)
-    }
-    else {
-        (getgid(), getegid())
-    }
 }
 
 pub fn getgroups_raw(groups: &mut Vec<u32>) -> io::Result<i32> {
@@ -171,13 +129,6 @@ pub fn setreuid(ruid: u32, euid: u32) -> io::Result<()> {
     }, ())
 }
 
-#[cfg(target_os = "linux")]
-pub fn setresuid(ruid: u32, euid: u32, suid: u32) -> io::Result<()> {
-    super::error::convert_nzero(unsafe {
-        libc::setresuid(ruid, euid, suid)
-    }, ())
-}
-
 
 pub fn setgid(gid: u32) -> io::Result<()> {
     super::error::convert_nzero(unsafe {
@@ -197,18 +148,84 @@ pub fn setregid(rgid: u32, egid: u32) -> io::Result<()> {
     }, ())
 }
 
-#[cfg(target_os = "linux")]
-pub fn setresgid(rgid: u32, egid: u32, sgid: u32) -> io::Result<()> {
-    super::error::convert_nzero(unsafe {
-        libc::setresgid(rgid, egid, sgid)
-    }, ())
-}
-
-
 pub fn setgroups(groups: &[u32]) -> io::Result<()> {
     super::error::convert_nzero(unsafe {
         libc::setgroups(groups.len(), groups.as_ptr())
     }, ())
+}
+
+
+cfg_if::cfg_if! {
+    if #[cfg(any(target_os = "linux", target_os = "freebsd", target_os = "openbsd", target_os = "dragonfly"))] {
+        pub fn getresuid() -> (u32, u32, u32) {
+            let mut ruid: u32 = 0;
+            let mut euid: u32 = 0;
+            let mut suid: u32 = 0;
+
+            unsafe { libc::getresuid(&mut ruid, &mut euid, &mut suid); }
+            (ruid, euid, suid)
+        }
+
+        pub fn getresgid() -> (u32, u32, u32) {
+            let mut rgid: u32 = 0;
+            let mut egid: u32 = 0;
+            let mut sgid: u32 = 0;
+
+            unsafe { libc::getresgid(&mut rgid, &mut egid, &mut sgid); }
+            (rgid, egid, sgid)
+        }
+
+        pub fn setresuid(ruid: u32, euid: u32, suid: u32) -> io::Result<()> {
+            super::error::convert_nzero(unsafe {
+                libc::setresuid(ruid, euid, suid)
+            }, ())
+        }
+
+        pub fn setresgid(rgid: u32, egid: u32, sgid: u32) -> io::Result<()> {
+            super::error::convert_nzero(unsafe {
+                libc::setresgid(rgid, egid, sgid)
+            }, ())
+        }
+
+        fn _getreuid() -> (u32, u32) {
+            let (ruid, euid, _) = getresuid();
+            (ruid, euid)
+        }
+
+        fn _getregid() -> (u32, u32) {
+            let (rgid, egid, _) = getresgid();
+            (rgid, egid)
+        }
+    }
+    else {
+        fn _getreuid() -> (u32, u32) {
+            (getuid(), geteuid())
+        }
+
+        fn _getregid() -> (u32, u32) {
+            (getgid(), getegid())
+        }
+    }
+}
+
+/// Gets the real and effective user IDs via the most efficient method possible.
+///
+/// On platforms with `getresuid()`, this function calls that function and discards
+/// the saved UID. On other platforms, it combines the results of `getuid()` and
+/// `geteuid()`.
+#[inline]
+pub fn getreuid() -> (u32, u32) {
+    _getreuid()
+}
+
+/// Gets the real and effective group IDs via the most efficient method possible.
+///
+/// On platforms with `getresgid()`, this function calls that function and discards
+/// the saved GID. On other platforms, it combines the results of `getgid()` and
+/// `getegid()`.
+#[inline]
+pub fn getregid() -> (u32, u32) {
+    _getregid()
 }
 
 
