@@ -128,3 +128,16 @@ pub fn gethostname() -> io::Result<ffi::OsString> {
         };
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_constrain() {
+        assert_eq!(constrain(-1, 0, 10), 0);
+        assert_eq!(constrain(3, 0, 10), 3);
+        assert_eq!(constrain(13, 0, 10), 10);
+    }
+}
