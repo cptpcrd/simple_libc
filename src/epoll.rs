@@ -26,12 +26,14 @@ bitflags! {
 }
 
 impl From<u32> for Events {
+    #[inline]
     fn from(i: u32) -> Events {
         Events::from_bits_truncate(i as i32)
     }
 }
 
 impl From<Events> for u32 {
+    #[inline]
     fn from(m: Events) -> u32 {
         m.bits() as u32
     }
@@ -44,6 +46,7 @@ pub struct Event {
 }
 
 impl Default for Event {
+    #[inline]
     fn default() -> Event {
         Event {
             events: Events::empty(),
@@ -53,6 +56,7 @@ impl Default for Event {
 }
 
 impl From<libc::epoll_event> for Event {
+    #[inline]
     fn from(ev: libc::epoll_event) -> Event {
         Event {
             events: Events::from(ev.events),
@@ -62,6 +66,7 @@ impl From<libc::epoll_event> for Event {
 }
 
 impl From<Event> for libc::epoll_event {
+    #[inline]
     fn from(ev: Event) -> libc::epoll_event {
         libc::epoll_event {
             events: u32::from(ev.events),
@@ -170,10 +175,12 @@ impl Epoll {
         })
     }
 
+    #[inline]
     pub fn wait(&self, events: &mut [Event], timeout: Option<time::Duration>) -> io::Result<i32> {
         self.pwait(events, timeout, None)
     }
 
+    #[inline]
     pub fn close(&self) {
         unsafe {
             libc::close(self.fd);
@@ -182,6 +189,7 @@ impl Epoll {
 }
 
 impl Drop for Epoll {
+    #[inline]
     fn drop(&mut self) {
         self.close();
     }
