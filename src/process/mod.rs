@@ -67,14 +67,7 @@ pub fn getgroups() -> io::Result<Vec<u32>> {
 pub fn getallgroups() -> io::Result<Vec<u32>> {
     let mut groups = getgroups()?;
 
-    let (rgid, egid, _) = {
-        if cfg!(target_os = "linux") {
-            getresgid()
-        }
-        else {
-            (getgid(), getegid(), 0)
-        }
-    };
+    let (rgid, egid) = getregid();
 
     groups.retain(|&x| x != rgid && x != egid);
 
