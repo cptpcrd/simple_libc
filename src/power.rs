@@ -30,13 +30,10 @@ bitflags! {
 cfg_if::cfg_if! {
     if #[cfg(target_os = "linux")] {
         pub fn set_cad_enabled_status(enabled: bool) -> io::Result<()> {
-            let cmd: i32;
-            if enabled {
-                cmd = libc::LINUX_REBOOT_CMD_CAD_ON;
-            }
-            else {
-                cmd = libc::LINUX_REBOOT_CMD_CAD_OFF;
-            }
+            let cmd = match enabled {
+                true => libc::LINUX_REBOOT_CMD_CAD_ON,
+                false => libc::LINUX_REBOOT_CMD_CAD_OFF,
+            };
 
             super::error::convert(unsafe { libc::reboot(cmd) }, ())
         }
