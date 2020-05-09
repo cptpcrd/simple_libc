@@ -22,33 +22,63 @@ pub fn getpid() -> i32 {
 }
 
 
+/// Returns the current real user ID.
 #[inline]
 pub fn getuid() -> u32 {
     unsafe { libc::getuid() }
 }
 
+/// Returns the current effective user ID.
 #[inline]
 pub fn geteuid() -> u32 {
     unsafe { libc::geteuid() }
 }
 
 
+/// Returns the current real group ID.
 #[inline]
 pub fn getgid() -> u32 {
     unsafe { libc::getgid() }
 }
 
+/// Returns the current effective group ID.
 #[inline]
 pub fn getegid() -> u32 {
     unsafe { libc::getegid() }
 }
 
+/// Low-level interface to the C `getgroups()` function.
+///
+/// This attempts to store the current list of supplementary
+/// group IDs in the provided vector. It is a very thin wrapper
+/// around C's `getgroups()` function, so the semantics are
+/// almost exactly the same.
+///
+/// Namely:
+/// 1. If the vector is empty (length 0), it will not be modified;
+///    instead, the number of current supplementary group IDs
+///    will be returned.
+/// 2. If the vector is long enough to hold all the current
+///    supplementary group IDs, it will be filled with the current
+///    supplementary group IDs, and the number of supplementary
+///    group IDs will be returned.
+/// 3. If the vector is not empty and it is also not long enough to
+///    hold all the current supplementary group IDs, an error will be
+///    returned.
+///
+/// In most cases, the `getgroups()` wrapper should be preferred.
 pub fn getgroups_raw(groups: &mut Vec<u32>) -> io::Result<i32> {
     super::error::convert_neg_ret(unsafe {
         libc::getgroups(groups.len() as i32, groups.as_mut_ptr())
     })
 }
 
+/// Returns a vector containing the current supplementary
+/// group IDs.
+///
+/// This is a higher-level wrapper that calls `getgroups_raw()` twice,
+/// first to determine the number of groups and then again to actually
+/// fill the list.
 pub fn getgroups() -> io::Result<Vec<u32>> {
     let mut groups: Vec<u32> = Vec::new();
 
@@ -64,6 +94,11 @@ pub fn getgroups() -> io::Result<Vec<u32>> {
     Ok(groups)
 }
 
+/// Returns a vector containing the real group ID, the effective group
+/// ID, and all group IDs returned by `getgroups()`.
+///
+/// No guarantees are made about the order of the vector, or the
+/// uniqueness of its elements.
 pub fn getallgroups() -> io::Result<Vec<u32>> {
     let mut groups = getgroups()?;
 
@@ -86,6 +121,14 @@ extern "C" {
     fn getlogin_r(buf: *mut libc::c_char, bufsize: libc::size_t) -> i32;
 }
 
+/// [NOT RECOMMENDED] Returns the username of the currently logged-in
+/// user.
+///
+/// WARNING: Use of this function is not recommended (see the documentation
+/// of the C function `getlogin()` for details).
+/// In most cases, especially when security is important,
+/// you should call `getuid()` and pass the result to
+/// `pwd::Passwd::lookup_uid()`.
 pub fn getlogin() -> io::Result<ffi::OsString> {
     // Get the initial buffer length from sysconf(), setting some sane defaults/constraints.
     let init_length = super::constrain(super::sysconf(libc::_SC_LOGIN_NAME_MAX).unwrap_or(256), 64, 1024);
@@ -222,6 +265,11 @@ pub fn getregid() -> (u32, u32) {
 }
 
 
+/// Attempts to change the root directory of the current process to the specified
+/// path.
+///
+/// In addition to the normal errors, this will return an error if the given path
+/// contains a null byte.
 pub fn chroot<P: AsRef<Path>>(path: P) -> io::Result<()> {
     let path = ffi::CString::new(path.as_ref().as_os_str().as_bytes())?;
 
@@ -230,16 +278,29 @@ pub fn chroot<P: AsRef<Path>>(path: P) -> io::Result<()> {
     }, ())
 }
 
+/// Change the current working directory to the specified path.
+///
+/// This is a thin wrapper around std::env::set_current_dir(), and only
+/// present for consistency.
 #[inline]
 pub fn chdir<P: AsRef<Path>>(path: P) -> io::Result<()> {
     std::env::set_current_dir(path)
 }
 
 
+/// Forks the current process.
+///
+/// If an error occurred, the Result returned represents the error encountered.
+/// Otherwise, the Ok value of the Result is 0 in the child, and the child's PID
+/// in the parent.
 pub fn fork() -> io::Result<i32> {
     super::error::convert_neg_ret(unsafe { libc::fork() })
 }
 
+/// Attempts to execute the given program with the given arguments, replacing the
+/// current process.
+///
+/// If this returns, it means an error occurred.
 pub fn execvp<U: Into<Vec<u8>> + Clone + Sized>(arg0: &str, argv: &[U]) -> io::Result<()> {
     let c_arg0 = ffi::CString::new(arg0)?;
 
