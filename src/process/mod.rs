@@ -9,6 +9,7 @@ pub mod sigmask;
 pub mod sigaction;
 pub mod priority;
 pub mod resource;
+pub mod exec;
 
 #[cfg(target_os = "linux")]
 pub mod signalfd;
@@ -295,34 +296,4 @@ pub fn chdir<P: AsRef<Path>>(path: P) -> io::Result<()> {
 /// in the parent.
 pub fn fork() -> io::Result<i32> {
     super::error::convert_neg_ret(unsafe { libc::fork() })
-}
-
-/// Attempts to execute the given program with the given arguments, replacing the
-/// current process.
-///
-/// If this returns, it means an error occurred.
-pub fn execvp<U: Into<Vec<u8>> + Clone + Sized>(prog: &str, argv: &[U]) -> io::Result<()> {
-    let c_prog = ffi::CString::new(prog)?;
-
-    let mut c_argv: Vec<*mut libc::c_char> = Vec::with_capacity(argv.len() + 1);
-
-    for arg in argv {
-        c_argv.push(ffi::CString::new(arg.clone())?.into_raw())
-    }
-
-    c_argv.push(std::ptr::null_mut());
-
-    unsafe {
-        libc::execvp(c_prog.as_ptr(), c_argv.as_ptr() as *const *const i8);
-    }
-
-    for arg in c_argv {
-        if arg != std::ptr::null_mut() {
-            unsafe {
-                let _ = ffi::CString::from_raw(arg);
-            }
-        }
-    }
-
-    Err(io::Error::last_os_error().into())
 }
