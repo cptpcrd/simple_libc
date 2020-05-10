@@ -44,7 +44,6 @@ pub fn get(t: Target) -> io::Result<i32> {
 pub fn set(t: Target, value: i32) -> io::Result<()> {
     let (which, who) = t.unpack();
 
-    error::set_errno_success();
     error::convert_nzero(unsafe {
         libc::setpriority(which, who, value)
     }, ())
