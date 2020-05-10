@@ -15,8 +15,16 @@ pub mod power;
 pub mod process;
 pub mod net;
 pub mod fcntl;
-pub mod flock;
 mod constants;
+
+#[cfg(any(
+    target_os = "linux",
+    target_os = "freebsd",
+    target_os = "openbsd",
+    target_os = "netbsd",
+    target_os = "dragonfly",
+))]
+pub mod flock;
 
 #[cfg(target_os = "linux")]
 pub mod epoll;
