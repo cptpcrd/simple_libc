@@ -4,6 +4,7 @@ use libc;
 use bitflags::bitflags;
 
 
+#[derive(Debug)]
 pub enum Action {
     /// Reboot the system
     ForceReboot,
@@ -56,7 +57,7 @@ cfg_if::cfg_if! {
         }
     }
     else if #[cfg(any(target_os = "freebsd", target_os = "openbsd", target_os = "dragonfly", target_os = "netbsd"))] {
-        pub fn perform_action(action: &Action, flags: ActionFlags) -> io::Result<()> {
+        pub fn perform_action(action: Action, flags: ActionFlags) -> io::Result<()> {
             let mut reboot_flags = match action {
                 Action::ForceReboot => libc::RB_AUTOBOOT,
                 Action::ForceHalt => libc::RB_HALT,
