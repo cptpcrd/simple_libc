@@ -122,23 +122,36 @@ pub fn gethostname_raw(name_vec: &mut Vec<i8>) -> io::Result<()> {
     }, ())
 }
 
-
-/// The POSIX standard is unclear on some of the exact semantics, so for now this is Linux-only.
-#[cfg(target_os = "linux")]
 pub fn gethostname() -> io::Result<ffi::OsString> {
     let mut name_vec: Vec<i8> = Vec::new();
-    name_vec.resize(constrain(sysconf(libc::_SC_HOST_NAME_MAX).unwrap_or(255), 10, 1024) as usize, 0);
+    let orig_size = constrain(sysconf(libc::_SC_HOST_NAME_MAX).unwrap_or(255), 10, 1024) as usize;
+    name_vec.resize(orig_size, 0);
 
     loop {
         match gethostname_raw(&mut name_vec) {
             Ok(()) => {
-                return Ok(ffi::OsString::from_vec(name_vec.iter().take_while(|&x| *x > 0).map(|&x| x as u8).collect()))
+                let name = bytes_to_osstring(&name_vec);
+
+                if name.len() >= name_vec.len() - 1 {
+                    // Either no NULL byte was added, or it was added at the very end
+                    // of the vector. The name may have been truncated; increase the size and try
+                    // again.
+
+                    if name_vec.len() < orig_size * 10 {
+                        name_vec.resize(name_vec.len() * 2, 0);
+                        continue;
+                    }
+                }
+
+                return Ok(name);
             },
             Err(e) => {
                 if let Some(raw_err) = e.raw_os_error() {
                     if raw_err == libc::EINVAL || raw_err == libc::ENAMETOOLONG {
-                        name_vec.resize(name_vec.len() * 2, 0);
-                        continue;
+                        if name_vec.len() < orig_size * 10 {
+                            name_vec.resize(name_vec.len() * 2, 0);
+                            continue;
+                        }
                     }
                 }
 
@@ -148,6 +161,11 @@ pub fn gethostname() -> io::Result<ffi::OsString> {
     }
 }
 
+
+/// This takes a type that implements IntoIterator<Item=&i8> and constructs an OsString.
+fn bytes_to_osstring<'a, T: IntoIterator<Item=&'a i8>>(bytes: T) -> ffi::OsString {
+    ffi::OsString::from_vec(bytes.into_iter().take_while(|x| **x > 0).map(|x| *x as u8).collect())
+}
 
 #[cfg(test)]
 mod tests {
