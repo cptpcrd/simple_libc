@@ -162,6 +162,37 @@ pub fn gethostname() -> io::Result<ffi::OsString> {
 }
 
 
+pub struct Utsname {
+    pub sysname: ffi::OsString,
+    pub nodename: ffi::OsString,
+    pub release: ffi::OsString,
+    pub version: ffi::OsString,
+    pub machine: ffi::OsString,
+    #[cfg(target_os = "linux")]
+    pub domainname: ffi::OsString,
+}
+
+pub fn uname() -> io::Result<Utsname> {
+    let mut utsname = unsafe {
+        std::mem::zeroed::<libc::utsname>()
+    };
+
+    error::convert_nzero(unsafe {
+        libc::uname(&mut utsname)
+    }, ())?;
+
+    Ok(Utsname {
+        sysname: bytes_to_osstring(utsname.sysname.iter()),
+        nodename: bytes_to_osstring(utsname.nodename.iter()),
+        release: bytes_to_osstring(utsname.release.iter()),
+        version: bytes_to_osstring(utsname.version.iter()),
+        machine: bytes_to_osstring(utsname.machine.iter()),
+        #[cfg(target_os = "linux")]
+        domainname: bytes_to_osstring(utsname.domainname.iter()),
+    })
+}
+
+
 /// This takes a type that implements IntoIterator<Item=&i8> and constructs an OsString.
 fn bytes_to_osstring<'a, T: IntoIterator<Item=&'a i8>>(bytes: T) -> ffi::OsString {
     ffi::OsString::from_vec(bytes.into_iter().take_while(|x| **x > 0).map(|x| *x as u8).collect())
