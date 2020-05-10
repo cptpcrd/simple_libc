@@ -101,13 +101,20 @@ pub fn close_fd(fd: i32) -> io::Result<()> {
 }
 
 
-#[cfg(target_os = "linux")]
+#[cfg(any(
+    target_os = "linux",
+    target_os = "freebsd",
+    target_os = "openbsd",
+    target_os = "netbsd",
+    target_os = "dragonfly",
+))]
 pub fn sethostname(name: &ffi::OsString) -> io::Result<()> {
     let name_vec: Vec<i8> = name.clone().into_vec().iter().map(|&x| x as i8).collect();
     error::convert_nzero(unsafe {
         libc::sethostname(name_vec.as_ptr(), name_vec.len())
     }, ())
 }
+
 
 pub fn gethostname_raw(name_vec: &mut Vec<i8>) -> io::Result<()> {
     error::convert_nzero(unsafe {
