@@ -103,7 +103,7 @@ impl Epoll {
     }
 
 
-    fn ctl(&self, op: CtlOp, fd: i32, events: Events, data: u64) -> io::Result<()> {
+    fn ctl(&mut self, op: CtlOp, fd: i32, events: Events, data: u64) -> io::Result<()> {
         let mut ep_event = libc::epoll_event{events: u32::from(events), u64: data};
 
         super::error::convert(unsafe {
@@ -112,40 +112,40 @@ impl Epoll {
     }
 
     #[inline]
-    pub fn del(&self, fd: i32) -> io::Result<()> {
+    pub fn del(&mut self, fd: i32) -> io::Result<()> {
         self.ctl(CtlOp::Del, fd, Events::empty(), 0)
     }
 
 
     #[inline]
-    pub fn add(&self, fd: i32, events: Events) -> io::Result<()> {
+    pub fn add(&mut self, fd: i32, events: Events) -> io::Result<()> {
         self.add3(fd, events, fd as u64)
     }
 
     #[inline]
-    pub fn modify(&self, fd: i32, events: Events) -> io::Result<()> {
+    pub fn modify(&mut self, fd: i32, events: Events) -> io::Result<()> {
         self.modify3(fd, events, fd as u64)
     }
 
 
     #[inline]
-    pub fn add2(&self, fd: i32, event: Event) -> io::Result<()> {
+    pub fn add2(&mut self, fd: i32, event: Event) -> io::Result<()> {
         self.add3(fd, event.events, event.data)
     }
 
     #[inline]
-    pub fn modify2(&self, fd: i32, event: Event) -> io::Result<()> {
+    pub fn modify2(&mut self, fd: i32, event: Event) -> io::Result<()> {
         self.modify3(fd, event.events, event.data)
     }
 
 
     #[inline]
-    pub fn add3(&self, fd: i32, events: Events, data: u64) -> io::Result<()> {
+    pub fn add3(&mut self, fd: i32, events: Events, data: u64) -> io::Result<()> {
         self.ctl(CtlOp::Add, fd, events, data)
     }
 
     #[inline]
-    pub fn modify3(&self, fd: i32, events: Events, data: u64) -> io::Result<()> {
+    pub fn modify3(&mut self, fd: i32, events: Events, data: u64) -> io::Result<()> {
         self.ctl(CtlOp::Mod, fd, events, data)
     }
 
@@ -183,7 +183,7 @@ impl Epoll {
     }
 
     #[inline]
-    pub fn close(&self) {
+    pub fn close(&mut self) {
         unsafe {
             libc::close(self.fd);
         }
