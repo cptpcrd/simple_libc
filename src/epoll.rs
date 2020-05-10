@@ -75,19 +75,21 @@ impl From<Event> for libc::epoll_event {
     }
 }
 
+bitflags! {
+    #[derive(Default)]
+    pub struct EpollFlags: i32 {
+        const CLOEXEC = libc::EPOLL_CLOEXEC;
+    }
+}
+
 pub struct Epoll {
     fd: libc::c_int,
 }
 
 impl Epoll {
-    pub fn new(close_on_exec: bool) -> io::Result<Epoll> {
-        let mut flags: libc::c_int = 0;
-        if close_on_exec {
-            flags |= libc::EPOLL_CLOEXEC;
-        }
-
+    pub fn new(flags: EpollFlags) -> io::Result<Epoll> {
         let fd = unsafe {
-            libc::epoll_create1(flags)
+            libc::epoll_create1(flags.bits)
         };
 
         super::error::convert_neg_ret(fd).map(|fd| {
