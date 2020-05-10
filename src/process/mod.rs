@@ -86,8 +86,7 @@ pub fn getgroups() -> io::Result<Vec<u32>> {
 
     let ngroups = getgroups_raw(&mut groups)?;
 
-    groups.reserve(ngroups as usize);
-    unsafe { groups.set_len(ngroups as usize) };
+    groups.resize(ngroups as usize, 0);
 
     if getgroups_raw(&mut groups)? != ngroups {
         return Err(io::Error::last_os_error());
@@ -137,10 +136,10 @@ pub fn getlogin() -> io::Result<ffi::OsString> {
 
     super::error::while_erange(|i| {
         let length = (init_length * (i as i64 + 1)) as usize;
-        let mut buf: Vec<i8> = Vec::with_capacity(length);
+        let mut buf: Vec<i8> = Vec::new();
 
         super::error::convert_nzero(unsafe {
-            buf.set_len(length);
+            buf.resize(length, 0);
             getlogin_r(buf.as_mut_ptr(), length)
         }, buf).map(|buf| {
             ffi::OsString::from_vec(buf.iter().take_while(|x| **x > 0).map(|x| *x as u8).collect())

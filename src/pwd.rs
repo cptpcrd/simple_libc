@@ -63,8 +63,7 @@ impl Passwd {
         super::error::while_erange(|i| {
             let buflen: usize = (i as usize + 1) * init_size;
 
-            buffer.reserve(buflen);
-            unsafe { buffer.set_len(buflen) };
+            buffer.resize(buflen, 0);
 
             let ret = getpwfunc(
                 &t,

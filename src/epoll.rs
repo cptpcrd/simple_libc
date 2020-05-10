@@ -163,9 +163,9 @@ impl Epoll {
             None => std::ptr::null(),
         };
 
-        let mut ep_events: Vec<libc::epoll_event> = Vec::with_capacity(maxevents);
+        let mut ep_events: Vec<libc::epoll_event> = Vec::new();
 
-        unsafe { ep_events.set_len(maxevents) };
+        ep_events.resize(maxevents, libc::epoll_event { events: 0, u64: 0 });
 
         super::error::convert_neg_ret(unsafe {
             libc::epoll_pwait(self.fd, ep_events.as_mut_ptr(), maxevents as i32, raw_timeout, raw_sigmask)
