@@ -1,5 +1,9 @@
 use std::io;
+use std::str::FromStr;
+
 use libc;
+use strum_macros;
+use serde::Deserialize;
 
 use super::super::error;
 
@@ -12,6 +16,7 @@ type RawResourceType = libc::__rlimit_resource_t;
 type RawResourceType = i32;
 
 
+#[derive(Copy, Clone, Debug, Eq, PartialEq, strum_macros::Display, strum_macros::EnumString, strum_macros::EnumIter)]
 #[repr(i32)]
 pub enum Resource {
     // OpenBSD is missing this for some reason
@@ -65,6 +70,33 @@ pub enum Resource {
     RTTIME = libc::RLIMIT_RTTIME as i32,
     #[cfg(target_os = "linux")]
     SIGPENDING = libc::RLIMIT_SIGPENDING as i32,
+}
+
+impl serde::Serialize for Resource {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(&self.to_string().to_lowercase())
+    }
+}
+
+impl<'d> serde::Deserialize<'d> for Resource {
+    fn deserialize<D: serde::Deserializer<'d>>(deserializer: D) -> Result<Self, D::Error> {
+        Self::from_str(&String::deserialize(deserializer)?.to_uppercase()).map_err(serde::de::Error::custom)
+    }
+}
+
+
+pub fn serialize_limit<S: serde::Serializer>(limit: &Limit, serializer: S) -> Result<S::Ok, S::Error> {
+    match *limit {
+        LIMIT_INFINITY => serializer.serialize_none(),
+        _ => serializer.serialize_some(&limit),
+    }
+}
+
+pub fn deserialize_limit<'a, D: serde::Deserializer<'a>>(deserializer: D) -> Result<Limit, D::Error> {
+    Ok(match Option::<Limit>::deserialize(deserializer)? {
+        Some(limit) => limit,
+        None => LIMIT_INFINITY,
+    })
 }
 
 
