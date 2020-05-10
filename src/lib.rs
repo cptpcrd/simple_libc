@@ -22,11 +22,24 @@ mod constants;
 pub mod epoll;
 
 
+/// Flush filesystem write caches.
+///
+/// See the man page for sync(2) for more details.
 pub fn sync() {
     unsafe { libc::sync() };
 }
 
 
+/// Get the value of runtime constants/limits.
+///
+/// Given a "name" (one of the `libc::_SC_*` constants),
+/// returns the associated configuration value, unless
+/// an error occurred (usually when the "name" is not
+/// recognized).
+///
+/// Unlike the `sysconf()` wrapper, this function does not
+/// treat return values < 0 specially; that is left to the
+/// user.
 pub fn sysconf_raw(name: i32) -> io::Result<i64> {
     error::set_errno_success();
     error::convert_if_errno_ret(unsafe {
@@ -34,6 +47,16 @@ pub fn sysconf_raw(name: i32) -> io::Result<i64> {
     })
 }
 
+/// Get the value of runtime constants/limits.
+///
+/// Given a "name" (one of the `libc::_SC_*` constants),
+/// returns the associated configuration value.
+///
+/// `None` is returned if an error occurs (usually when
+/// the "name" is not recognized) OR if the value returned
+/// by the C function `sysconf()` is < 0 (usually indicates
+/// no limit). To differentiate between these two
+/// possibilities, use `sysconf_raw()`.
 pub fn sysconf(name: i32) -> Option<i64> {
     match sysconf_raw(name) {
         Ok(ret) => {
@@ -47,6 +70,11 @@ pub fn sysconf(name: i32) -> Option<i64> {
 }
 
 
+/// Constrain a value to a particular range.
+///
+/// This is included because sometimes when using `sysconf()`
+/// it's helpful to constrain a value to a sane range before
+/// using it as a buffer size or similar.
 pub fn constrain<T: Ord + Eq>(val: T, min: T, max: T) -> T {
     // Help users who get the order wrong
     debug_assert!(max >= min);
@@ -96,6 +124,7 @@ pub fn pipe2(flags: i32) -> io::Result<(fs::File, fs::File)> {
 }
 
 
+/// Closes the given file descriptor.
 pub fn close_fd(fd: i32) -> io::Result<()> {
     error::convert_nzero(unsafe { libc::close(fd) }, ())
 }
@@ -116,12 +145,17 @@ pub fn sethostname(name: &ffi::OsString) -> io::Result<()> {
 }
 
 
+/// Attempts to read the current system hostname into the given vector.
+///
+/// The result is null-terminated. Behavior in the case that the vector
+/// is not long enough is system-dependent.
 pub fn gethostname_raw(name_vec: &mut Vec<i8>) -> io::Result<()> {
     error::convert_nzero(unsafe {
         libc::gethostname(name_vec.as_mut_ptr(), name_vec.len())
     }, ())
 }
 
+/// Attempts to determine the current system hostname.
 pub fn gethostname() -> io::Result<ffi::OsString> {
     let mut name_vec: Vec<i8> = Vec::new();
     let orig_size = constrain(sysconf(libc::_SC_HOST_NAME_MAX).unwrap_or(255), 10, 1024) as usize;
@@ -172,6 +206,8 @@ pub struct Utsname {
     pub domainname: ffi::OsString,
 }
 
+/// Returns a `Utsname` struct containing information about the
+/// current system.
 pub fn uname() -> io::Result<Utsname> {
     let mut utsname = unsafe {
         std::mem::zeroed::<libc::utsname>()
