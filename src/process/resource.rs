@@ -108,6 +108,10 @@ pub fn prlimit(pid: i32, resource: Resource, new_limits: Option<(Limit, Limit)>)
 
 #[cfg(target_os = "linux")]
 pub fn nice_rlimit_to_thresh(nice_rlim: Limit) -> i32 {
+    if nice_rlim == LIMIT_INFINITY {
+        return -20;
+    }
+
     20 - (super::super::constrain(nice_rlim, 1, 40) as i32)
 }
 
