@@ -151,3 +151,69 @@ pub fn nice_rlimit_to_thresh(nice_rlim: Limit) -> i32 {
 pub fn nice_thresh_to_rlimit(nice_thresh: i32) -> Limit {
     (20 - super::super::constrain(nice_thresh, -20, 19)) as Limit
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use serde_test::{Token, assert_tokens, assert_de_tokens, assert_ser_tokens};
+
+    #[test]
+    fn test_resource_serde() {
+        assert_ser_tokens(&Resource::NOFILE, &[Token::String("nofile")]);
+
+        // Deserializing is case-insensitive
+        assert_de_tokens(&Resource::NOFILE, &[Token::String("nofile")]);
+        assert_de_tokens(&Resource::NOFILE, &[Token::String("nofile")]);
+        assert_de_tokens(&Resource::NOFILE, &[Token::String("NOFILE")]);
+    }
+
+    #[test]
+    fn test_limit_serde() {
+        // A quick struct so we can use our custom serializer and deserializer
+        #[derive(Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+        struct SerializeLimit {
+            #[serde(serialize_with = "serialize_limit", deserialize_with = "deserialize_limit")]
+            limit: Limit,
+        }
+
+        assert_tokens(&SerializeLimit { limit: LIMIT_INFINITY }, &[
+            Token::Struct { name: "SerializeLimit", len: 1 },
+            Token::Str("limit"),
+            Token::None,
+            Token::StructEnd,
+        ]);
+
+        assert_tokens(&SerializeLimit { limit: 1 }, &[
+            Token::Struct { name: "SerializeLimit", len: 1 },
+            Token::Str("limit"),
+            Token::Some,
+            Token::U64(1),
+            Token::StructEnd,
+        ]);
+    }
+
+    #[test]
+    fn test_nice_rlimit_thresh() {
+        assert_eq!(nice_rlimit_to_thresh(LIMIT_INFINITY), -20);
+
+        assert_eq!(nice_rlimit_to_thresh(40), -20);
+        assert_eq!(nice_rlimit_to_thresh(30), -10);
+        assert_eq!(nice_rlimit_to_thresh(20), 0);
+        assert_eq!(nice_rlimit_to_thresh(10), 10);
+        assert_eq!(nice_rlimit_to_thresh(1), 19);
+
+        assert_eq!(nice_rlimit_to_thresh(100), -20);
+        assert_eq!(nice_rlimit_to_thresh(0), 19);
+
+        assert_eq!(nice_thresh_to_rlimit(-20), 40);
+        assert_eq!(nice_thresh_to_rlimit(-10), 30);
+        assert_eq!(nice_thresh_to_rlimit(0), 20);
+        assert_eq!(nice_thresh_to_rlimit(10), 10);
+        assert_eq!(nice_thresh_to_rlimit(19), 1);
+
+        assert_eq!(nice_thresh_to_rlimit(-100), 40);
+        assert_eq!(nice_thresh_to_rlimit(100), 1);
+    }
+}
