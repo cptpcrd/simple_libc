@@ -10,6 +10,7 @@ pub mod sigaction;
 pub mod priority;
 pub mod resource;
 pub mod exec;
+pub mod wait;
 
 #[cfg(target_os = "linux")]
 pub mod signalfd;
