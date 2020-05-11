@@ -7,9 +7,10 @@ use libc;
 use lazy_static::lazy_static;
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Passwd {
     pub name: ffi::OsString,
+    pub passwd: ffi::OsString,
     pub uid: u32,
     pub gid: u32,
     pub gecos_info: ffi::OsString,
@@ -89,6 +90,7 @@ impl Passwd {
                 uid: passwd.pw_uid,
                 gid: passwd.pw_gid,
                 name: Self::from_c_str(passwd.pw_name),
+                passwd: Self::from_c_str(passwd.pw_passwd),
                 gecos_info: Self::from_c_str(passwd.pw_gecos),
                 home_dir: Self::from_c_str(passwd.pw_dir),
                 shell: Self::from_c_str(passwd.pw_shell),
