@@ -233,6 +233,60 @@ pub fn gethostname() -> io::Result<ffi::OsString> {
 }
 
 
+#[cfg(target_os = "linux")]
+pub fn setdomainname(name: &ffi::OsString) -> io::Result<()> {
+    let name_vec: Vec<i8> = name.clone().into_vec().iter().map(|&x| x as i8).collect();
+    error::convert_nzero(unsafe {
+        libc::setdomainname(name_vec.as_ptr(), name_vec.len())
+    }, ())
+}
+
+#[cfg(target_os = "linux")]
+pub fn getdomainname_raw(name_vec: &mut Vec<i8>) -> io::Result<()> {
+    error::convert_nzero(unsafe {
+        libc::getdomainname(name_vec.as_mut_ptr(), name_vec.len())
+    }, ())
+}
+
+#[cfg(target_os = "linux")]
+pub fn getdomainname() -> io::Result<ffi::OsString> {
+    let mut name_vec: Vec<i8> = Vec::new();
+    let orig_size = 128;
+    name_vec.resize(orig_size, 0);
+
+    loop {
+        match getdomainname_raw(&mut name_vec) {
+            Ok(()) => {
+                let name = bytes_to_osstring(&name_vec);
+
+                if name.len() >= name_vec.len() - 1 {
+                    // Either no NULL byte was added, or it was added at the very end
+                    // of the vector. The name may have been truncated; increase the size and try
+                    // again.
+
+                    if name_vec.len() < orig_size * 10 {
+                        name_vec.resize(name_vec.len() * 2, 0);
+                        continue;
+                    }
+                }
+
+                return Ok(name);
+            },
+            Err(e) => {
+                if error::is_einval(&e) {
+                    if name_vec.len() < orig_size * 10 {
+                        name_vec.resize(name_vec.len() * 2, 0);
+                        continue;
+                    }
+                }
+
+                return Err(e);
+            },
+        };
+    }
+}
+
+
 pub struct Utsname {
     pub sysname: ffi::OsString,
     pub nodename: ffi::OsString,
@@ -331,5 +385,11 @@ mod tests {
     fn test_uname_hostname() {
         uname().unwrap();
         gethostname().unwrap();
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn test_domainname() {
+        getdomainname().unwrap();
     }
 }
