@@ -99,6 +99,13 @@ pub fn is_eagain(err: &io::Error) -> bool {
     return false;
 }
 
+pub fn is_einval(err: &io::Error) -> bool {
+    if let Some(libc::EINVAL) = err.raw_os_error() {
+        return true;
+    }
+    return false;
+}
+
 pub fn is_ewouldblock(err: &io::Error) -> bool {
     if let Some(libc::EWOULDBLOCK) = err.raw_os_error() {
         return true;
