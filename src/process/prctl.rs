@@ -131,7 +131,7 @@ impl<'d> serde::Deserialize<'d> for Cap {
 
 
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 #[repr(transparent)]
 pub struct CapSet {
     pub bits: u64,
@@ -156,6 +156,16 @@ impl CapSet {
     #[inline]
     pub fn fill(&mut self) {
         self.bits = CAP_BITMASK;
+    }
+
+    #[inline]
+    pub fn is_full(&self) -> bool {
+        self.bits == CAP_BITMASK
+    }
+
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.bits == 0
     }
 
     #[inline]
