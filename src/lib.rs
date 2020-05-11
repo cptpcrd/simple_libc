@@ -138,6 +138,35 @@ pub fn close_fd(fd: i32) -> io::Result<()> {
 }
 
 
+pub enum KillSpec {
+    /// Kill by process ID (must be > 0)
+    Pid(i32),
+    /// Kill by process group ID (must be > 1)
+    Pgid(i32),
+    /// All processes in this process's process group
+    CurPgrp,
+    /// All processes except an implementation-defined list
+    ///
+    /// On Linux, this kills everything except the current process and PID 1.
+    All,
+}
+
+pub fn kill(spec: KillSpec, sig: i32) -> io::Result<()> {
+    let pid = match spec {
+        KillSpec::Pid(pid) => pid,
+        KillSpec::Pgid(pgid) => -pgid,
+        KillSpec::CurPgrp => 0,
+        KillSpec::All => -1,
+    };
+
+    error::convert_nzero(unsafe { libc::kill(pid, sig) }, ())
+}
+
+pub fn killpg(pgid: i32, sig: i32) -> io::Result<()> {
+    error::convert_nzero(unsafe { libc::killpg(pgid, sig) }, ())
+}
+
+
 #[cfg(any(
     target_os = "linux",
     target_os = "freebsd",
