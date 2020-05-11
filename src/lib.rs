@@ -273,6 +273,8 @@ fn bytes_to_osstring<'a, T: IntoIterator<Item=&'a i8>>(bytes: T) -> ffi::OsStrin
 
 #[cfg(test)]
 mod tests {
+    use std::io::{Read, Write};
+
     use super::*;
 
     #[test]
@@ -280,5 +282,54 @@ mod tests {
         assert_eq!(constrain(-1, 0, 10), 0);
         assert_eq!(constrain(3, 0, 10), 3);
         assert_eq!(constrain(13, 0, 10), 10);
+    }
+
+    #[test]
+    fn test_pipe() {
+        let (mut r, mut w) = pipe().unwrap();
+        let mut buf: Vec<u8> = Vec::new();
+
+        buf.resize(5, 10);
+        w.write(&[0, 1, 2, 3]).unwrap();
+        assert_eq!(r.read(&mut buf).unwrap(), 4);
+        assert_eq!(buf, &[0, 1, 2, 3, 10]);
+
+        w.write(&[4, 5, 6, 7]).unwrap();
+        drop(w);
+        buf.clear();
+        r.read_to_end(&mut buf).unwrap();
+        assert_eq!(buf, &[4, 5, 6, 7]);
+
+        let (r, w) = pipe_raw().unwrap();
+        close_fd(r).unwrap();
+        close_fd(w).unwrap();
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn test_pipe2() {
+        let (mut r, mut w) = pipe2(0).unwrap();
+        let mut buf: Vec<u8> = Vec::new();
+
+        buf.resize(5, 10);
+        w.write(&[0, 1, 2, 3]).unwrap();
+        assert_eq!(r.read(&mut buf).unwrap(), 4);
+        assert_eq!(buf, &[0, 1, 2, 3, 10]);
+
+        w.write(&[4, 5, 6, 7]).unwrap();
+        drop(w);
+        buf.clear();
+        r.read_to_end(&mut buf).unwrap();
+        assert_eq!(buf, &[4, 5, 6, 7]);
+
+        let (r, w) = pipe2_raw(0).unwrap();
+        close_fd(r).unwrap();
+        close_fd(w).unwrap();
+    }
+
+    #[test]
+    fn test_uname_hostname() {
+        uname().unwrap();
+        gethostname().unwrap();
     }
 }
