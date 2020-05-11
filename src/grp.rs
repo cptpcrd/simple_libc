@@ -7,9 +7,10 @@ use libc;
 use lazy_static::lazy_static;
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Group {
     pub name: ffi::OsString,
+    pub passwd: ffi::OsString,
     pub gid: u32,
     pub members: Vec<ffi::OsString>,
 }
@@ -95,6 +96,7 @@ impl Group {
         Self {
             gid: group.gr_gid,
             name: Self::from_c_str(group.gr_name),
+            passwd: Self::from_c_str(group.gr_passwd),
             members: parsed_members,
         }
     }
