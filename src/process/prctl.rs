@@ -7,6 +7,8 @@ use libc;
 use strum::IntoEnumIterator;
 use strum_macros;
 use lazy_static::lazy_static;
+use serde::ser::SerializeSeq;
+use serde::de::Deserialize;
 
 use super::super::constants;
 use super::super::error;
@@ -273,6 +275,70 @@ impl IntoIterator for CapSet {
             i: 0,
         }
     }
+}
+
+pub fn serialize_capset_raw<S: serde::Serializer>(set: &CapSet, serializer: S) -> Result<S::Ok, S::Error> {
+    serializer.serialize_u64(set.bits)
+}
+
+
+pub fn deserialize_capset_raw<'d, D: serde::Deserializer<'d>>(deserializer: D) -> Result<CapSet, D::Error> {
+    Ok(CapSet { bits: u64::deserialize(deserializer)? })
+}
+
+
+pub fn serialize_capset_seq<S: serde::Serializer>(set: &CapSet, serializer: S) -> Result<S::Ok, S::Error> {
+    if set.is_full() {
+        let mut seq = serializer.serialize_seq(Some(1))?;
+        seq.serialize_element(&"ALL")?;
+        return seq.end();
+    }
+
+    let values: Vec<Cap> = set.iter().collect();
+
+    let mut seq = serializer.serialize_seq(Some(values.len()))?;
+    for cap in values {
+        seq.serialize_element(&cap)?;
+    }
+    seq.end()
+}
+
+pub fn deserialize_capset_seq<'d, D: serde::Deserializer<'d>>(deserializer: D) -> Result<CapSet, D::Error> {
+    let mut values: Vec<String> = Vec::deserialize(deserializer)?;
+    if values.len() == 0 {
+        return Ok(CapSet::empty());
+    }
+
+    let mut set = CapSet::empty();
+    let mut inverted = false;
+    if values[0] == "!" {
+        inverted = true;
+        values.remove(0);
+        set.fill();
+    }
+
+    for cap_name in values {
+        if cap_name == "ALL" {
+            if inverted {
+                set.clear();
+            }
+            else {
+                set.fill();
+            }
+
+            continue;
+        }
+
+        let cap = Cap::from_str(&cap_name).map_err(serde::de::Error::custom)?;
+        if inverted {
+            set.drop(cap);
+        }
+        else {
+            set.add(cap);
+        }
+    }
+
+    Ok(set)
 }
 
 
@@ -550,6 +616,8 @@ mod tests {
     use super::*;
     use super::super::super::constants;
 
+    use serde_test::{Token, assert_tokens, assert_de_tokens};
+
     #[test]
     fn test_cap_iter() {
         assert_eq!(Cap::iter().last().map(|x| x as isize), Some(constants::CAP_MAX));
@@ -623,5 +691,99 @@ mod tests {
 
         set.drop_multi(vec![Cap::Kill]);
         assert_eq!(set.iter().collect::<Vec<Cap>>(), vec![]);
+    }
+
+    #[test]
+    fn test_capset_serde_seq() {
+        // A quick struct so we can use our custom serializer and deserializer
+        #[derive(Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+        struct SerSet {
+            #[serde(serialize_with = "serialize_capset_seq", deserialize_with = "deserialize_capset_seq")]
+            set: CapSet,
+        }
+
+        let mut s = SerSet { set: CapSet::empty() };
+        assert_tokens(&s, &[
+            Token::Struct { name: "SerSet", len: 1 },
+            Token::Str("set"),
+            Token::Seq { len: Some(0) },
+            Token::SeqEnd,
+            Token::StructEnd,
+        ]);
+
+        s.set.add(Cap::Chown);
+        assert_tokens(&s, &[
+            Token::Struct { name: "SerSet", len: 1 },
+            Token::Str("set"),
+            Token::Seq { len: Some(1) },
+            Token::Str("CAP_CHOWN"),
+            Token::SeqEnd,
+            Token::StructEnd,
+        ]);
+
+        s.set.fill();
+        assert_tokens(&s, &[
+            Token::Struct { name: "SerSet", len: 1 },
+            Token::Str("set"),
+            Token::Seq { len: Some(1) },
+            Token::Str("ALL"),
+            Token::SeqEnd,
+            Token::StructEnd,
+        ]);
+
+        s.set.drop(Cap::Chown);
+        assert_de_tokens(&s, &[
+            Token::Struct { name: "SerSet", len: 1 },
+            Token::Str("set"),
+            Token::Seq { len: Some(2) },
+            Token::Str("!"),
+            Token::Str("CAP_CHOWN"),
+            Token::SeqEnd,
+            Token::StructEnd,
+        ]);
+
+        s.set.clear();
+        assert_de_tokens(&s, &[
+            Token::Struct { name: "SerSet", len: 1 },
+            Token::Str("set"),
+            Token::Seq { len: Some(2) },
+            Token::Str("!"),
+            Token::Str("ALL"),
+            Token::SeqEnd,
+            Token::StructEnd,
+        ]);
+    }
+
+    #[test]
+    fn test_capset_serde_raw() {
+        #[derive(Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+        struct SerSet {
+            #[serde(serialize_with = "serialize_capset_raw", deserialize_with = "deserialize_capset_raw")]
+            set: CapSet,
+        }
+
+        let mut s = SerSet { set: CapSet::empty() };
+        assert_tokens(&s, &[
+            Token::Struct { name: "SerSet", len: 1 },
+            Token::Str("set"),
+            Token::U64(0),
+            Token::StructEnd,
+        ]);
+
+        s.set.add(Cap::Chown);
+        assert_tokens(&s, &[
+            Token::Struct { name: "SerSet", len: 1 },
+            Token::Str("set"),
+            Token::U64(Cap::Chown.to_single_bitfield()),
+            Token::StructEnd,
+        ]);
+
+        s.set.fill();
+        assert_tokens(&s, &[
+            Token::Struct { name: "SerSet", len: 1 },
+            Token::Str("set"),
+            Token::U64(CAP_BITMASK),
+            Token::StructEnd,
+        ]);
     }
 }
