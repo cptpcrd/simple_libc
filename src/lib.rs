@@ -210,7 +210,7 @@ pub fn sethostname(name: &ffi::OsString) -> io::Result<()> {
 ///
 /// The result is null-terminated. Behavior in the case that the vector
 /// is not long enough is system-dependent.
-pub fn gethostname_raw(name_vec: &mut Vec<i8>) -> io::Result<()> {
+pub fn gethostname_raw(name_vec: &mut Vec<Char>) -> io::Result<()> {
     error::convert_nzero(unsafe {
         libc::gethostname(name_vec.as_mut_ptr(), name_vec.len())
     }, ())

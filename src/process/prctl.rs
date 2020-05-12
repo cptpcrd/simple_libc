@@ -490,7 +490,7 @@ pub fn get_keepcaps() ->  io::Result<bool> {
 
 #[inline]
 pub fn set_keepcaps(keep: bool) ->  io::Result<()> {
-    prctl(libc::PR_SET_KEEPCAPS, keep as u64, 0, 0, 0).and(Ok(()))
+    prctl(libc::PR_SET_KEEPCAPS, keep as Ulong, 0, 0, 0).and(Ok(()))
 }
 
 
@@ -501,26 +501,27 @@ pub mod ambient {
     use strum::IntoEnumIterator;
 
     use super::{Cap, CapSet};
+    use super::super::super::Ulong;
 
 
     #[inline]
     pub fn raise(cap: Cap) -> io::Result<()> {
-        super::prctl(libc::PR_CAP_AMBIENT, libc::PR_CAP_AMBIENT_RAISE as u64, cap as u64, 0, 0).and(Ok(()))
+        super::prctl(libc::PR_CAP_AMBIENT, libc::PR_CAP_AMBIENT_RAISE as Ulong, cap as Ulong, 0, 0).and(Ok(()))
     }
 
     #[inline]
     pub fn lower(cap: Cap) -> io::Result<()> {
-        super::prctl(libc::PR_CAP_AMBIENT, libc::PR_CAP_AMBIENT_LOWER as u64, cap as u64, 0, 0).and(Ok(()))
+        super::prctl(libc::PR_CAP_AMBIENT, libc::PR_CAP_AMBIENT_LOWER as Ulong, cap as Ulong, 0, 0).and(Ok(()))
     }
 
     #[inline]
     pub fn is_set(cap: Cap) -> io::Result<bool> {
-        super::prctl(libc::PR_CAP_AMBIENT, libc::PR_CAP_AMBIENT_IS_SET as u64, cap as u64, 0, 0).map(|x| x != 0)
+        super::prctl(libc::PR_CAP_AMBIENT, libc::PR_CAP_AMBIENT_IS_SET as Ulong, cap as Ulong, 0, 0).map(|x| x != 0)
     }
 
     #[inline]
     pub fn clear() -> io::Result<()> {
-        super::prctl(libc::PR_CAP_AMBIENT, libc::PR_CAP_AMBIENT_CLEAR_ALL as u64, 0, 0, 0).and(Ok(()))
+        super::prctl(libc::PR_CAP_AMBIENT, libc::PR_CAP_AMBIENT_CLEAR_ALL as Ulong, 0, 0, 0).and(Ok(()))
     }
 
     #[inline]
@@ -548,16 +549,17 @@ pub mod bounding {
     use strum::IntoEnumIterator;
 
     use super::{Cap, CapSet};
+    use super::super::super::Ulong;
 
 
     #[inline]
     pub fn drop(cap: Cap) -> io::Result<()> {
-        super::prctl(libc::PR_CAPBSET_DROP, cap as u64, 0, 0, 0).and(Ok(()))
+        super::prctl(libc::PR_CAPBSET_DROP, cap as Ulong, 0, 0, 0).and(Ok(()))
     }
 
     #[inline]
     pub fn read(cap: Cap) -> io::Result<bool> {
-        super::prctl(libc::PR_CAPBSET_READ, cap as u64, 0, 0, 0).map(|x| x != 0)
+        super::prctl(libc::PR_CAPBSET_READ, cap as Ulong, 0, 0, 0).map(|x| x != 0)
     }
 
     // Slightly easier to understand than read()
@@ -585,9 +587,11 @@ pub mod secbits {
 
     use bitflags::bitflags;
 
+    use super::super::super::Ulong;
+
 
     bitflags! {
-        pub struct SecFlags: u64 {
+        pub struct SecFlags: Ulong {
             const SECBIT_KEEP_CAPS = super::super::super::constants::SECBIT_KEEP_CAPS;
             const SECBIT_KEEP_CAPS_LOCKED = super::super::super::constants::SECBIT_KEEP_CAPS_LOCKED;
 
@@ -609,7 +613,7 @@ pub mod secbits {
 
     #[inline]
     pub fn get() -> io::Result<SecFlags> {
-        super::prctl(libc::PR_GET_SECUREBITS, 0, 0, 0, 0).map(|f| SecFlags::from_bits_truncate(f as u64))
+        super::prctl(libc::PR_GET_SECUREBITS, 0, 0, 0, 0).map(|f| SecFlags::from_bits_truncate(f as Ulong))
     }
 }
 

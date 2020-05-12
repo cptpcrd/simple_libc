@@ -3,11 +3,11 @@ use std::io;
 
 use libc;
 
-use super::super::Int;
+use super::super::{Char, Int};
 
 
-fn build_c_string_vec<U: Into<Vec<u8>> + Clone + Sized>(vals: &[U]) -> io::Result<Vec<*mut libc::c_char>> {
-    let mut c_vals: Vec<*mut libc::c_char> = Vec::with_capacity(vals.len() + 1);
+fn build_c_string_vec<U: Into<Vec<Char>> + Clone + Sized>(vals: &[U]) -> io::Result<Vec<*mut Char>> {
+    let mut c_vals: Vec<*mut Char> = Vec::with_capacity(vals.len() + 1);
 
     for val in vals {
         c_vals.push(ffi::CString::new(val.clone())?.into_raw())
@@ -39,7 +39,7 @@ pub fn execv<U: Into<Vec<u8>> + Clone + Sized>(prog: &str, argv: &[U]) -> io::Re
     let c_argv = build_c_string_vec(argv)?;
 
     unsafe {
-        libc::execv(c_prog.as_ptr(), c_argv.as_ptr() as *const *const i8);
+        libc::execv(c_prog.as_ptr(), c_argv.as_ptr() as *const *const Char);
     }
 
     cleanup_c_string_vec(c_argv);
@@ -58,7 +58,7 @@ pub fn execve<U: Into<Vec<u8>> + Clone + Sized, V: Into<Vec<u8>> + Clone + Sized
     let c_env = build_c_string_vec(env)?;
 
     unsafe {
-        libc::execve(c_prog.as_ptr(), c_argv.as_ptr() as *const *const i8, c_env.as_ptr() as *const *const i8);
+        libc::execve(c_prog.as_ptr(), c_argv.as_ptr() as *const *const Char, c_env.as_ptr() as *const *const Char);
     }
 
     cleanup_c_string_vec(c_argv);
@@ -80,7 +80,7 @@ pub fn fexecve<U: Into<Vec<u8>> + Clone + Sized, V: Into<Vec<u8>> + Clone + Size
     let c_env = build_c_string_vec(env)?;
 
     unsafe {
-        libc::fexecve(fd, c_argv.as_ptr() as *const *const i8, c_env.as_ptr() as *const *const i8);
+        libc::fexecve(fd, c_argv.as_ptr() as *const *const Char, c_env.as_ptr() as *const *const Char);
     }
 
     cleanup_c_string_vec(c_argv);
@@ -99,7 +99,7 @@ pub fn execvp<U: Into<Vec<u8>> + Clone + Sized>(prog: &str, argv: &[U]) -> io::R
     let c_argv = build_c_string_vec(argv)?;
 
     unsafe {
-        libc::execvp(c_prog.as_ptr(), c_argv.as_ptr() as *const *const i8);
+        libc::execvp(c_prog.as_ptr(), c_argv.as_ptr() as *const *const Char);
     }
 
     cleanup_c_string_vec(c_argv);

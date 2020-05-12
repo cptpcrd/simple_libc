@@ -1,17 +1,19 @@
+use super::Ulong;
+
 // This module contains all the constants that are not exposed by
 // libc and must instead be hardcoded.
 
 
 // BEGIN USED BY process/capabilities.rs
 
-pub const SECBIT_KEEP_CAPS: u64 = 0x10;
-pub const SECBIT_KEEP_CAPS_LOCKED: u64 = 0x20;
-pub const SECBIT_NOROOT: u64 = 0x1;
-pub const SECBIT_NOROOT_LOCKED: u64 = 0x2;
-pub const SECBIT_NO_SETUID_FIXUP: u64 = 0x4;
-pub const SECBIT_NO_SETUID_FIXUP_LOCKED: u64 = 0x8;
-pub const SECBIT_NO_CAP_AMBIENT_RAISE: u64 = 0x40;
-pub const SECBIT_NO_CAP_AMBIENT_RAISE_LOCKED: u64 = 0x80;
+pub const SECBIT_KEEP_CAPS: Ulong = 0x10;
+pub const SECBIT_KEEP_CAPS_LOCKED: Ulong = 0x20;
+pub const SECBIT_NOROOT: Ulong = 0x1;
+pub const SECBIT_NOROOT_LOCKED: Ulong = 0x2;
+pub const SECBIT_NO_SETUID_FIXUP: Ulong = 0x4;
+pub const SECBIT_NO_SETUID_FIXUP_LOCKED: Ulong = 0x8;
+pub const SECBIT_NO_CAP_AMBIENT_RAISE: Ulong = 0x40;
+pub const SECBIT_NO_CAP_AMBIENT_RAISE_LOCKED: Ulong = 0x80;
 
 pub const CAP_CHOWN: isize = 0;
 pub const CAP_DAC_OVERRIDE: isize = 1;

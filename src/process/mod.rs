@@ -17,7 +17,7 @@ pub mod signalfd;
 #[cfg(target_os = "linux")]
 pub mod prctl;
 
-use super::{Int, PidT, UidT, GidT};
+use super::{Char, Int, PidT, UidT, GidT};
 
 
 #[inline]
@@ -134,11 +134,11 @@ extern "C" {
 /// `pwd::Passwd::lookup_uid()`.
 pub fn getlogin() -> io::Result<ffi::OsString> {
     // Get the initial buffer length from sysconf(), setting some sane defaults/constraints.
-    let init_length = super::constrain(super::sysconf(libc::_SC_LOGIN_NAME_MAX).unwrap_or(256), 64, 1024);
+    let init_length = super::constrain(super::sysconf(libc::_SC_LOGIN_NAME_MAX).unwrap_or(256), 64, 1024) as usize;
 
     super::error::while_erange(|i| {
-        let length = (init_length * (i as i64 + 1)) as usize;
-        let mut buf: Vec<i8> = Vec::new();
+        let length = init_length * (i as usize + 1);
+        let mut buf: Vec<Char> = Vec::new();
 
         super::error::convert_nzero(unsafe {
             buf.resize(length, 0);

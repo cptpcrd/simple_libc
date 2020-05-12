@@ -6,7 +6,7 @@ use libc;
 
 use lazy_static::lazy_static;
 
-use super::Int;
+use super::{Int, Char};
 
 
 #[derive(Debug, Clone)]
@@ -59,7 +59,7 @@ impl Passwd {
 
         let init_size = super::constrain(super::sysconf(libc::_SC_GETPW_R_SIZE_MAX).unwrap_or(1024), 256, 4096) as usize;
 
-        let mut buffer: Vec<i8> = Vec::new();
+        let mut buffer: Vec<Char> = Vec::new();
 
         let mut result: *mut libc::passwd = std::ptr::null_mut();
 
