@@ -11,6 +11,7 @@ pub fn nice(incr: Int) -> io::Result<Int> {
 }
 
 
+#[derive(Debug)]
 pub enum Target {
     Process(IdT),
     ProcGroup(IdT),

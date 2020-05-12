@@ -162,6 +162,7 @@ pub fn close_fd(fd: Int) -> io::Result<()> {
 }
 
 
+#[derive(Debug)]
 pub enum KillSpec {
     /// Kill by process ID (must be > 0)
     Pid(PidT),
@@ -311,6 +312,7 @@ pub fn getdomainname() -> io::Result<ffi::OsString> {
 }
 
 
+#[derive(Debug)]
 pub struct Utsname {
     pub sysname: ffi::OsString,
     pub nodename: ffi::OsString,
