@@ -1,5 +1,7 @@
+use std::collections::HashMap;
 use std::io;
 
+use lazy_static::lazy_static;
 use libc::{
     SIGABRT, SIGALRM, SIGBUS, SIGCHLD, SIGCONT, SIGFPE, SIGHUP, SIGILL, SIGINT, SIGKILL, SIGPIPE,
     SIGPROF, SIGQUIT, SIGSEGV, SIGSTOP, SIGSYS, SIGTERM, SIGTRAP, SIGTSTP, SIGTTIN, SIGTTOU,
@@ -9,7 +11,9 @@ use libc::{
 #[cfg(target_os = "linux")]
 use libc::SIGPOLL;
 
-pub fn can_catch(sig: i32) -> bool {
+use super::Int;
+
+pub fn can_catch(sig: Int) -> bool {
     match sig {
         libc::SIGKILL => false,
         libc::SIGSTOP => false,
@@ -17,39 +21,46 @@ pub fn can_catch(sig: i32) -> bool {
     }
 }
 
-pub fn sig_from_name(name: &str) -> Option<i32> {
-    match name {
-        "SIGABRT" => Some(SIGABRT),
-        "SIGALRM" => Some(SIGALRM),
-        "SIGBUS" => Some(SIGBUS),
-        "SIGCHLD" => Some(SIGCHLD),
-        "SIGCONT" => Some(SIGCONT),
-        "SIGFPE" => Some(SIGFPE),
-        "SIGHUP" => Some(SIGHUP),
-        "SIGILL" => Some(SIGILL),
-        "SIGINT" => Some(SIGINT),
-        "SIGKILL" => Some(SIGKILL),
-        "SIGPIPE" => Some(SIGPIPE),
-        "SIGQUIT" => Some(SIGQUIT),
-        "SIGSEGV" => Some(SIGSEGV),
-        "SIGSTOP" => Some(SIGSTOP),
-        "SIGTERM" => Some(SIGTERM),
-        "SIGTSTP" => Some(SIGTSTP),
-        "SIGTTIN" => Some(SIGTTIN),
-        "SIGTTOU" => Some(SIGTTOU),
-        "SIGUSR1" => Some(SIGUSR1),
-        "SIGUSR2" => Some(SIGUSR2),
+lazy_static! {
+    static ref SIGNALS_BY_NAME: HashMap<&'static str, Int> = {
+        let mut m = HashMap::new();
+        m.insert("SIGABRT", SIGABRT);
+        m.insert("SIGALRM", SIGALRM);
+        m.insert("SIGBUS", SIGBUS);
+        m.insert("SIGCHLD", SIGCHLD);
+        m.insert("SIGCONT", SIGCONT);
+        m.insert("SIGFPE", SIGFPE);
+        m.insert("SIGHUP", SIGHUP);
+        m.insert("SIGILL", SIGILL);
+        m.insert("SIGINT", SIGINT);
+        m.insert("SIGKILL", SIGKILL);
+        m.insert("SIGPIPE", SIGPIPE);
+        m.insert("SIGPROF", SIGPROF);
+        m.insert("SIGQUIT", SIGQUIT);
+        m.insert("SIGSEGV", SIGSEGV);
+        m.insert("SIGSTOP", SIGSTOP);
+        m.insert("SIGSYS", SIGSYS);
+        m.insert("SIGTERM", SIGTERM);
+        m.insert("SIGTRAP", SIGTRAP);
+        m.insert("SIGTSTP", SIGTSTP);
+        m.insert("SIGTTIN", SIGTTIN);
+        m.insert("SIGTTOU", SIGTTOU);
+        m.insert("SIGURG", SIGURG);
+        m.insert("SIGUSR1", SIGUSR1);
+        m.insert("SIGUSR2", SIGUSR2);
+        m.insert("SIGVTALRM", SIGVTALRM);
+        m.insert("SIGXCPU", SIGXCPU);
+        m.insert("SIGXFSZ", SIGXFSZ);
+
         #[cfg(target_os = "linux")]
-        "SIGPOLL" => Some(SIGPOLL),
-        "SIGPROF" => Some(SIGPROF),
-        "SIGSYS" => Some(SIGSYS),
-        "SIGTRAP" => Some(SIGTRAP),
-        "SIGURG" => Some(SIGURG),
-        "SIGVTALRM" => Some(SIGVTALRM),
-        "SIGXCPU" => Some(SIGXCPU),
-        "SIGXFSZ" => Some(SIGXFSZ),
-        _ => None,
-    }
+        m.insert("SIGPOLL", SIGPOLL);
+
+        m
+    };
+}
+
+pub fn sig_from_name(name: &str) -> Option<Int> {
+    SIGNALS_BY_NAME.get(name).copied()
 }
 
 #[repr(transparent)]
@@ -132,6 +143,15 @@ mod tests {
         assert!(can_catch(SIGTERM));
         assert!(!can_catch(SIGKILL));
         assert!(!can_catch(SIGSTOP));
+    }
+
+    #[test]
+    fn test_sig_from_name() {
+        assert_eq!(sig_from_name("SIGALRM"), Some(SIGALRM));
+        assert_eq!(sig_from_name("SIGALRM_BAD"), None);
+
+        #[cfg(target_os = "linux")]
+        assert_eq!(sig_from_name("SIGPOLL"), Some(SIGPOLL));
     }
 
     #[test]
