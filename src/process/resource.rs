@@ -6,7 +6,10 @@ use strum_macros;
 use serde::Deserialize;
 
 use super::super::error;
-use super::super::{Int, PidT};
+use super::super::Int;
+
+#[cfg(target_os = "netbsd")]
+use super::super::constants;
 
 
 // Work around GNU not implementing the POSIX standard correctly
@@ -21,8 +24,10 @@ type RawResourceType = Int;
 #[repr(isize)]
 pub enum Resource {
     // OpenBSD is missing this for some reason
-    #[cfg(not(target_os = "openbsd"))]
+    #[cfg(not(any(target_os = "openbsd", target_os = "netbsd")))]
     AS = libc::RLIMIT_AS as isize,
+    #[cfg(target_os = "netbsd")]
+    AS = constants::RLIMIT_AS as isize,
 
     // Should be present on all POSIX systems
     CORE = libc::RLIMIT_CORE as isize,
@@ -41,8 +46,10 @@ pub enum Resource {
     RSS = libc::RLIMIT_RSS as isize,
 
     // Most of the BSDs (but not OpenBSD)
-    #[cfg(any(target_os = "freebsd", target_os = "netbsd", target_os = "dragonfly"))]
+    #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
     SBSIZE = libc::RLIMIT_SBSIZE as isize,
+    #[cfg(target_os = "netbsd")]
+    SBSIZE = constants::RLIMIT_SBSIZE as isize,
 
     // FreeBSD-specific
     #[cfg(target_os = "freebsd")]
@@ -54,7 +61,7 @@ pub enum Resource {
 
     // NetBSD-specific
     #[cfg(target_os = "netbsd")]
-    NTHR = libc::RLIMIT_NTHR as isize,
+    NTHR = constants::RLIMIT_NTHR as isize,
 
     // DragonFly BSD-specific
     #[cfg(target_os = "dragonfly")]
@@ -122,7 +129,7 @@ pub fn setrlimit(resource: Resource, new_limits: (Limit, Limit)) -> io::Result<(
 }
 
 #[cfg(target_os = "linux")]
-pub fn prlimit(pid: PidT, resource: Resource, new_limits: Option<(Limit, Limit)>) -> io::Result<(Limit, Limit)> {
+pub fn prlimit(pid: super::super::PidT, resource: Resource, new_limits: Option<(Limit, Limit)>) -> io::Result<(Limit, Limit)> {
     let mut new_rlim = libc::rlimit { rlim_cur: LIMIT_INFINITY, rlim_max: LIMIT_INFINITY };
     let mut new_rlim_ptr: *const libc::rlimit = std::ptr::null();
 

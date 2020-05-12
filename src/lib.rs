@@ -16,6 +16,7 @@ pub mod process;
 pub mod net;
 pub mod fcntl;
 mod constants;
+mod externs;
 
 #[cfg(any(
     target_os = "linux",
@@ -194,6 +195,19 @@ pub fn killpg(pgid: PidT, sig: Int) -> io::Result<()> {
 
 #[cfg(any(
     target_os = "linux",
+    target_os = "openbsd",
+    target_os = "netbsd",
+))]
+type SetHostnameSize = SizeT;
+
+#[cfg(any(
+    target_os = "freebsd",
+    target_os = "dragonfly",
+))]
+type SetHostnameSize = Int;
+
+#[cfg(any(
+    target_os = "linux",
     target_os = "freebsd",
     target_os = "openbsd",
     target_os = "netbsd",
@@ -202,7 +216,7 @@ pub fn killpg(pgid: PidT, sig: Int) -> io::Result<()> {
 pub fn sethostname(name: &ffi::OsString) -> io::Result<()> {
     let name_vec: Vec<Char> = name.clone().into_vec().iter().map(|&x| x as Char).collect();
     error::convert_nzero(unsafe {
-        libc::sethostname(name_vec.as_ptr(), name_vec.len())
+        libc::sethostname(name_vec.as_ptr(), name_vec.len() as SetHostnameSize)
     }, ())
 }
 

@@ -25,12 +25,26 @@ type PriorityWhich = libc::__priority_which_t;
 #[cfg(not(all(target_os = "linux", any(target_env = "", target_env = "gnu"))))]
 type PriorityWhich = Int;
 
+#[cfg(any(
+    target_os = "linux",
+    target_os = "openbsd",
+    target_os = "netbsd",
+))]
+type PriorityWho = IdT;
+
+#[cfg(any(
+    target_os = "freebsd",
+    target_os = "dragonfly",
+))]
+type PriorityWho = Int;
+
+
 impl Target {
-    fn unpack(&self) -> (PriorityWhich, u32) {
+    fn unpack(&self) -> (PriorityWhich, PriorityWho) {
         match self {
-            Self::Process(w) => (libc::PRIO_PROCESS as PriorityWhich, *w),
-            Self::ProcGroup(w) => (libc::PRIO_PGRP as PriorityWhich, *w),
-            Self::User(w) => (libc::PRIO_USER as PriorityWhich, *w),
+            Self::Process(w) => (libc::PRIO_PROCESS as PriorityWhich, *w as PriorityWho),
+            Self::ProcGroup(w) => (libc::PRIO_PGRP as PriorityWhich, *w as PriorityWho),
+            Self::User(w) => (libc::PRIO_USER as PriorityWhich, *w as PriorityWho),
         }
     }
 }

@@ -3,7 +3,7 @@ use std::io;
 
 use libc;
 
-use super::super::{Char, Int};
+use super::super::Char;
 
 
 fn build_c_string_vec<U: Into<Vec<u8>> + Clone + Sized>(vals: &[U]) -> io::Result<Vec<*mut Char>> {
@@ -75,7 +75,8 @@ pub fn execve<U: Into<Vec<u8>> + Clone + Sized, V: Into<Vec<u8>> + Clone + Sized
 /// a file descriptor specifying the program to be executed.
 ///
 /// If this function returns, it means an error occurred.
-pub fn fexecve<U: Into<Vec<u8>> + Clone + Sized, V: Into<Vec<u8>> + Clone + Sized>(fd: Int, argv: &[U], env: &[V]) -> io::Result<()> {
+#[cfg(target_os = "linux")]
+pub fn fexecve<U: Into<Vec<u8>> + Clone + Sized, V: Into<Vec<u8>> + Clone + Sized>(fd: super::super::Int, argv: &[U], env: &[V]) -> io::Result<()> {
     let c_argv = build_c_string_vec(argv)?;
     let c_env = build_c_string_vec(env)?;
 

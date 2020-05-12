@@ -82,6 +82,7 @@ impl From<Sigaction> for libc::sigaction {
                 SigHandler::Handler(f) => f as libc::sighandler_t,
                 SigHandler::ActionHandler(f) => f as libc::sighandler_t,
             },
+            #[cfg(target_os = "linux")]
             sa_restorer: None,
         }
     }

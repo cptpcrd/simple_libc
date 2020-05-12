@@ -1,5 +1,4 @@
 use std::io;
-use libc;
 
 use bitflags::bitflags;
 
@@ -30,6 +29,8 @@ bitflags! {
 
 cfg_if::cfg_if! {
     if #[cfg(target_os = "linux")] {
+        use libc;
+
         pub fn set_cad_enabled_status(enabled: bool) -> io::Result<()> {
             let cmd = match enabled {
                 true => libc::LINUX_REBOOT_CMD_CAD_ON,
@@ -57,18 +58,30 @@ cfg_if::cfg_if! {
         }
     }
     else if #[cfg(any(target_os = "freebsd", target_os = "openbsd", target_os = "dragonfly", target_os = "netbsd"))] {
+        use super::externs;
+        use super::constants;
+
         pub fn perform_action(action: Action, flags: ActionFlags) -> io::Result<()> {
             let mut reboot_flags = match action {
-                Action::ForceReboot => libc::RB_AUTOBOOT,
-                Action::ForceHalt => libc::RB_HALT,
-                Action::ForcePowerOff => libc::RB_HALT | libc::RB_POWERDOWN,
+                Action::ForceReboot => constants::RB_AUTOBOOT,
+                Action::ForceHalt => constants::RB_HALT,
+                Action::ForcePowerOff => constants::RB_HALT | constants::RB_POWERDOWN,
             };
 
             if flags.contains(ActionFlags::NOSYNC) {
-                reboot_flags |= libc::RB_NOSYNC;
+                reboot_flags |= constants::RB_NOSYNC;
             }
 
-            unsafe { libc::reboot(reboot_flags); }
+            #[cfg(any(target_os = "freebsd", target_os = "openbsd", target_os = "dragonfly"))]
+            unsafe { externs::reboot(reboot_flags); }
+
+            #[cfg(target_os = "netbsd")]
+            unsafe {
+                use std::ffi;
+                let empty_str = ffi::CString::new("").unwrap().into_raw();
+                externs::reboot(reboot_flags, empty_str);
+                ffi::CString::from_raw(empty_str);
+            }
 
             Err(io::Error::last_os_error())
         }

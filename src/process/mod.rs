@@ -20,6 +20,7 @@ pub mod prctl;
 pub mod namespace;
 
 use super::{Char, Int, PidT, UidT, GidT};
+use super::externs;
 
 
 #[inline]
@@ -122,10 +123,6 @@ pub fn getallgroups() -> io::Result<Vec<GidT>> {
 }
 
 
-extern "C" {
-    fn getlogin_r(buf: *mut libc::c_char, bufsize: libc::size_t) -> libc::c_int;
-}
-
 /// [NOT RECOMMENDED] Returns the username of the currently logged-in
 /// user.
 ///
@@ -144,7 +141,7 @@ pub fn getlogin() -> io::Result<ffi::OsString> {
 
         super::error::convert_nzero(unsafe {
             buf.resize(length, 0);
-            getlogin_r(buf.as_mut_ptr(), length)
+            externs::getlogin_r(buf.as_mut_ptr(), length)
         }, buf).map(|buf| {
             ffi::OsString::from_vec(buf.iter().take_while(|x| **x > 0).map(|x| *x as u8).collect())
         })
@@ -166,7 +163,7 @@ pub fn seteuid(uid: UidT) -> io::Result<()> {
 
 pub fn setreuid(ruid: UidT, euid: UidT) -> io::Result<()> {
     super::error::convert_nzero(unsafe {
-        libc::setreuid(ruid, euid)
+        externs::setreuid(ruid, euid)
     }, ())
 }
 
@@ -185,13 +182,24 @@ pub fn setegid(gid: GidT) -> io::Result<()> {
 
 pub fn setregid(rgid: GidT, egid: GidT) -> io::Result<()> {
     super::error::convert_nzero(unsafe {
-        libc::setregid(rgid, egid)
+        externs::setregid(rgid, egid)
     }, ())
 }
 
+#[cfg(target_os = "linux")]
+type SetGroupsSize = super::SizeT;
+
+#[cfg(any(
+    target_os = "openbsd",
+    target_os = "netbsd",
+    target_os = "freebsd",
+    target_os = "dragonfly",
+))]
+type SetGroupsSize = Int;
+
 pub fn setgroups(groups: &[GidT]) -> io::Result<()> {
     super::error::convert_nzero(unsafe {
-        libc::setgroups(groups.len(), groups.as_ptr())
+        libc::setgroups(groups.len() as SetGroupsSize, groups.as_ptr())
     }, ())
 }
 
@@ -203,7 +211,7 @@ cfg_if::cfg_if! {
             let mut euid: UidT = 0;
             let mut suid: UidT = 0;
 
-            unsafe { libc::getresuid(&mut ruid, &mut euid, &mut suid); }
+            unsafe { externs::getresuid(&mut ruid, &mut euid, &mut suid); }
             (ruid, euid, suid)
         }
 
@@ -212,19 +220,19 @@ cfg_if::cfg_if! {
             let mut egid: GidT = 0;
             let mut sgid: GidT = 0;
 
-            unsafe { libc::getresgid(&mut rgid, &mut egid, &mut sgid); }
+            unsafe { externs::getresgid(&mut rgid, &mut egid, &mut sgid); }
             (rgid, egid, sgid)
         }
 
         pub fn setresuid(ruid: UidT, euid: UidT, suid: UidT) -> io::Result<()> {
             super::error::convert_nzero(unsafe {
-                libc::setresuid(ruid, euid, suid)
+                externs::setresuid(ruid, euid, suid)
             }, ())
         }
 
         pub fn setresgid(rgid: GidT, egid: GidT, sgid: GidT) -> io::Result<()> {
             super::error::convert_nzero(unsafe {
-                libc::setresgid(rgid, egid, sgid)
+                externs::setresgid(rgid, egid, sgid)
             }, ())
         }
 
