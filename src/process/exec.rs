@@ -6,7 +6,7 @@ use libc;
 use super::super::{Char, Int};
 
 
-fn build_c_string_vec<U: Into<Vec<Char>> + Clone + Sized>(vals: &[U]) -> io::Result<Vec<*mut Char>> {
+fn build_c_string_vec<U: Into<Vec<u8>> + Clone + Sized>(vals: &[U]) -> io::Result<Vec<*mut Char>> {
     let mut c_vals: Vec<*mut Char> = Vec::with_capacity(vals.len() + 1);
 
     for val in vals {
