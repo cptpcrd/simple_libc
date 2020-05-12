@@ -23,7 +23,6 @@ pub const SIGTTIN: i32 = libc::SIGTTIN;
 pub const SIGTTOU: i32 = libc::SIGTTOU;
 pub const SIGUSR1: i32 = libc::SIGUSR1;
 pub const SIGUSR2: i32 = libc::SIGUSR2;
-pub const SIGPOLL: i32 = libc::SIGPOLL;
 pub const SIGPROF: i32 = libc::SIGPROF;
 pub const SIGSYS: i32 = libc::SIGSYS;
 pub const SIGTRAP: i32 = libc::SIGTRAP;
@@ -31,6 +30,9 @@ pub const SIGURG: i32 = libc::SIGURG;
 pub const SIGVTALRM: i32 = libc::SIGVTALRM;
 pub const SIGXCPU: i32 = libc::SIGXCPU;
 pub const SIGXFSZ: i32 = libc::SIGXFSZ;
+
+#[cfg(target_os = "linux")]
+pub const SIGPOLL: i32 = libc::SIGPOLL;
 
 pub fn can_catch(sig: i32) -> bool {
     match sig {
@@ -62,6 +64,7 @@ pub fn sig_from_name(name: &str) -> Option<i32> {
         "SIGTTOU" => Some(SIGTTOU),
         "SIGUSR1" => Some(SIGUSR1),
         "SIGUSR2" => Some(SIGUSR2),
+        #[cfg(target_os = "linux")]
         "SIGPOLL" => Some(SIGPOLL),
         "SIGPROF" => Some(SIGPROF),
         "SIGSYS" => Some(SIGSYS),
