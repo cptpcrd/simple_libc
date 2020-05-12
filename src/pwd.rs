@@ -4,7 +4,6 @@ use std::os::unix::ffi::OsStringExt;
 use std::sync;
 
 use lazy_static::lazy_static;
-use libc;
 
 use super::{Char, Int};
 
@@ -36,7 +35,7 @@ impl Passwd {
         loop {
             super::error::set_errno_success();
             let passwd: *mut libc::passwd = unsafe { libc::getpwent() };
-            if passwd == std::ptr::null_mut() {
+            if passwd.is_null() {
                 break;
             }
 
@@ -87,7 +86,7 @@ impl Passwd {
                 let ret = getpwfunc(&t, &mut passwd, buffer.as_mut_ptr(), buflen, &mut result);
 
                 super::error::convert_nzero_ret(ret).and_then(|_| {
-                    if result == std::ptr::null_mut() {
+                    if result.is_null() {
                         return Ok(None);
                     }
 

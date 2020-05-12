@@ -4,7 +4,6 @@ use std::os::unix::io::AsRawFd;
 use std::path::Path;
 
 use bitflags::bitflags;
-use libc;
 
 bitflags! {
     pub struct ExtraUnshareFlags: i32 {

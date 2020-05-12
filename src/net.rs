@@ -2,8 +2,6 @@ use std::io;
 use std::os::unix;
 use std::os::unix::io::AsRawFd;
 
-use libc;
-
 cfg_if::cfg_if! {
     if #[cfg(any(target_os = "linux", target_os = "openbsd"))] {
         // Linux and OpenBSD use almost exactly the same interface.

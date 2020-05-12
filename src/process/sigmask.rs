@@ -1,7 +1,5 @@
 use std::io;
 
-use libc;
-
 use super::super::signal::Sigset;
 use super::super::Int;
 

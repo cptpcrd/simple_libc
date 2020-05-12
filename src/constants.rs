@@ -64,7 +64,7 @@ cfg_if! {
 
         // WARNING: Updating to newer versions may require significant
         // code changes to process/capabilities.rs
-        pub const _LINUX_CAPABILITY_VERSION_3: u32 = 0x20080522;
+        pub const _LINUX_CAPABILITY_VERSION_3: u32 = 0x2008_0522;
 
         // END USED BY process/capabilities.rs
     }

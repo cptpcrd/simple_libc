@@ -1,4 +1,3 @@
-use libc;
 use std::ffi;
 use std::io;
 use std::os::unix::ffi::OsStringExt;
@@ -33,7 +32,7 @@ impl Group {
         loop {
             super::error::set_errno_success();
             let group: *mut libc::group = unsafe { libc::getgrent() };
-            if group == std::ptr::null_mut() {
+            if group.is_null() {
                 break;
             }
 
@@ -78,7 +77,7 @@ impl Group {
                 let ret = getgrfunc(&t, &mut group, buffer.as_mut_ptr(), buflen, &mut result);
 
                 super::error::convert_nzero_ret(ret).and_then(|_| {
-                    if result == std::ptr::null_mut() {
+                    if result.is_null() {
                         return Ok(None);
                     }
 
@@ -94,7 +93,7 @@ impl Group {
 
         for i in 0.. {
             let member: *mut libc::c_char = *group.gr_mem.offset(i);
-            if member == std::ptr::null_mut() {
+            if member.is_null() {
                 break;
             }
 

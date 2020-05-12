@@ -1,7 +1,5 @@
 use std::io;
 
-use libc;
-
 use libc::{
     SIGABRT, SIGALRM, SIGBUS, SIGCHLD, SIGCONT, SIGFPE, SIGHUP, SIGILL, SIGINT, SIGKILL, SIGPIPE,
     SIGPROF, SIGQUIT, SIGSEGV, SIGSTOP, SIGSYS, SIGTERM, SIGTRAP, SIGTSTP, SIGTTIN, SIGTTOU,
@@ -69,13 +67,13 @@ impl Sigset {
     pub fn empty() -> Sigset {
         let mut s = Self::unsafe_new();
         s.clear();
-        return s;
+        s
     }
 
     pub fn full() -> Sigset {
         let mut s = Self::unsafe_new();
         s.fill();
-        return s;
+        s
     }
 
     #[inline]
@@ -106,7 +104,7 @@ impl Sigset {
     }
 
     #[inline]
-    pub fn to_raw_set(self) -> libc::sigset_t {
+    pub fn into_raw_set(self) -> libc::sigset_t {
         self.set
     }
 }

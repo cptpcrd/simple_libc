@@ -1,4 +1,3 @@
-use libc;
 use std::io;
 
 use super::Int;
@@ -111,35 +110,35 @@ pub fn is_erange(err: &io::Error) -> bool {
     if let Some(libc::ERANGE) = err.raw_os_error() {
         return true;
     }
-    return false;
+    false
 }
 
 pub fn is_eintr(err: &io::Error) -> bool {
     if let Some(libc::EINTR) = err.raw_os_error() {
         return true;
     }
-    return false;
+    false
 }
 
 pub fn is_eagain(err: &io::Error) -> bool {
     if let Some(libc::EAGAIN) = err.raw_os_error() {
         return true;
     }
-    return false;
+    false
 }
 
 pub fn is_einval(err: &io::Error) -> bool {
     if let Some(libc::EINVAL) = err.raw_os_error() {
         return true;
     }
-    return false;
+    false
 }
 
 pub fn is_ewouldblock(err: &io::Error) -> bool {
     if let Some(libc::EWOULDBLOCK) = err.raw_os_error() {
         return true;
     }
-    return false;
+    false
 }
 
 pub fn while_erange<F: FnMut(i32) -> io::Result<T>, T>(

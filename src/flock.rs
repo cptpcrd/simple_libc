@@ -1,4 +1,3 @@
-use libc;
 use std::io;
 
 use super::Int;
@@ -8,12 +7,11 @@ pub fn flock_raw(fd: Int, op: i32) -> io::Result<()> {
 }
 
 pub fn lock(fd: Int, exclusive: bool, block: bool) -> io::Result<()> {
-    let mut op;
-    if exclusive {
-        op = libc::LOCK_EX;
+    let mut op = if exclusive {
+        libc::LOCK_EX
     } else {
-        op = libc::LOCK_SH;
-    }
+        libc::LOCK_SH
+    };
 
     if !block {
         op |= libc::LOCK_NB;

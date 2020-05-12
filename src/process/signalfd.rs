@@ -1,8 +1,6 @@
 use std::io;
 use std::os::unix::io::AsRawFd;
 
-use libc;
-
 use super::super::error;
 use super::super::signal::Sigset;
 use super::super::Int;
@@ -14,14 +12,14 @@ pub struct SignalFd {
 
 impl SignalFd {
     pub fn new(mask: &Sigset, flags: Int) -> io::Result<SignalFd> {
-        return error::convert_ret(unsafe { libc::signalfd(-1, &mask.raw_set(), flags) })
-            .map(|fd| SignalFd { fd });
+        error::convert_ret(unsafe { libc::signalfd(-1, &mask.raw_set(), flags) })
+            .map(|fd| SignalFd { fd })
     }
 
     pub fn read_one(&self) -> io::Result<Siginfo> {
         let mut siginfo: libc::signalfd_siginfo = unsafe { std::mem::zeroed() };
 
-        return error::convert_neg(
+        error::convert_neg(
             unsafe {
                 libc::read(
                     self.fd,
@@ -31,7 +29,7 @@ impl SignalFd {
             },
             &siginfo,
         )
-        .map(Siginfo::from);
+        .map(Siginfo::from)
     }
 
     pub fn read(&self, siginfos: &mut [Siginfo]) -> io::Result<usize> {
@@ -44,7 +42,7 @@ impl SignalFd {
             raw_siginfos.set_len(length);
         }
 
-        return error::convert_neg_ret(unsafe {
+        error::convert_neg_ret(unsafe {
             libc::read(
                 self.fd,
                 raw_siginfos.as_mut_ptr() as *mut libc::c_void,
@@ -57,13 +55,13 @@ impl SignalFd {
                 siginfos[i] = Siginfo::from(raw_siginfo);
             }
             Ok(n)
-        });
+        })
     }
 }
 
 impl AsRawFd for SignalFd {
     fn as_raw_fd(&self) -> libc::c_int {
-        return self.fd;
+        self.fd
     }
 }
 

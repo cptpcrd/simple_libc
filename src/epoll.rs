@@ -3,7 +3,6 @@ use std::io;
 use std::time;
 
 use bitflags::bitflags;
-use libc;
 
 use super::Int;
 
@@ -93,7 +92,7 @@ impl Epoll {
     pub fn new(flags: EpollFlags) -> io::Result<Epoll> {
         let fd = unsafe { libc::epoll_create1(flags.bits) };
 
-        super::error::convert_neg_ret(fd).map(|fd| Epoll { fd: fd })
+        super::error::convert_neg_ret(fd).map(|fd| Epoll { fd })
     }
 
     #[inline]
@@ -183,7 +182,7 @@ impl Epoll {
             for i in 0..(res as usize) {
                 events[i] = Event::from(ep_events[i]);
             }
-            return res;
+            res
         })
     }
 

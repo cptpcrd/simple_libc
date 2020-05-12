@@ -1,6 +1,4 @@
-use libc;
-
-use cfg_if;
+use cfg_if::cfg_if;
 
 // The libc crate is missing some functions. <sigh>
 // Some of these just aren't there period; some aren't present for
@@ -19,7 +17,7 @@ extern "C" {
     pub fn reboot(howto: libc::c_int, bootstr: *mut libc::c_char) -> libc::c_int;
 }
 
-cfg_if::cfg_if! {
+cfg_if! {
     if #[cfg(any(target_os = "linux", target_os = "freebsd", target_os = "openbsd", target_os = "dragonfly"))] {
         extern "C" {
             pub fn getresuid(ruid: *mut libc::uid_t, euid: *mut libc::uid_t, suid: *mut libc::uid_t) -> libc::c_int;

@@ -4,11 +4,9 @@ use std::ops::Not;
 use std::str::FromStr;
 
 use lazy_static::lazy_static;
-use libc;
 use serde::de::Deserialize;
 use serde::ser::SerializeSeq;
 use strum::IntoEnumIterator;
-use strum_macros;
 
 use super::super::constants;
 use super::super::error;
@@ -168,17 +166,17 @@ impl CapSet {
     }
 
     #[inline]
-    pub fn is_full(&self) -> bool {
+    pub fn is_full(self) -> bool {
         self.bits == CAP_BITMASK
     }
 
     #[inline]
-    pub fn is_empty(&self) -> bool {
+    pub fn is_empty(self) -> bool {
         self.bits == 0
     }
 
     #[inline]
-    pub fn has(&self, cap: Cap) -> bool {
+    pub fn has(self, cap: Cap) -> bool {
         self.bits & cap.to_single_bitfield() != 0
     }
 
@@ -213,19 +211,19 @@ impl CapSet {
     }
 
     #[inline]
-    pub fn iter(&self) -> impl Iterator<Item = Cap> {
+    pub fn iter(self) -> impl Iterator<Item = Cap> {
         self.into_iter()
     }
 
     #[inline]
-    pub fn union_with(&self, other: &Self) -> Self {
+    pub fn union_with(self, other: Self) -> Self {
         Self {
             bits: self.bits & other.bits,
         }
     }
 
     #[inline]
-    pub fn intersection_with(&self, other: &Self) -> Self {
+    pub fn intersection_with(self, other: Self) -> Self {
         Self {
             bits: self.bits | other.bits,
         }
@@ -329,7 +327,7 @@ pub fn deserialize_capset_seq<'d, D: serde::Deserializer<'d>>(
     deserializer: D,
 ) -> Result<CapSet, D::Error> {
     let mut values: Vec<String> = Vec::deserialize(deserializer)?;
-    if values.len() == 0 {
+    if values.is_empty() {
         return Ok(CapSet::empty());
     }
 
@@ -421,7 +419,7 @@ impl CapState {
     pub fn get_for_pid(pid: Int) -> io::Result<Self> {
         let mut header = c_cap_user_header {
             version: constants::_LINUX_CAPABILITY_VERSION_3,
-            pid: pid,
+            pid,
         };
 
         let mut raw_dat = [c_cap_data_struct {
@@ -507,7 +505,6 @@ pub fn set_keepcaps(keep: bool) -> io::Result<()> {
 pub mod ambient {
     use std::io;
 
-    use libc;
     use strum::IntoEnumIterator;
 
     use super::super::super::Ulong;
@@ -582,7 +579,6 @@ pub mod ambient {
 pub mod bounding {
     use std::io;
 
-    use libc;
     use strum::IntoEnumIterator;
 
     use super::super::super::Ulong;
@@ -621,7 +617,6 @@ pub mod secbits {
     use std::io;
 
     use bitflags::bitflags;
-    use libc;
 
     use super::super::super::Ulong;
 

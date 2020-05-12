@@ -1,7 +1,6 @@
 use std::io;
 
 use bitflags::bitflags;
-use libc;
 
 use super::super::signal::Sigset;
 use super::super::Int;
@@ -95,11 +94,10 @@ impl From<libc::sigaction> for Sigaction {
             handler: match act.sa_sigaction {
                 libc::SIG_DFL => SigHandler::Default,
                 libc::SIG_IGN => SigHandler::Ignore,
-                _ => match act.sa_flags & libc::SA_SIGINFO != 0 {
-                    true => {
-                        SigHandler::ActionHandler(unsafe { std::mem::transmute(act.sa_sigaction) })
-                    }
-                    false => SigHandler::Handler(unsafe { std::mem::transmute(act.sa_sigaction) }),
+                _ => if act.sa_flags & libc::SA_SIGINFO != 0 {
+                    SigHandler::ActionHandler(unsafe { std::mem::transmute(act.sa_sigaction) })
+                } else {
+                    SigHandler::Handler(unsafe { std::mem::transmute(act.sa_sigaction) })
                 },
             },
         }
@@ -115,7 +113,7 @@ fn sigaction(sig: Int, act: Option<Sigaction>) -> io::Result<Sigaction> {
     }
 
     super::super::error::convert(unsafe { libc::sigaction(sig, newact, &mut oldact) }, oldact)
-        .map(|oldact| Sigaction::from(oldact))
+        .map(Sigaction::from)
 }
 
 pub fn sig_getaction(sig: Int) -> io::Result<Sigaction> {

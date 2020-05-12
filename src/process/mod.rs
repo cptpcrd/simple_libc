@@ -4,8 +4,6 @@ use std::os::unix::ffi::OsStrExt;
 use std::os::unix::ffi::OsStringExt;
 use std::path::Path;
 
-use libc;
-
 pub mod exec;
 pub mod priority;
 pub mod resource;

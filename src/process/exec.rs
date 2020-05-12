@@ -1,8 +1,6 @@
 use std::ffi;
 use std::io;
 
-use libc;
-
 use super::super::Char;
 
 fn build_c_string_vec<U: Into<Vec<u8>> + Clone + Sized>(vals: &[U]) -> io::Result<Vec<*mut Char>> {
@@ -19,7 +17,7 @@ fn build_c_string_vec<U: Into<Vec<u8>> + Clone + Sized>(vals: &[U]) -> io::Resul
 
 fn cleanup_c_string_vec(c_vals: Vec<*mut libc::c_char>) {
     for val in c_vals {
-        if val != std::ptr::null_mut() {
+        if !val.is_null() {
             unsafe {
                 let _ = ffi::CString::from_raw(val);
             }
@@ -42,7 +40,7 @@ pub fn execv<U: Into<Vec<u8>> + Clone + Sized>(prog: &str, argv: &[U]) -> io::Re
 
     cleanup_c_string_vec(c_argv);
 
-    Err(io::Error::last_os_error().into())
+    Err(io::Error::last_os_error())
 }
 
 /// Attempts to execute the given program with the given arguments and the given
@@ -70,7 +68,7 @@ pub fn execve<U: Into<Vec<u8>> + Clone + Sized, V: Into<Vec<u8>> + Clone + Sized
     cleanup_c_string_vec(c_argv);
     cleanup_c_string_vec(c_env);
 
-    Err(io::Error::last_os_error().into())
+    Err(io::Error::last_os_error())
 }
 
 /// Attempts to execute the given program with the given arguments and the given
@@ -101,7 +99,7 @@ pub fn fexecve<U: Into<Vec<u8>> + Clone + Sized, V: Into<Vec<u8>> + Clone + Size
     cleanup_c_string_vec(c_argv);
     cleanup_c_string_vec(c_env);
 
-    Err(io::Error::last_os_error().into())
+    Err(io::Error::last_os_error())
 }
 
 /// Attempts to execute the given program with the given arguments, replacing the
@@ -119,5 +117,5 @@ pub fn execvp<U: Into<Vec<u8>> + Clone + Sized>(prog: &str, argv: &[U]) -> io::R
 
     cleanup_c_string_vec(c_argv);
 
-    Err(io::Error::last_os_error().into())
+    Err(io::Error::last_os_error())
 }

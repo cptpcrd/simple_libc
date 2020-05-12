@@ -1,4 +1,3 @@
-use libc;
 use std::io;
 
 use super::error;
@@ -11,45 +10,43 @@ macro_rules! fcntl_raw {
 }
 
 #[inline]
-pub fn dupfd(fd: Int, min_fd: i32) -> io::Result<i32> {
+pub fn dupfd(fd: Int, min_fd: Int) -> io::Result<Int> {
     unsafe { fcntl_raw!(fd, libc::F_DUPFD, min_fd) }
 }
 
 #[inline]
-pub fn dupfd_cloexec(fd: Int, min_fd: i32) -> io::Result<i32> {
+pub fn dupfd_cloexec(fd: Int, min_fd: Int) -> io::Result<Int> {
     unsafe { fcntl_raw!(fd, libc::F_DUPFD_CLOEXEC, min_fd) }
 }
 
 #[inline]
-pub fn getflags(fd: Int) -> io::Result<i32> {
+pub fn getflags(fd: Int) -> io::Result<Int> {
     unsafe { fcntl_raw!(fd, libc::F_GETFD) }
 }
 
 #[inline]
-pub fn setflags(fd: Int, flags: i32) -> io::Result<()> {
+pub fn setflags(fd: Int, flags: Int) -> io::Result<()> {
     unsafe { fcntl_raw!(fd, libc::F_SETFD, flags)? };
     Ok(())
 }
 
 pub fn is_inheritable(fd: Int) -> io::Result<bool> {
-    return Ok(getflags(fd)? & libc::FD_CLOEXEC == 0);
+    Ok(getflags(fd)? & libc::FD_CLOEXEC == 0)
 }
 
 pub fn set_inheritable(fd: Int, inheritable: bool) -> io::Result<()> {
     let mut flags = getflags(fd)?;
 
+    let currently_inheritable = flags & libc::FD_CLOEXEC != 0;
+    
+    if inheritable == currently_inheritable {
+        return Ok(());
+    }
+
     if inheritable {
-        if flags & libc::FD_CLOEXEC != 0 {
-            flags -= libc::FD_CLOEXEC;
-        } else {
-            return Ok(());
-        }
+        flags &= !(libc::FD_CLOEXEC as Int);
     } else {
-        if flags & libc::FD_CLOEXEC != 0 {
-            return Ok(());
-        } else {
-            flags |= libc::FD_CLOEXEC;
-        }
+        flags |= libc::FD_CLOEXEC;
     }
 
     setflags(fd, flags)

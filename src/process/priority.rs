@@ -1,7 +1,5 @@
 use std::io;
 
-use libc;
-
 use super::super::error;
 use super::super::{IdT, Int};
 

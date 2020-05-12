@@ -1,7 +1,5 @@
 use std::io;
 
-use libc;
-
 use bitflags::bitflags;
 
 use super::super::{Int, PidT};

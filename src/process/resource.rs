@@ -1,9 +1,7 @@
 use std::io;
 use std::str::FromStr;
 
-use libc;
 use serde::Deserialize;
-use strum_macros;
 
 use super::super::error;
 use super::super::Int;
@@ -148,7 +146,7 @@ pub fn getrlimit(resource: Resource) -> io::Result<(Limit, Limit)> {
 
     error::convert_nzero(
         unsafe {
-            libc::getrlimit(resource as RawResourceType, &mut rlim);
+            libc::getrlimit(resource as RawResourceType, &mut rlim)
         },
         rlim,
     )
@@ -163,7 +161,7 @@ pub fn setrlimit(resource: Resource, new_limits: (Limit, Limit)) -> io::Result<(
 
     error::convert_nzero(
         unsafe {
-            libc::setrlimit(resource as RawResourceType, &rlim);
+            libc::setrlimit(resource as RawResourceType, &rlim)
         },
         (),
     )
@@ -199,7 +197,7 @@ pub fn prlimit(
                 resource as RawResourceType,
                 new_rlim_ptr,
                 &mut old_rlim,
-            );
+            )
         },
         old_rlim,
     )

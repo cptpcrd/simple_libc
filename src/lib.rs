@@ -5,8 +5,6 @@ use std::io;
 use std::os::unix::ffi::OsStringExt;
 use std::os::unix::io::FromRawFd;
 
-use libc;
-
 mod constants;
 pub mod error;
 mod externs;
@@ -238,11 +236,9 @@ pub fn gethostname() -> io::Result<ffi::OsString> {
             }
             Err(e) => {
                 if let Some(raw_err) = e.raw_os_error() {
-                    if raw_err == libc::EINVAL || raw_err == libc::ENAMETOOLONG {
-                        if name_vec.len() < orig_size * 10 {
-                            name_vec.resize(name_vec.len() * 2, 0);
-                            continue;
-                        }
+                    if (raw_err == libc::EINVAL || raw_err == libc::ENAMETOOLONG) && name_vec.len() < orig_size * 10 {
+                        name_vec.resize(name_vec.len() * 2, 0);
+                        continue;
                     }
                 }
 
@@ -294,11 +290,9 @@ pub fn getdomainname() -> io::Result<ffi::OsString> {
                 return Ok(name);
             }
             Err(e) => {
-                if error::is_einval(&e) {
-                    if name_vec.len() < orig_size * 10 {
-                        name_vec.resize(name_vec.len() * 2, 0);
-                        continue;
-                    }
+                if error::is_einval(&e) && name_vec.len() < orig_size * 10 {
+                    name_vec.resize(name_vec.len() * 2, 0);
+                    continue;
                 }
 
                 return Err(e);
