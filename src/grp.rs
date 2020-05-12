@@ -5,13 +5,13 @@ use std::sync;
 
 use lazy_static::lazy_static;
 
-use super::{Char, Int};
+use super::{Char, Int, GidT};
 
 #[derive(Debug, Clone)]
 pub struct Group {
     pub name: ffi::OsString,
     pub passwd: ffi::OsString,
-    pub gid: u32,
+    pub gid: GidT,
     pub members: Vec<ffi::OsString>,
 }
 
@@ -128,10 +128,10 @@ impl Group {
         )
     }
 
-    pub fn lookup_gid(gid: u32) -> io::Result<Option<Self>> {
+    pub fn lookup_gid(gid: GidT) -> io::Result<Option<Self>> {
         Self::lookup(
             &gid,
-            |gid: &u32,
+            |gid: &GidT,
              grp: *mut libc::group,
              buf: *mut libc::c_char,
              buflen: libc::size_t,
