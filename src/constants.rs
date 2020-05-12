@@ -1,9 +1,7 @@
 use cfg_if::cfg_if;
 
-
 // This module contains all the constants that are not exposed by
 // libc and must instead be hardcoded.
-
 
 cfg_if! {
     if #[cfg(target_os = "linux")] {

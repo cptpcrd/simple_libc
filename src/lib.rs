@@ -2,21 +2,21 @@ use std::cmp;
 use std::ffi;
 use std::fs;
 use std::io;
-use std::os::unix::io::FromRawFd;
 use std::os::unix::ffi::OsStringExt;
+use std::os::unix::io::FromRawFd;
 
 use libc;
 
-pub mod signal;
-pub mod pwd;
-pub mod grp;
+mod constants;
 pub mod error;
+mod externs;
+pub mod fcntl;
+pub mod grp;
+pub mod net;
 pub mod power;
 pub mod process;
-pub mod net;
-pub mod fcntl;
-mod constants;
-mod externs;
+pub mod pwd;
+pub mod signal;
 
 #[cfg(any(
     target_os = "linux",
@@ -29,7 +29,6 @@ pub mod flock;
 
 #[cfg(target_os = "linux")]
 pub mod epoll;
-
 
 pub type Short = libc::c_short;
 pub type Ushort = libc::c_ushort;
@@ -62,7 +61,6 @@ pub fn sync() {
     unsafe { libc::sync() };
 }
 
-
 /// Get the value of runtime constants/limits.
 ///
 /// Given a "name" (one of the `libc::_SC_*` constants),
@@ -75,9 +73,7 @@ pub fn sync() {
 /// user.
 pub fn sysconf_raw(name: Int) -> io::Result<Long> {
     error::set_errno_success();
-    error::convert_if_errno_ret(unsafe {
-        libc::sysconf(name)
-    })
+    error::convert_if_errno_ret(unsafe { libc::sysconf(name) })
 }
 
 /// Get the value of runtime constants/limits.
@@ -97,11 +93,10 @@ pub fn sysconf(name: Int) -> Option<Long> {
                 return None;
             }
             Some(ret)
-        },
+        }
         Err(_) => None,
     }
 }
-
 
 /// Constrain a value to a particular range.
 ///
@@ -115,13 +110,10 @@ pub fn constrain<T: Ord + Eq>(val: T, min: T, max: T) -> T {
     cmp::min(cmp::max(val, min), max)
 }
 
-
 pub fn pipe_raw() -> io::Result<(Int, Int)> {
     let mut fds: [Int; 2] = [0; 2];
 
-    error::convert(unsafe {
-        libc::pipe(fds.as_mut_ptr())
-    }, fds).map(|fds| (fds[0], fds[1]))
+    error::convert(unsafe { libc::pipe(fds.as_mut_ptr()) }, fds).map(|fds| (fds[0], fds[1]))
 }
 
 pub fn pipe() -> io::Result<(fs::File, fs::File)> {
@@ -139,9 +131,7 @@ pub fn pipe() -> io::Result<(fs::File, fs::File)> {
 pub fn pipe2_raw(flags: Int) -> io::Result<(Int, Int)> {
     let mut fds: [Int; 2] = [0; 2];
 
-    error::convert(unsafe {
-        libc::pipe2(fds.as_mut_ptr(), flags)
-    }, fds).map(|fds| (fds[0], fds[1]))
+    error::convert(unsafe { libc::pipe2(fds.as_mut_ptr(), flags) }, fds).map(|fds| (fds[0], fds[1]))
 }
 
 #[cfg(any(
@@ -156,12 +146,10 @@ pub fn pipe2(flags: Int) -> io::Result<(fs::File, fs::File)> {
     unsafe { Ok((fs::File::from_raw_fd(r), fs::File::from_raw_fd(w))) }
 }
 
-
 /// Closes the given file descriptor.
 pub fn close_fd(fd: Int) -> io::Result<()> {
     error::convert_nzero(unsafe { libc::close(fd) }, ())
 }
-
 
 #[derive(Debug)]
 pub enum KillSpec {
@@ -192,18 +180,10 @@ pub fn killpg(pgid: PidT, sig: Int) -> io::Result<()> {
     error::convert_nzero(unsafe { libc::killpg(pgid, sig) }, ())
 }
 
-
-#[cfg(any(
-    target_os = "linux",
-    target_os = "openbsd",
-    target_os = "netbsd",
-))]
+#[cfg(any(target_os = "linux", target_os = "openbsd", target_os = "netbsd"))]
 type SetHostnameSize = SizeT;
 
-#[cfg(any(
-    target_os = "freebsd",
-    target_os = "dragonfly",
-))]
+#[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
 type SetHostnameSize = Int;
 
 #[cfg(any(
@@ -215,20 +195,21 @@ type SetHostnameSize = Int;
 ))]
 pub fn sethostname(name: &ffi::OsString) -> io::Result<()> {
     let name_vec: Vec<Char> = name.clone().into_vec().iter().map(|&x| x as Char).collect();
-    error::convert_nzero(unsafe {
-        libc::sethostname(name_vec.as_ptr(), name_vec.len() as SetHostnameSize)
-    }, ())
+    error::convert_nzero(
+        unsafe { libc::sethostname(name_vec.as_ptr(), name_vec.len() as SetHostnameSize) },
+        (),
+    )
 }
-
 
 /// Attempts to read the current system hostname into the given vector.
 ///
 /// The result is null-terminated. Behavior in the case that the vector
 /// is not long enough is system-dependent.
 pub fn gethostname_raw(name_vec: &mut Vec<Char>) -> io::Result<()> {
-    error::convert_nzero(unsafe {
-        libc::gethostname(name_vec.as_mut_ptr(), name_vec.len())
-    }, ())
+    error::convert_nzero(
+        unsafe { libc::gethostname(name_vec.as_mut_ptr(), name_vec.len()) },
+        (),
+    )
 }
 
 /// Attempts to determine the current system hostname.
@@ -254,7 +235,7 @@ pub fn gethostname() -> io::Result<ffi::OsString> {
                 }
 
                 return Ok(name);
-            },
+            }
             Err(e) => {
                 if let Some(raw_err) = e.raw_os_error() {
                     if raw_err == libc::EINVAL || raw_err == libc::ENAMETOOLONG {
@@ -271,20 +252,21 @@ pub fn gethostname() -> io::Result<ffi::OsString> {
     }
 }
 
-
 #[cfg(target_os = "linux")]
 pub fn setdomainname(name: &ffi::OsString) -> io::Result<()> {
     let name_vec: Vec<Char> = name.clone().into_vec().iter().map(|&x| x as Char).collect();
-    error::convert_nzero(unsafe {
-        libc::setdomainname(name_vec.as_ptr(), name_vec.len())
-    }, ())
+    error::convert_nzero(
+        unsafe { libc::setdomainname(name_vec.as_ptr(), name_vec.len()) },
+        (),
+    )
 }
 
 #[cfg(target_os = "linux")]
 pub fn getdomainname_raw(name_vec: &mut Vec<Char>) -> io::Result<()> {
-    error::convert_nzero(unsafe {
-        libc::getdomainname(name_vec.as_mut_ptr(), name_vec.len())
-    }, ())
+    error::convert_nzero(
+        unsafe { libc::getdomainname(name_vec.as_mut_ptr(), name_vec.len()) },
+        (),
+    )
 }
 
 #[cfg(target_os = "linux")]
@@ -310,7 +292,7 @@ pub fn getdomainname() -> io::Result<ffi::OsString> {
                 }
 
                 return Ok(name);
-            },
+            }
             Err(e) => {
                 if error::is_einval(&e) {
                     if name_vec.len() < orig_size * 10 {
@@ -320,11 +302,10 @@ pub fn getdomainname() -> io::Result<ffi::OsString> {
                 }
 
                 return Err(e);
-            },
+            }
         };
     }
 }
-
 
 #[derive(Debug)]
 pub struct Utsname {
@@ -340,13 +321,9 @@ pub struct Utsname {
 /// Returns a `Utsname` struct containing information about the
 /// current system.
 pub fn uname() -> io::Result<Utsname> {
-    let mut utsname = unsafe {
-        std::mem::zeroed::<libc::utsname>()
-    };
+    let mut utsname = unsafe { std::mem::zeroed::<libc::utsname>() };
 
-    error::convert_nzero(unsafe {
-        libc::uname(&mut utsname)
-    }, ())?;
+    error::convert_nzero(unsafe { libc::uname(&mut utsname) }, ())?;
 
     Ok(Utsname {
         sysname: bytes_to_osstring(utsname.sysname.iter()),
@@ -359,10 +336,15 @@ pub fn uname() -> io::Result<Utsname> {
     })
 }
 
-
 /// This takes a type that implements IntoIterator<Item=&Char> and constructs an OsString.
-fn bytes_to_osstring<'a, T: IntoIterator<Item=&'a Char>>(bytes: T) -> ffi::OsString {
-    ffi::OsString::from_vec(bytes.into_iter().take_while(|x| **x > 0).map(|x| *x as u8).collect())
+fn bytes_to_osstring<'a, T: IntoIterator<Item = &'a Char>>(bytes: T) -> ffi::OsString {
+    ffi::OsString::from_vec(
+        bytes
+            .into_iter()
+            .take_while(|x| **x > 0)
+            .map(|x| *x as u8)
+            .collect(),
+    )
 }
 
 #[cfg(test)]

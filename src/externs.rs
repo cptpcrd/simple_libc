@@ -19,7 +19,6 @@ extern "C" {
     pub fn reboot(howto: libc::c_int, bootstr: *mut libc::c_char) -> libc::c_int;
 }
 
-
 cfg_if::cfg_if! {
     if #[cfg(any(target_os = "linux", target_os = "freebsd", target_os = "openbsd", target_os = "dragonfly"))] {
         extern "C" {

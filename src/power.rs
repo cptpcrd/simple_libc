@@ -2,7 +2,6 @@ use std::io;
 
 use bitflags::bitflags;
 
-
 #[derive(Debug)]
 pub enum Action {
     /// Reboot the system
@@ -25,7 +24,6 @@ bitflags! {
         const NOSYNC = 0b00001;
     }
 }
-
 
 cfg_if::cfg_if! {
     if #[cfg(target_os = "linux")] {

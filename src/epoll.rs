@@ -1,9 +1,9 @@
+use std::convert::TryInto;
 use std::io;
 use std::time;
-use std::convert::TryInto;
 
-use libc;
 use bitflags::bitflags;
+use libc;
 
 use super::Int;
 
@@ -91,13 +91,9 @@ pub struct Epoll {
 
 impl Epoll {
     pub fn new(flags: EpollFlags) -> io::Result<Epoll> {
-        let fd = unsafe {
-            libc::epoll_create1(flags.bits)
-        };
+        let fd = unsafe { libc::epoll_create1(flags.bits) };
 
-        super::error::convert_neg_ret(fd).map(|fd| {
-            Epoll { fd: fd }
-        })
+        super::error::convert_neg_ret(fd).map(|fd| Epoll { fd: fd })
     }
 
     #[inline]
@@ -105,20 +101,22 @@ impl Epoll {
         self.fd
     }
 
-
     fn ctl(&mut self, op: CtlOp, fd: Int, events: Events, data: u64) -> io::Result<()> {
-        let mut ep_event = libc::epoll_event{events: u32::from(events), u64: data};
+        let mut ep_event = libc::epoll_event {
+            events: u32::from(events),
+            u64: data,
+        };
 
-        super::error::convert(unsafe {
-            libc::epoll_ctl(self.fd, op as Int, fd, &mut ep_event)
-        }, ())
+        super::error::convert(
+            unsafe { libc::epoll_ctl(self.fd, op as Int, fd, &mut ep_event) },
+            (),
+        )
     }
 
     #[inline]
     pub fn del(&mut self, fd: Int) -> io::Result<()> {
         self.ctl(CtlOp::Del, fd, Events::empty(), 0)
     }
-
 
     #[inline]
     pub fn add(&mut self, fd: Int, events: Events) -> io::Result<()> {
@@ -130,7 +128,6 @@ impl Epoll {
         self.modify3(fd, events, fd as u64)
     }
 
-
     #[inline]
     pub fn add2(&mut self, fd: Int, event: Event) -> io::Result<()> {
         self.add3(fd, event.events, event.data)
@@ -140,7 +137,6 @@ impl Epoll {
     pub fn modify2(&mut self, fd: Int, event: Event) -> io::Result<()> {
         self.modify3(fd, event.events, event.data)
     }
-
 
     #[inline]
     pub fn add3(&mut self, fd: Int, events: Events, data: u64) -> io::Result<()> {
@@ -152,8 +148,12 @@ impl Epoll {
         self.ctl(CtlOp::Mod, fd, events, data)
     }
 
-
-    pub fn pwait(&self, events: &mut [Event], timeout: Option<time::Duration>, sigmask: Option<&super::signal::Sigset>) -> io::Result<Int> {
+    pub fn pwait(
+        &self,
+        events: &mut [Event],
+        timeout: Option<time::Duration>,
+        sigmask: Option<&super::signal::Sigset>,
+    ) -> io::Result<Int> {
         let maxevents = events.len();
 
         let raw_timeout: Int = match timeout {
@@ -171,12 +171,19 @@ impl Epoll {
         ep_events.resize(maxevents, libc::epoll_event { events: 0, u64: 0 });
 
         super::error::convert_neg_ret(unsafe {
-            libc::epoll_pwait(self.fd, ep_events.as_mut_ptr(), maxevents as Int, raw_timeout, raw_sigmask)
-        }).map(|res| {
+            libc::epoll_pwait(
+                self.fd,
+                ep_events.as_mut_ptr(),
+                maxevents as Int,
+                raw_timeout,
+                raw_sigmask,
+            )
+        })
+        .map(|res| {
             for i in 0..(res as usize) {
                 events[i] = Event::from(ep_events[i]);
             }
-            return res
+            return res;
         })
     }
 

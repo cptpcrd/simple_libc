@@ -6,7 +6,6 @@ use bitflags::bitflags;
 
 use super::super::{Int, PidT};
 
-
 #[derive(Debug)]
 pub enum ProcStatus {
     Exited(Int),
@@ -20,14 +19,11 @@ impl ProcStatus {
         unsafe {
             if libc::WIFSIGNALED(status) {
                 Self::Signaled(libc::WTERMSIG(status))
-            }
-            else if libc::WIFSTOPPED(status) {
+            } else if libc::WIFSTOPPED(status) {
                 Self::Stopped(libc::WSTOPSIG(status))
-            }
-            else if libc::WIFCONTINUED(status) {
+            } else if libc::WIFCONTINUED(status) {
                 Self::Continued
-            }
-            else {
+            } else {
                 // Assume normal exit
                 Self::Exited(libc::WEXITSTATUS(status))
             }
@@ -35,15 +31,12 @@ impl ProcStatus {
     }
 }
 
-
 pub fn wait() -> io::Result<(PidT, ProcStatus)> {
     let mut status: Int = 0;
 
-    super::super::error::convert_neg_ret(unsafe {
-        libc::wait(&mut status)
-    }).map(|pid| (pid, ProcStatus::from_raw_status(status)))
+    super::super::error::convert_neg_ret(unsafe { libc::wait(&mut status) })
+        .map(|pid| (pid, ProcStatus::from_raw_status(status)))
 }
-
 
 #[derive(Debug)]
 pub enum WaitpidSpec {
@@ -61,7 +54,10 @@ bitflags! {
     }
 }
 
-pub fn waitpid(spec: WaitpidSpec, options: WaitpidOptions) -> io::Result<Option<(PidT, ProcStatus)>> {
+pub fn waitpid(
+    spec: WaitpidSpec,
+    options: WaitpidOptions,
+) -> io::Result<Option<(PidT, ProcStatus)>> {
     let wpid = match spec {
         WaitpidSpec::Pid(pid) => pid,
         WaitpidSpec::Pgid(pgid) => -pgid,
@@ -71,10 +67,9 @@ pub fn waitpid(spec: WaitpidSpec, options: WaitpidOptions) -> io::Result<Option<
 
     let mut status: Int = 0;
 
-    super::super::error::convert_neg_ret(unsafe {
-        libc::waitpid(wpid, &mut status, options.bits)
-    }).map(|pid| match pid {
-        0 => None,
-        _ => Some((pid, ProcStatus::from_raw_status(status))),
-    })
+    super::super::error::convert_neg_ret(unsafe { libc::waitpid(wpid, &mut status, options.bits) })
+        .map(|pid| match pid {
+            0 => None,
+            _ => Some((pid, ProcStatus::from_raw_status(status))),
+        })
 }

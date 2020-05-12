@@ -1,9 +1,8 @@
-use std::io;
 use libc;
+use std::io;
 
 use super::error;
 use super::Int;
-
 
 macro_rules! fcntl_raw {
     ($fd:expr, $cmd:expr$(, $args:expr)*) => {
@@ -32,7 +31,6 @@ pub fn setflags(fd: Int, flags: i32) -> io::Result<()> {
     Ok(())
 }
 
-
 pub fn is_inheritable(fd: Int) -> io::Result<bool> {
     return Ok(getflags(fd)? & libc::FD_CLOEXEC == 0);
 }
@@ -43,23 +41,19 @@ pub fn set_inheritable(fd: Int, inheritable: bool) -> io::Result<()> {
     if inheritable {
         if flags & libc::FD_CLOEXEC != 0 {
             flags -= libc::FD_CLOEXEC;
-        }
-        else {
+        } else {
             return Ok(());
         }
-    }
-    else {
+    } else {
         if flags & libc::FD_CLOEXEC != 0 {
             return Ok(());
-        }
-        else {
+        } else {
             flags |= libc::FD_CLOEXEC;
         }
     }
 
     setflags(fd, flags)
 }
-
 
 pub fn set_lock(fd: Int, lock: &libc::flock) -> io::Result<()> {
     unsafe { fcntl_raw!(fd, libc::F_SETLK, lock)? };

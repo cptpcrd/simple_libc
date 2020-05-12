@@ -1,11 +1,11 @@
 use std::io;
 use std::os::unix::io::AsRawFd;
+
 use libc;
 
-use super::super::signal::Sigset;
 use super::super::error;
+use super::super::signal::Sigset;
 use super::super::Int;
-
 
 #[derive(Debug)]
 pub struct SignalFd {
@@ -14,17 +14,24 @@ pub struct SignalFd {
 
 impl SignalFd {
     pub fn new(mask: &Sigset, flags: Int) -> io::Result<SignalFd> {
-        return error::convert_ret(unsafe {
-            libc::signalfd(-1, &mask.raw_set(), flags)
-        }).map(|fd| SignalFd { fd })
+        return error::convert_ret(unsafe { libc::signalfd(-1, &mask.raw_set(), flags) })
+            .map(|fd| SignalFd { fd });
     }
 
     pub fn read_one(&self) -> io::Result<Siginfo> {
         let mut siginfo: libc::signalfd_siginfo = unsafe { std::mem::zeroed() };
 
-        return error::convert_neg(unsafe {
-            libc::read(self.fd, (&mut siginfo as *mut libc::signalfd_siginfo) as *mut libc::c_void, std::mem::size_of::<libc::signalfd_siginfo>())
-        }, &siginfo).map(Siginfo::from)
+        return error::convert_neg(
+            unsafe {
+                libc::read(
+                    self.fd,
+                    (&mut siginfo as *mut libc::signalfd_siginfo) as *mut libc::c_void,
+                    std::mem::size_of::<libc::signalfd_siginfo>(),
+                )
+            },
+            &siginfo,
+        )
+        .map(Siginfo::from);
     }
 
     pub fn read(&self, siginfos: &mut [Siginfo]) -> io::Result<usize> {
@@ -33,7 +40,9 @@ impl SignalFd {
 
         let mut raw_siginfos: Vec<libc::signalfd_siginfo> = Vec::new();
         raw_siginfos.reserve(length);
-        unsafe { raw_siginfos.set_len(length); }
+        unsafe {
+            raw_siginfos.set_len(length);
+        }
 
         return error::convert_neg_ret(unsafe {
             libc::read(
@@ -41,13 +50,14 @@ impl SignalFd {
                 raw_siginfos.as_mut_ptr() as *mut libc::c_void,
                 size * length,
             )
-        }).and_then(|n| {
+        })
+        .and_then(|n| {
             let n = (n as usize) / size;
             for (i, raw_siginfo) in raw_siginfos.iter().take(n).enumerate() {
                 siginfos[i] = Siginfo::from(raw_siginfo);
             }
             Ok(n)
-        })
+        });
     }
 }
 
@@ -134,5 +144,4 @@ impl From<Siginfo> for libc::signalfd_siginfo {
 
         sinfo
     }
-
 }

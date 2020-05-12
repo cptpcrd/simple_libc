@@ -2,12 +2,11 @@ use std::ffi;
 use std::io;
 use std::os::unix::ffi::OsStringExt;
 use std::sync;
-use libc;
 
 use lazy_static::lazy_static;
+use libc;
 
-use super::{Int, Char};
-
+use super::{Char, Int};
 
 #[derive(Debug, Clone)]
 pub struct Passwd {
@@ -28,7 +27,9 @@ impl Passwd {
     pub fn list() -> io::Result<Vec<Self>> {
         let _lock = PASSWD_LIST_MUTEX.lock();
 
-        unsafe { libc::setpwent(); }
+        unsafe {
+            libc::setpwent();
+        }
 
         let mut passwds: Vec<Self> = Vec::new();
 
@@ -44,7 +45,9 @@ impl Passwd {
 
         let err = super::error::result_or_os_error(()).err();
 
-        unsafe { libc::endpwent(); }
+        unsafe {
+            libc::endpwent();
+        }
 
         match err {
             Some(e) => Err(e),
@@ -53,37 +56,46 @@ impl Passwd {
     }
 
     fn lookup<T, F>(t: &T, getpwfunc: F) -> io::Result<Option<Self>>
-        where T: Sized,
-        F: Fn(&T, *mut libc::passwd, *mut libc::c_char, libc::size_t, *mut *mut libc::passwd) -> Int {
+    where
+        T: Sized,
+        F: Fn(
+            &T,
+            *mut libc::passwd,
+            *mut libc::c_char,
+            libc::size_t,
+            *mut *mut libc::passwd,
+        ) -> Int,
+    {
         let mut passwd: libc::passwd = unsafe { std::mem::zeroed() };
 
-        let init_size = super::constrain(super::sysconf(libc::_SC_GETPW_R_SIZE_MAX).unwrap_or(1024), 256, 4096) as usize;
+        let init_size = super::constrain(
+            super::sysconf(libc::_SC_GETPW_R_SIZE_MAX).unwrap_or(1024),
+            256,
+            4096,
+        ) as usize;
 
         let mut buffer: Vec<Char> = Vec::new();
 
         let mut result: *mut libc::passwd = std::ptr::null_mut();
 
-        super::error::while_erange(|i| {
-            let buflen: usize = (i as usize + 1) * init_size;
+        super::error::while_erange(
+            |i| {
+                let buflen: usize = (i as usize + 1) * init_size;
 
-            buffer.resize(buflen, 0);
+                buffer.resize(buflen, 0);
 
-            let ret = getpwfunc(
-                &t,
-                &mut passwd,
-                buffer.as_mut_ptr(),
-                buflen,
-                &mut result,
-            );
+                let ret = getpwfunc(&t, &mut passwd, buffer.as_mut_ptr(), buflen, &mut result);
 
-            super::error::convert_nzero_ret(ret).and_then(|_| {
-                if result == std::ptr::null_mut() {
-                    return Ok(None)
-                }
+                super::error::convert_nzero_ret(ret).and_then(|_| {
+                    if result == std::ptr::null_mut() {
+                        return Ok(None);
+                    }
 
-                Ok(Some(Self::parse(passwd)))
-            })
-        }, 5)
+                    Ok(Some(Self::parse(passwd)))
+                })
+            },
+            5,
+        )
     }
 
     fn parse(passwd: libc::passwd) -> Self {
@@ -107,23 +119,29 @@ impl Passwd {
     pub fn lookup_name(name: &str) -> io::Result<Option<Self>> {
         Self::lookup(
             &name,
-            |name: &&str, pwd: *mut libc::passwd, buf: *mut libc::c_char, buflen: libc::size_t, result: *mut *mut libc::passwd| {
+            |name: &&str,
+             pwd: *mut libc::passwd,
+             buf: *mut libc::c_char,
+             buflen: libc::size_t,
+             result: *mut *mut libc::passwd| {
                 unsafe {
                     let c_name = ffi::CString::from_vec_unchecked(Vec::from(*name));
                     libc::getpwnam_r(c_name.as_ptr(), pwd, buf, buflen, result)
                 }
-            }
+            },
         )
     }
 
     pub fn lookup_uid(uid: u32) -> io::Result<Option<Self>> {
         Self::lookup(
             &uid,
-            |uid: &u32, pwd: *mut libc::passwd, buf: *mut libc::c_char, buflen: libc::size_t, result: *mut *mut libc::passwd| {
-                unsafe {
-                    libc::getpwuid_r(*uid, pwd, buf, buflen, result)
-                }
-            }
+            |uid: &u32,
+             pwd: *mut libc::passwd,
+             buf: *mut libc::c_char,
+             buflen: libc::size_t,
+             result: *mut *mut libc::passwd| {
+                unsafe { libc::getpwuid_r(*uid, pwd, buf, buflen, result) }
+            },
         )
     }
 

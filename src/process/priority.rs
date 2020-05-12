@@ -1,15 +1,14 @@
 use std::io;
+
 use libc;
 
 use super::super::error;
-use super::super::{Int, IdT};
-
+use super::super::{IdT, Int};
 
 pub fn nice(incr: Int) -> io::Result<Int> {
     error::set_errno_success();
     error::convert_if_errno_ret(unsafe { libc::nice(incr) })
 }
-
 
 #[derive(Debug)]
 pub enum Target {
@@ -25,19 +24,11 @@ type PriorityWhich = libc::__priority_which_t;
 #[cfg(not(all(target_os = "linux", any(target_env = "", target_env = "gnu"))))]
 type PriorityWhich = Int;
 
-#[cfg(any(
-    target_os = "linux",
-    target_os = "openbsd",
-    target_os = "netbsd",
-))]
+#[cfg(any(target_os = "linux", target_os = "openbsd", target_os = "netbsd"))]
 type PriorityWho = IdT;
 
-#[cfg(any(
-    target_os = "freebsd",
-    target_os = "dragonfly",
-))]
+#[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
 type PriorityWho = Int;
-
 
 impl Target {
     fn unpack(&self) -> (PriorityWhich, PriorityWho) {
@@ -53,23 +44,22 @@ pub fn get(t: Target) -> io::Result<Int> {
     let (which, who) = t.unpack();
 
     error::set_errno_success();
-    error::convert_if_errno_ret(unsafe {
-        libc::getpriority(which, who)
-    })
+    error::convert_if_errno_ret(unsafe { libc::getpriority(which, who) })
 }
 
 pub fn set(t: Target, value: Int) -> io::Result<()> {
     let (which, who) = t.unpack();
 
-    error::convert_nzero(unsafe {
-        libc::setpriority(which, who, value)
-    }, ())
+    error::convert_nzero(unsafe { libc::setpriority(which, who, value) }, ())
 }
 
 #[cfg(test)]
 mod tests {
     #[test]
     fn test_get_equals_nice() {
-        assert_eq!(super::nice(0).unwrap(), super::get(super::Target::Process(0)).unwrap());
+        assert_eq!(
+            super::nice(0).unwrap(),
+            super::get(super::Target::Process(0)).unwrap()
+        );
     }
 }

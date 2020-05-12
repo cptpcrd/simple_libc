@@ -2,35 +2,10 @@ use std::io;
 
 use libc;
 
-
 use libc::{
-    SIGABRT,
-    SIGALRM,
-    SIGBUS,
-    SIGCHLD,
-    SIGCONT,
-    SIGFPE,
-    SIGHUP,
-    SIGILL,
-    SIGINT,
-    SIGKILL,
-    SIGPIPE,
-    SIGQUIT,
-    SIGSEGV,
-    SIGSTOP,
-    SIGTERM,
-    SIGTSTP,
-    SIGTTIN,
-    SIGTTOU,
-    SIGUSR1,
-    SIGUSR2,
-    SIGPROF,
-    SIGSYS,
-    SIGTRAP,
-    SIGURG,
-    SIGVTALRM,
-    SIGXCPU,
-    SIGXFSZ,
+    SIGABRT, SIGALRM, SIGBUS, SIGCHLD, SIGCONT, SIGFPE, SIGHUP, SIGILL, SIGINT, SIGKILL, SIGPIPE,
+    SIGPROF, SIGQUIT, SIGSEGV, SIGSTOP, SIGSYS, SIGTERM, SIGTRAP, SIGTSTP, SIGTTIN, SIGTTOU,
+    SIGURG, SIGUSR1, SIGUSR2, SIGVTALRM, SIGXCPU, SIGXFSZ,
 };
 
 #[cfg(target_os = "linux")]
@@ -79,7 +54,6 @@ pub fn sig_from_name(name: &str) -> Option<i32> {
     }
 }
 
-
 #[repr(transparent)]
 pub struct Sigset {
     set: libc::sigset_t,
@@ -106,34 +80,24 @@ impl Sigset {
 
     #[inline]
     pub fn clear(&mut self) {
-        unsafe {
-            libc::sigemptyset(&mut self.set)
-        };
+        unsafe { libc::sigemptyset(&mut self.set) };
     }
 
     #[inline]
     pub fn fill(&mut self) {
-        unsafe {
-            libc::sigfillset(&mut self.set)
-        };
+        unsafe { libc::sigfillset(&mut self.set) };
     }
 
     pub fn add(&mut self, sig: i32) -> io::Result<()> {
-        super::error::convert(unsafe {
-            libc::sigaddset(&mut self.set, sig)
-        }, ())
+        super::error::convert(unsafe { libc::sigaddset(&mut self.set, sig) }, ())
     }
 
     pub fn del(&mut self, sig: i32) -> io::Result<()> {
-        super::error::convert(unsafe {
-            libc::sigdelset(&mut self.set, sig)
-        }, ())
+        super::error::convert(unsafe { libc::sigdelset(&mut self.set, sig) }, ())
     }
 
     pub fn ismember(&self, sig: i32) -> io::Result<bool> {
-        super::error::convert_ret(unsafe {
-            libc::sigismember(&self.set, sig)
-        }).map(|res| { res != 0 })
+        super::error::convert_ret(unsafe { libc::sigismember(&self.set, sig) }).map(|res| res != 0)
     }
 
     #[inline]
@@ -160,7 +124,6 @@ impl Default for Sigset {
         Self::empty()
     }
 }
-
 
 #[cfg(test)]
 mod tests {

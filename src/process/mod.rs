@@ -1,33 +1,32 @@
 use std::ffi;
 use std::io;
-use std::path::Path;
 use std::os::unix::ffi::OsStrExt;
 use std::os::unix::ffi::OsStringExt;
+use std::path::Path;
+
 use libc;
 
-pub mod sigmask;
-pub mod sigaction;
+pub mod exec;
 pub mod priority;
 pub mod resource;
-pub mod exec;
+pub mod sigaction;
+pub mod sigmask;
 pub mod wait;
 
 #[cfg(target_os = "linux")]
-pub mod signalfd;
+pub mod namespace;
 #[cfg(target_os = "linux")]
 pub mod prctl;
 #[cfg(target_os = "linux")]
-pub mod namespace;
+pub mod signalfd;
 
-use super::{Char, Int, PidT, UidT, GidT};
 use super::externs;
-
+use super::{Char, GidT, Int, PidT, UidT};
 
 #[inline]
 pub fn getpid() -> PidT {
     unsafe { libc::getpid() }
 }
-
 
 /// Returns the current real user ID.
 #[inline]
@@ -40,7 +39,6 @@ pub fn getuid() -> UidT {
 pub fn geteuid() -> UidT {
     unsafe { libc::geteuid() }
 }
-
 
 /// Returns the current real group ID.
 #[inline]
@@ -114,14 +112,12 @@ pub fn getallgroups() -> io::Result<Vec<GidT>> {
 
     if rgid == egid {
         groups.insert(0, egid);
-    }
-    else {
+    } else {
         groups.splice(0..0, [rgid, egid].iter().cloned());
     }
 
     Ok(groups)
 }
-
 
 /// [NOT RECOMMENDED] Returns the username of the currently logged-in
 /// user.
@@ -133,57 +129,59 @@ pub fn getallgroups() -> io::Result<Vec<GidT>> {
 /// `pwd::Passwd::lookup_uid()`.
 pub fn getlogin() -> io::Result<ffi::OsString> {
     // Get the initial buffer length from sysconf(), setting some sane defaults/constraints.
-    let init_length = super::constrain(super::sysconf(libc::_SC_LOGIN_NAME_MAX).unwrap_or(256), 64, 1024) as usize;
+    let init_length = super::constrain(
+        super::sysconf(libc::_SC_LOGIN_NAME_MAX).unwrap_or(256),
+        64,
+        1024,
+    ) as usize;
 
-    super::error::while_erange(|i| {
-        let length = init_length * (i as usize + 1);
-        let mut buf: Vec<Char> = Vec::new();
+    super::error::while_erange(
+        |i| {
+            let length = init_length * (i as usize + 1);
+            let mut buf: Vec<Char> = Vec::new();
 
-        super::error::convert_nzero(unsafe {
-            buf.resize(length, 0);
-            externs::getlogin_r(buf.as_mut_ptr(), length)
-        }, buf).map(|buf| {
-            ffi::OsString::from_vec(buf.iter().take_while(|x| **x > 0).map(|x| *x as u8).collect())
-        })
-    }, 10)
+            super::error::convert_nzero(
+                unsafe {
+                    buf.resize(length, 0);
+                    externs::getlogin_r(buf.as_mut_ptr(), length)
+                },
+                buf,
+            )
+            .map(|buf| {
+                ffi::OsString::from_vec(
+                    buf.iter()
+                        .take_while(|x| **x > 0)
+                        .map(|x| *x as u8)
+                        .collect(),
+                )
+            })
+        },
+        10,
+    )
 }
 
-
 pub fn setuid(uid: UidT) -> io::Result<()> {
-    super::error::convert_nzero(unsafe {
-        libc::setuid(uid)
-    }, ())
+    super::error::convert_nzero(unsafe { libc::setuid(uid) }, ())
 }
 
 pub fn seteuid(uid: UidT) -> io::Result<()> {
-    super::error::convert_nzero(unsafe {
-        libc::seteuid(uid)
-    }, ())
+    super::error::convert_nzero(unsafe { libc::seteuid(uid) }, ())
 }
 
 pub fn setreuid(ruid: UidT, euid: UidT) -> io::Result<()> {
-    super::error::convert_nzero(unsafe {
-        externs::setreuid(ruid, euid)
-    }, ())
+    super::error::convert_nzero(unsafe { externs::setreuid(ruid, euid) }, ())
 }
 
-
 pub fn setgid(gid: GidT) -> io::Result<()> {
-    super::error::convert_nzero(unsafe {
-        libc::setgid(gid)
-    }, ())
+    super::error::convert_nzero(unsafe { libc::setgid(gid) }, ())
 }
 
 pub fn setegid(gid: GidT) -> io::Result<()> {
-    super::error::convert_nzero(unsafe {
-        libc::setegid(gid)
-    }, ())
+    super::error::convert_nzero(unsafe { libc::setegid(gid) }, ())
 }
 
 pub fn setregid(rgid: GidT, egid: GidT) -> io::Result<()> {
-    super::error::convert_nzero(unsafe {
-        externs::setregid(rgid, egid)
-    }, ())
+    super::error::convert_nzero(unsafe { externs::setregid(rgid, egid) }, ())
 }
 
 #[cfg(target_os = "linux")]
@@ -198,11 +196,11 @@ type SetGroupsSize = super::SizeT;
 type SetGroupsSize = Int;
 
 pub fn setgroups(groups: &[GidT]) -> io::Result<()> {
-    super::error::convert_nzero(unsafe {
-        libc::setgroups(groups.len() as SetGroupsSize, groups.as_ptr())
-    }, ())
+    super::error::convert_nzero(
+        unsafe { libc::setgroups(groups.len() as SetGroupsSize, groups.as_ptr()) },
+        (),
+    )
 }
-
 
 cfg_if::cfg_if! {
     if #[cfg(any(target_os = "linux", target_os = "freebsd", target_os = "openbsd", target_os = "dragonfly"))] {
@@ -277,7 +275,6 @@ pub fn getregid() -> (GidT, GidT) {
     _getregid()
 }
 
-
 /// Attempts to change the root directory of the current process to the specified
 /// path.
 ///
@@ -286,9 +283,7 @@ pub fn getregid() -> (GidT, GidT) {
 pub fn chroot<P: AsRef<Path>>(path: P) -> io::Result<()> {
     let path = ffi::CString::new(path.as_ref().as_os_str().as_bytes())?;
 
-    super::error::convert_nzero(unsafe {
-        libc::chroot(path.as_ptr())
-    }, ())
+    super::error::convert_nzero(unsafe { libc::chroot(path.as_ptr()) }, ())
 }
 
 /// Change the current working directory to the specified path.
@@ -300,7 +295,6 @@ pub fn chdir<P: AsRef<Path>>(path: P) -> io::Result<()> {
     std::env::set_current_dir(path)
 }
 
-
 /// Forks the current process.
 ///
 /// If an error occurred, the Result returned represents the error encountered.
@@ -309,7 +303,6 @@ pub fn chdir<P: AsRef<Path>>(path: P) -> io::Result<()> {
 pub fn fork() -> io::Result<Int> {
     super::error::convert_neg_ret(unsafe { libc::fork() })
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -329,7 +322,12 @@ mod tests {
         assert_eq!((getgid(), getegid()), getregid());
     }
 
-    #[cfg(any(target_os = "linux", target_os = "freebsd", target_os = "openbsd", target_os = "dragonfly"))]
+    #[cfg(any(
+        target_os = "linux",
+        target_os = "freebsd",
+        target_os = "openbsd",
+        target_os = "dragonfly"
+    ))]
     #[test]
     fn test_resuidgid() {
         let (ruid, euid, suid) = getresuid();

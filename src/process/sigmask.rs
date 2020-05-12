@@ -5,8 +5,7 @@ use libc;
 use super::super::signal::Sigset;
 use super::super::Int;
 
-
-fn sigmask(how: Int, set: Option<&Sigset>) ->io::Result<Sigset> {
+fn sigmask(how: Int, set: Option<&Sigset>) -> io::Result<Sigset> {
     let oldset = Sigset::empty();
 
     let raw_set: *const libc::sigset_t = match set {
@@ -14,9 +13,10 @@ fn sigmask(how: Int, set: Option<&Sigset>) ->io::Result<Sigset> {
         None => std::ptr::null(),
     };
 
-    super::super::error::convert(unsafe {
-        libc::pthread_sigmask(how, raw_set, &mut oldset.raw_set())
-    }, oldset)
+    super::super::error::convert(
+        unsafe { libc::pthread_sigmask(how, raw_set, &mut oldset.raw_set()) },
+        oldset,
+    )
 }
 
 pub fn getmask() -> io::Result<Sigset> {

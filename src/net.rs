@@ -1,8 +1,8 @@
 use std::io;
 use std::os::unix;
 use std::os::unix::io::AsRawFd;
-use libc;
 
+use libc;
 
 cfg_if::cfg_if! {
     if #[cfg(any(target_os = "linux", target_os = "openbsd"))] {
@@ -52,14 +52,10 @@ cfg_if::cfg_if! {
     }
 }
 
-
 /// Attempts to read credentials from the given Unix socket.
 ///
 /// Only supported on specific platforms.
-#[cfg(any(
-    target_os = "linux",
-    target_os = "openbsd",
-))]
+#[cfg(any(target_os = "linux", target_os = "openbsd"))]
 pub fn get_ucred(sock: &unix::net::UnixStream) -> io::Result<Ucred> {
     get_ucred_raw(sock.as_raw_fd())
 }

@@ -1,11 +1,10 @@
 use std::io;
 
-use libc;
 use bitflags::bitflags;
+use libc;
 
 use super::super::signal::Sigset;
 use super::super::Int;
-
 
 bitflags! {
     #[derive(Default)]
@@ -18,7 +17,6 @@ bitflags! {
         const NODEFER = libc::SA_NODEFER;
     }
 }
-
 
 #[derive(Debug)]
 pub enum SigHandler {
@@ -72,10 +70,11 @@ impl From<Sigaction> for libc::sigaction {
     fn from(act: Sigaction) -> libc::sigaction {
         libc::sigaction {
             sa_mask: act.mask.raw_set(),
-            sa_flags: act.flags.bits | (match act.handler {
-                SigHandler::ActionHandler(_) => libc::SA_SIGINFO,
-                _ => 0,
-            }),
+            sa_flags: act.flags.bits
+                | (match act.handler {
+                    SigHandler::ActionHandler(_) => libc::SA_SIGINFO,
+                    _ => 0,
+                }),
             sa_sigaction: match act.handler {
                 SigHandler::Default => libc::SIG_DFL,
                 SigHandler::Ignore => libc::SIG_IGN,
@@ -97,20 +96,17 @@ impl From<libc::sigaction> for Sigaction {
                 libc::SIG_DFL => SigHandler::Default,
                 libc::SIG_IGN => SigHandler::Ignore,
                 _ => match act.sa_flags & libc::SA_SIGINFO != 0 {
-                    true => SigHandler::ActionHandler(unsafe {
-                        std::mem::transmute(act.sa_sigaction)
-                    }),
-                    false => SigHandler::Handler(unsafe {
-                        std::mem::transmute(act.sa_sigaction)
-                    }),
+                    true => {
+                        SigHandler::ActionHandler(unsafe { std::mem::transmute(act.sa_sigaction) })
+                    }
+                    false => SigHandler::Handler(unsafe { std::mem::transmute(act.sa_sigaction) }),
                 },
             },
         }
     }
 }
 
-
-fn sigaction(sig: Int, act: Option<Sigaction>) ->io::Result<Sigaction> {
+fn sigaction(sig: Int, act: Option<Sigaction>) -> io::Result<Sigaction> {
     let mut oldact: libc::sigaction = unsafe { std::mem::zeroed() };
 
     let mut newact: *const libc::sigaction = std::ptr::null();
@@ -118,18 +114,16 @@ fn sigaction(sig: Int, act: Option<Sigaction>) ->io::Result<Sigaction> {
         newact = &libc::sigaction::from(a);
     }
 
-    super::super::error::convert(unsafe {
-        libc::sigaction(sig, newact, &mut oldact)
-    }, oldact).map(|oldact| Sigaction::from(oldact))
+    super::super::error::convert(unsafe { libc::sigaction(sig, newact, &mut oldact) }, oldact)
+        .map(|oldact| Sigaction::from(oldact))
 }
 
-pub fn sig_getaction(sig: Int) ->io::Result<Sigaction> {
+pub fn sig_getaction(sig: Int) -> io::Result<Sigaction> {
     sigaction(sig, None)
 }
 
-pub fn sig_setaction(sig: Int, act: Sigaction) ->io::Result<Sigaction> {
+pub fn sig_setaction(sig: Int, act: Sigaction) -> io::Result<Sigaction> {
     sigaction(sig, Some(act))
 }
 
-pub extern "C" fn empty_sighandler(_sig: Int) {
-}
+pub extern "C" fn empty_sighandler(_sig: Int) {}

@@ -1,22 +1,17 @@
-use std::io;
 use libc;
+use std::io;
 
 use super::Int;
 
-
 pub fn flock_raw(fd: Int, op: i32) -> io::Result<()> {
-    super::error::convert(unsafe {
-        libc::flock(fd, op)
-    }, ())
+    super::error::convert(unsafe { libc::flock(fd, op) }, ())
 }
-
 
 pub fn lock(fd: Int, exclusive: bool, block: bool) -> io::Result<()> {
     let mut op;
     if exclusive {
         op = libc::LOCK_EX;
-    }
-    else {
+    } else {
         op = libc::LOCK_SH;
     }
 

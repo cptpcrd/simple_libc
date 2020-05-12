@@ -1,11 +1,10 @@
 use std::fs::File;
 use std::io;
-use std::path::Path;
 use std::os::unix::io::AsRawFd;
+use std::path::Path;
 
-use libc;
 use bitflags::bitflags;
-
+use libc;
 
 bitflags! {
     pub struct ExtraUnshareFlags: i32 {
@@ -28,23 +27,24 @@ bitflags! {
 }
 
 pub fn unshare(nstypes: NamespaceTypes, extra_flags: ExtraUnshareFlags) -> io::Result<()> {
-    super::super::error::convert_nzero(unsafe {
-        libc::unshare(nstypes.bits | extra_flags.bits)
-    }, ())
+    super::super::error::convert_nzero(
+        unsafe { libc::unshare(nstypes.bits | extra_flags.bits) },
+        (),
+    )
 }
 
 pub fn setns_raw(fd: i32, nstype: NamespaceTypes) -> io::Result<()> {
-    super::super::error::convert_nzero(unsafe {
-        libc::setns(fd, nstype.bits)
-    }, ())
+    super::super::error::convert_nzero(unsafe { libc::setns(fd, nstype.bits) }, ())
 }
 
 pub fn setns(f: &File, nstype: NamespaceTypes) -> io::Result<()> {
     setns_raw(f.as_raw_fd(), nstype)
 }
 
-
-pub fn join_proc_namespaces<P: AsRef<Path>>(proc_pid_dir: P, mut nstypes: NamespaceTypes) -> io::Result<()> {
+pub fn join_proc_namespaces<P: AsRef<Path>>(
+    proc_pid_dir: P,
+    mut nstypes: NamespaceTypes,
+) -> io::Result<()> {
     let proc_ns_dir = proc_pid_dir.as_ref().join("ns");
 
     if nstypes.contains(NamespaceTypes::NEWUSER) {
