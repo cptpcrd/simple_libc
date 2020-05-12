@@ -19,10 +19,10 @@ pub enum Target {
 }
 
 // Work around GNU not implementing the POSIX standard correctly
-#[cfg(any(target_env = "", target_env = "gnu"))]
+#[cfg(all(target_os = "linux", any(target_env = "", target_env = "gnu")))]
 type PriorityWhich = libc::__priority_which_t;
 
-#[cfg(not(any(target_env = "", target_env = "gnu")))]
+#[cfg(not(all(target_os = "linux", any(target_env = "", target_env = "gnu"))))]
 type PriorityWhich = Int;
 
 impl Target {
