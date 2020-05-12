@@ -184,18 +184,13 @@ impl Epoll {
     pub fn wait(&self, events: &mut [Event], timeout: Option<time::Duration>) -> io::Result<Int> {
         self.pwait(events, timeout, None)
     }
-
-    #[inline]
-    pub fn close(&mut self) {
-        unsafe {
-            libc::close(self.fd);
-        }
-    }
 }
 
 impl Drop for Epoll {
     #[inline]
     fn drop(&mut self) {
-        self.close();
+        unsafe {
+            libc::close(self.fd);
+        }
     }
 }
