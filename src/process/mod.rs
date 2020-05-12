@@ -16,6 +16,8 @@ pub mod wait;
 pub mod signalfd;
 #[cfg(target_os = "linux")]
 pub mod prctl;
+#[cfg(target_os = "linux")]
+pub mod namespace;
 
 use super::{Char, Int, PidT, UidT, GidT};
 
