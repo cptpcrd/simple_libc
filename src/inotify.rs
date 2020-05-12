@@ -265,6 +265,7 @@ impl Inotify {
 }
 
 impl AsRawFd for Inotify {
+    #[inline]
     fn as_raw_fd(&self) -> RawFd {
         self.fd
     }

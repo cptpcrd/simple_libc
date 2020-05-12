@@ -20,6 +20,7 @@ pub fn lock(fd: Int, exclusive: bool, block: bool) -> io::Result<()> {
     flock_raw(fd, op)
 }
 
+#[inline]
 pub fn unlock(fd: Int) -> io::Result<()> {
     flock_raw(fd, libc::LOCK_UN)
 }

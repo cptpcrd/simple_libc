@@ -30,6 +30,7 @@ pub fn setflags(fd: Int, flags: Int) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 pub fn is_inheritable(fd: Int) -> io::Result<bool> {
     Ok(getflags(fd)? & libc::FD_CLOEXEC == 0)
 }
@@ -52,16 +53,19 @@ pub fn set_inheritable(fd: Int, inheritable: bool) -> io::Result<()> {
     setflags(fd, flags)
 }
 
+#[inline]
 pub fn set_lock(fd: Int, lock: &libc::flock) -> io::Result<()> {
     unsafe { fcntl_raw!(fd, libc::F_SETLK, lock)? };
     Ok(())
 }
 
+#[inline]
 pub fn set_lock_wait(fd: Int, lock: &libc::flock) -> io::Result<()> {
     unsafe { fcntl_raw!(fd, libc::F_SETLKW, lock)? };
     Ok(())
 }
 
+#[inline]
 pub fn get_lock(fd: Int, lock: &mut libc::flock) -> io::Result<()> {
     unsafe { fcntl_raw!(fd, libc::F_GETLK, lock)? };
     Ok(())

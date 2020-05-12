@@ -23,6 +23,7 @@ pub fn set_errno_success() {
     }
 }
 
+#[inline]
 pub fn convert_ret<T>(ret: T) -> io::Result<T>
 where
     T: From<Int> + Eq + Copy,
@@ -41,6 +42,7 @@ where
     Ok(res)
 }
 
+#[inline]
 pub fn convert_if_errno_ret<T>(ret: T) -> io::Result<T>
 where
     T: From<Int> + Eq + Copy,
@@ -59,6 +61,7 @@ where
     Ok(res)
 }
 
+#[inline]
 pub fn convert_neg_ret<T>(ret: T) -> io::Result<T>
 where
     T: Default + Ord + Copy,
@@ -77,6 +80,7 @@ where
     Ok(res)
 }
 
+#[inline]
 pub fn convert_nzero_ret<T>(ret: T) -> io::Result<T>
 where
     T: Default + Eq + Copy,
