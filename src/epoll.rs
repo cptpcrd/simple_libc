@@ -1,5 +1,7 @@
 use std::io;
 use std::time;
+use std::convert::TryInto;
+
 use libc;
 use bitflags::bitflags;
 
@@ -154,8 +156,8 @@ impl Epoll {
     pub fn pwait(&self, events: &mut [Event], timeout: Option<time::Duration>, sigmask: Option<&super::signal::Sigset>) -> io::Result<Int> {
         let maxevents = events.len();
 
-        let raw_timeout = match timeout {
-            Some(t) => t.as_millis() as Int,
+        let raw_timeout: Int = match timeout {
+            Some(t) => t.as_millis().try_into().unwrap_or(Int::MAX),
             None => -1,
         };
 
