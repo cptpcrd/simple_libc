@@ -10,10 +10,10 @@ use super::super::{Int, PidT};
 
 
 // Work around GNU not implementing the POSIX standard correctly
-#[cfg(any(target_env = "", target_env = "gnu"))]
+#[cfg(all(target_os = "linux", any(target_env = "", target_env = "gnu")))]
 type RawResourceType = libc::__rlimit_resource_t;
 
-#[cfg(not(any(target_env = "", target_env = "gnu")))]
+#[cfg(not(all(target_os = "linux", any(target_env = "", target_env = "gnu"))))]
 type RawResourceType = Int;
 
 
