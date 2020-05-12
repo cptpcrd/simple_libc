@@ -5,7 +5,7 @@ use std::sync;
 
 use lazy_static::lazy_static;
 
-use super::{Char, Int, GidT};
+use super::{Char, GidT, Int};
 
 #[derive(Debug, Clone)]
 pub struct Group {

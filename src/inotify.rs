@@ -89,11 +89,7 @@ impl Inotify {
             .map(|fd| Self { fd })
     }
 
-    fn add_watch_impl<P: AsRef<Path>>(
-        &mut self,
-        path: P,
-        flags: u32,
-    ) -> io::Result<Watch> {
+    fn add_watch_impl<P: AsRef<Path>>(&mut self, path: P, flags: u32) -> io::Result<Watch> {
         let c_path = ffi::CString::new(path.as_ref().as_os_str().as_bytes())?;
 
         super::error::convert_neg_ret(unsafe {

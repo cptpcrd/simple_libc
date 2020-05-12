@@ -5,7 +5,7 @@ use std::sync;
 
 use lazy_static::lazy_static;
 
-use super::{Char, Int, UidT, GidT};
+use super::{Char, GidT, Int, UidT};
 
 #[derive(Debug, Clone)]
 pub struct Passwd {
