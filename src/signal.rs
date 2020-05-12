@@ -3,36 +3,38 @@ use std::io;
 use libc;
 
 
-pub const SIGABRT: i32 = libc::SIGABRT;
-pub const SIGALRM: i32 = libc::SIGALRM;
-pub const SIGBUS: i32 = libc::SIGBUS;
-pub const SIGCHLD: i32 = libc::SIGCHLD;
-pub const SIGCONT: i32 = libc::SIGCONT;
-pub const SIGFPE: i32 = libc::SIGFPE;
-pub const SIGHUP: i32 = libc::SIGHUP;
-pub const SIGILL: i32 = libc::SIGILL;
-pub const SIGINT: i32 = libc::SIGINT;
-pub const SIGKILL: i32 = libc::SIGKILL;
-pub const SIGPIPE: i32 = libc::SIGPIPE;
-pub const SIGQUIT: i32 = libc::SIGQUIT;
-pub const SIGSEGV: i32 = libc::SIGSEGV;
-pub const SIGSTOP: i32 = libc::SIGSTOP;
-pub const SIGTERM: i32 = libc::SIGTERM;
-pub const SIGTSTP: i32 = libc::SIGTSTP;
-pub const SIGTTIN: i32 = libc::SIGTTIN;
-pub const SIGTTOU: i32 = libc::SIGTTOU;
-pub const SIGUSR1: i32 = libc::SIGUSR1;
-pub const SIGUSR2: i32 = libc::SIGUSR2;
-pub const SIGPROF: i32 = libc::SIGPROF;
-pub const SIGSYS: i32 = libc::SIGSYS;
-pub const SIGTRAP: i32 = libc::SIGTRAP;
-pub const SIGURG: i32 = libc::SIGURG;
-pub const SIGVTALRM: i32 = libc::SIGVTALRM;
-pub const SIGXCPU: i32 = libc::SIGXCPU;
-pub const SIGXFSZ: i32 = libc::SIGXFSZ;
+use libc::{
+    SIGABRT,
+    SIGALRM,
+    SIGBUS,
+    SIGCHLD,
+    SIGCONT,
+    SIGFPE,
+    SIGHUP,
+    SIGILL,
+    SIGINT,
+    SIGKILL,
+    SIGPIPE,
+    SIGQUIT,
+    SIGSEGV,
+    SIGSTOP,
+    SIGTERM,
+    SIGTSTP,
+    SIGTTIN,
+    SIGTTOU,
+    SIGUSR1,
+    SIGUSR2,
+    SIGPROF,
+    SIGSYS,
+    SIGTRAP,
+    SIGURG,
+    SIGVTALRM,
+    SIGXCPU,
+    SIGXFSZ,
+};
 
 #[cfg(target_os = "linux")]
-pub const SIGPOLL: i32 = libc::SIGPOLL;
+use libc::SIGPOLL;
 
 pub fn can_catch(sig: i32) -> bool {
     match sig {
