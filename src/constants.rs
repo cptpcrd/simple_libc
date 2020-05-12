@@ -67,6 +67,13 @@ cfg_if! {
         pub const _LINUX_CAPABILITY_VERSION_3: u32 = 0x2008_0522;
 
         // END USED BY process/capabilities.rs
+
+
+        // BEGIN USED by inotify.rs
+        pub const IN_EXCL_UNLINK: u32 = 0x0400_0000;
+        pub const IN_MASK_ADD: u32 = 0x2000_0000;
+        pub const IN_MASK_CREATE: u32 = 0x1000_0000;
+        // END USED by inotify.rs
     }
     else if #[cfg(target_os = "openbsd")] {
         use super::Int;

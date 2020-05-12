@@ -27,6 +27,8 @@ pub mod flock;
 
 #[cfg(target_os = "linux")]
 pub mod epoll;
+#[cfg(target_os = "linux")]
+pub mod inotify;
 
 pub type Short = libc::c_short;
 pub type Ushort = libc::c_ushort;
