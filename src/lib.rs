@@ -236,7 +236,9 @@ pub fn gethostname() -> io::Result<ffi::OsString> {
             }
             Err(e) => {
                 if let Some(raw_err) = e.raw_os_error() {
-                    if (raw_err == libc::EINVAL || raw_err == libc::ENAMETOOLONG) && name_vec.len() < orig_size * 10 {
+                    if (raw_err == libc::EINVAL || raw_err == libc::ENAMETOOLONG)
+                        && name_vec.len() < orig_size * 10
+                    {
                         name_vec.resize(name_vec.len() * 2, 0);
                         continue;
                     }

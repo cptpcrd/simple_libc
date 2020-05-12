@@ -146,9 +146,7 @@ pub fn getrlimit(resource: Resource) -> io::Result<(Limit, Limit)> {
     };
 
     error::convert_nzero(
-        unsafe {
-            libc::getrlimit(resource as RawResourceType, &mut rlim)
-        },
+        unsafe { libc::getrlimit(resource as RawResourceType, &mut rlim) },
         rlim,
     )
     .map(|rlim| (rlim.rlim_cur, rlim.rlim_max))
@@ -161,9 +159,7 @@ pub fn setrlimit(resource: Resource, new_limits: (Limit, Limit)) -> io::Result<(
     };
 
     error::convert_nzero(
-        unsafe {
-            libc::setrlimit(resource as RawResourceType, &rlim)
-        },
+        unsafe { libc::setrlimit(resource as RawResourceType, &rlim) },
         (),
     )
 }

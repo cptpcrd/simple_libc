@@ -94,11 +94,13 @@ impl From<libc::sigaction> for Sigaction {
             handler: match act.sa_sigaction {
                 libc::SIG_DFL => SigHandler::Default,
                 libc::SIG_IGN => SigHandler::Ignore,
-                _ => if act.sa_flags & libc::SA_SIGINFO != 0 {
-                    SigHandler::ActionHandler(unsafe { std::mem::transmute(act.sa_sigaction) })
-                } else {
-                    SigHandler::Handler(unsafe { std::mem::transmute(act.sa_sigaction) })
-                },
+                _ => {
+                    if act.sa_flags & libc::SA_SIGINFO != 0 {
+                        SigHandler::ActionHandler(unsafe { std::mem::transmute(act.sa_sigaction) })
+                    } else {
+                        SigHandler::Handler(unsafe { std::mem::transmute(act.sa_sigaction) })
+                    }
+                }
             },
         }
     }

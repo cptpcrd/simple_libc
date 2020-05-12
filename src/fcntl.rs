@@ -38,7 +38,7 @@ pub fn set_inheritable(fd: Int, inheritable: bool) -> io::Result<()> {
     let mut flags = getflags(fd)?;
 
     let currently_inheritable = flags & libc::FD_CLOEXEC != 0;
-    
+
     if inheritable == currently_inheritable {
         return Ok(());
     }
