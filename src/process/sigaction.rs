@@ -10,18 +10,12 @@ use super::super::Int;
 bitflags! {
     #[derive(Default)]
     pub struct Flags: Int {
-        const SA_NOCLDSTOP = libc::SA_NOCLDSTOP;
-        const SA_ONSTACK = libc::SA_ONSTACK;
-        const SA_RESETHAND = libc::SA_RESETHAND;
-        const SA_RESTART = libc::SA_RESTART;
-        const SA_NOCLDWAIT = libc::SA_NOCLDWAIT;
-        const SA_NODEFER = libc::SA_NODEFER;
-    }
-}
-
-impl From<Int> for Flags {
-    fn from(f: Int) -> Flags {
-        Flags::from_bits_truncate(f)
+        const NOCLDSTOP = libc::SA_NOCLDSTOP;
+        const ONSTACK = libc::SA_ONSTACK;
+        const RESETHAND = libc::SA_RESETHAND;
+        const RESTART = libc::SA_RESTART;
+        const NOCLDWAIT = libc::SA_NOCLDWAIT;
+        const NODEFER = libc::SA_NODEFER;
     }
 }
 
@@ -91,7 +85,7 @@ impl From<libc::sigaction> for Sigaction {
     fn from(act: libc::sigaction) -> Sigaction {
         Sigaction {
             mask: Sigset::from(act.sa_mask),
-            flags: Flags::from(act.sa_flags),
+            flags: Flags::from_bits_truncate(act.sa_flags),
             handler: match act.sa_sigaction {
                 libc::SIG_DFL => SigHandler::Default,
                 libc::SIG_IGN => SigHandler::Ignore,
