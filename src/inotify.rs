@@ -89,57 +89,50 @@ impl Inotify {
             .map(|fd| Self { fd })
     }
 
+    fn add_watch_impl<P: AsRef<Path>>(
+        &mut self,
+        path: P,
+        flags: u32,
+    ) -> io::Result<Watch> {
+        let c_path = ffi::CString::new(path.as_ref().as_os_str().as_bytes())?;
+
+        super::error::convert_neg_ret(unsafe {
+            libc::inotify_add_watch(self.fd, c_path.as_ptr(), flags)
+        })
+        .map(|wd| Watch { wd })
+    }
+
     /// Add a new watch (or modify an existing watch) for the given file.
+    #[inline]
     pub fn add_watch<P: AsRef<Path>>(
         &mut self,
         path: P,
         events: Events,
         flags: WatchFlags,
     ) -> io::Result<Watch> {
-        let c_path = ffi::CString::new(path.as_ref().as_os_str().as_bytes())?;
-
-        super::error::convert_neg_ret(unsafe {
-            libc::inotify_add_watch(self.fd, c_path.as_ptr(), events.bits | flags.bits)
-        })
-        .map(|wd| Watch { wd })
+        self.add_watch_impl(path, events.bits | flags.bits)
     }
 
     /// Add a new watch for the given file, or extend the watch mask if the watch already exists.
+    #[inline]
     pub fn extend_watch<P: AsRef<Path>>(
         &mut self,
         path: P,
         events: Events,
         flags: WatchFlags,
     ) -> io::Result<Watch> {
-        let c_path = ffi::CString::new(path.as_ref().as_os_str().as_bytes())?;
-
-        super::error::convert_neg_ret(unsafe {
-            libc::inotify_add_watch(
-                self.fd,
-                c_path.as_ptr(),
-                events.bits | flags.bits | constants::IN_MASK_ADD,
-            )
-        })
-        .map(|wd| Watch { wd })
+        self.add_watch_impl(path, events.bits | flags.bits | constants::IN_MASK_ADD)
     }
 
     /// Add a new watch for the given file, failing with an error if the event already exists
+    #[inline]
     pub fn create_watch<P: AsRef<Path>>(
         &mut self,
         path: P,
         events: Events,
         flags: WatchFlags,
     ) -> io::Result<Watch> {
-        let c_path = ffi::CString::new(path.as_ref().as_os_str().as_bytes())?;
-
-        super::error::convert_neg_ret(unsafe {
-            libc::inotify_add_watch(
-                self.fd,
-                c_path.as_ptr(),
-                events.bits | flags.bits | constants::IN_MASK_CREATE,
-            )
-        })
-        .map(|wd| Watch { wd })
+        self.add_watch_impl(path, events.bits | flags.bits | constants::IN_MASK_CREATE)
     }
 
     /// Remove a previously added watch.
