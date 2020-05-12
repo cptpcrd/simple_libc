@@ -299,3 +299,51 @@ pub fn chdir<P: AsRef<Path>>(path: P) -> io::Result<()> {
 pub fn fork() -> io::Result<Int> {
     super::error::convert_neg_ret(unsafe { libc::fork() })
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // Most of these are really just to check that the calls succeed without crashing.
+    // Which is about all we can do for a lot of them.
+
+    #[test]
+    fn test_getpid() {
+        getpid();
+    }
+
+    #[test]
+    fn test_getuidgid() {
+        assert_eq!((getuid(), geteuid()), getreuid());
+        assert_eq!((getgid(), getegid()), getregid());
+    }
+
+    #[cfg(any(target_os = "linux", target_os = "freebsd", target_os = "openbsd", target_os = "dragonfly"))]
+    #[test]
+    fn test_resuidgid() {
+        let (ruid, euid, suid) = getresuid();
+        assert_eq!((getuid(), geteuid()), (ruid, euid));
+        setresuid(ruid, euid, suid).unwrap();
+
+        let (rgid, egid, sgid) = getresgid();
+        assert_eq!((getgid(), getegid()), (rgid, egid));
+        setresgid(rgid, egid, sgid).unwrap();
+    }
+
+    #[test]
+    fn test_getlogin() {
+        getlogin().unwrap();
+    }
+
+    #[test]
+    fn test_getgroups() {
+        getgroups().unwrap();
+        getallgroups().unwrap();
+    }
+
+    #[test]
+    fn test_chdir() {
+        chdir("/").unwrap();
+    }
+}
