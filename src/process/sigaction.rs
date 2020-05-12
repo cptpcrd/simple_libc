@@ -24,6 +24,7 @@ pub enum SigHandler {
     Default,
     Ignore,
     Handler(extern "C" fn(Int)),
+    ActionHandler(extern "C" fn(Int, *mut libc::siginfo_t, *mut libc::c_void)),
 }
 
 pub struct Sigaction {
@@ -70,11 +71,15 @@ impl From<Sigaction> for libc::sigaction {
     fn from(act: Sigaction) -> libc::sigaction {
         libc::sigaction {
             sa_mask: act.mask.raw_set(),
-            sa_flags: act.flags.bits(),
+            sa_flags: act.flags.bits | (match act.handler {
+                SigHandler::ActionHandler(_) => libc::SA_SIGINFO,
+                _ => 0,
+            }),
             sa_sigaction: match act.handler {
                 SigHandler::Default => libc::SIG_DFL,
                 SigHandler::Ignore => libc::SIG_IGN,
                 SigHandler::Handler(f) => f as libc::sighandler_t,
+                SigHandler::ActionHandler(f) => f as libc::sighandler_t,
             },
             sa_restorer: None,
         }
@@ -89,9 +94,14 @@ impl From<libc::sigaction> for Sigaction {
             handler: match act.sa_sigaction {
                 libc::SIG_DFL => SigHandler::Default,
                 libc::SIG_IGN => SigHandler::Ignore,
-                _ => SigHandler::Handler(unsafe {
-                    std::mem::transmute(act.sa_sigaction)
-                }),
+                _ => match act.sa_flags & libc::SA_SIGINFO != 0 {
+                    true => SigHandler::ActionHandler(unsafe {
+                        std::mem::transmute(act.sa_sigaction)
+                    }),
+                    false => SigHandler::Handler(unsafe {
+                        std::mem::transmute(act.sa_sigaction)
+                    }),
+                },
             },
         }
     }
