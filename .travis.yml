@@ -1,0 +1,31 @@
+language: rust
+rust:
+  - stable
+  - beta
+  - nightly
+
+jobs:
+  allow_failures:
+    - rust: nightly
+  fast_finish: true
+
+cache: cargo
+
+env:
+  - TARGET=x86_64-unknown-linux-gnu
+  - TARGET=x86_64-unknown-linux-musl
+  - TARGET=aarch64-unknown-linux-gnu
+  - TARGET=aarch64-unknown-linux-musl
+  - TARGET=armv7-unknown-linux-gnueabi
+  - TARGET=armv7-unknown-linux-musleabi
+  - TARGET=armv7-unknown-linux-gnueabihf
+  - TARGET=armv7-unknown-linux-musleabihf
+  - TARGET=x86_64-unknown-freebsd
+  - TARGET=x86_64-unknown-netbsd
+
+install:
+  - rustup target install "$TARGET"
+
+script:
+  - cargo build --verbose --target="$TARGET"
+  - case "$TARGET" in x86_64-unknown-linux-*) cargo test --verbose --target="$TARGET";; esac
