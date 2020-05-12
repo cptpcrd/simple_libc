@@ -5,14 +5,14 @@ use std::sync;
 
 use lazy_static::lazy_static;
 
-use super::{Char, Int};
+use super::{Char, Int, UidT, GidT};
 
 #[derive(Debug, Clone)]
 pub struct Passwd {
     pub name: ffi::OsString,
     pub passwd: ffi::OsString,
-    pub uid: u32,
-    pub gid: u32,
+    pub uid: UidT,
+    pub gid: GidT,
     pub gecos_info: ffi::OsString,
     pub home_dir: ffi::OsString,
     pub shell: ffi::OsString,
@@ -131,10 +131,10 @@ impl Passwd {
         )
     }
 
-    pub fn lookup_uid(uid: u32) -> io::Result<Option<Self>> {
+    pub fn lookup_uid(uid: UidT) -> io::Result<Option<Self>> {
         Self::lookup(
             &uid,
-            |uid: &u32,
+            |uid: &UidT,
              pwd: *mut libc::passwd,
              buf: *mut libc::c_char,
              buflen: libc::size_t,
