@@ -3,6 +3,7 @@ use std::time;
 use libc;
 use bitflags::bitflags;
 
+use super::Int;
 
 enum CtlOp {
     Add = libc::EPOLL_CTL_ADD as isize,
@@ -77,13 +78,13 @@ impl From<Event> for libc::epoll_event {
 
 bitflags! {
     #[derive(Default)]
-    pub struct EpollFlags: i32 {
+    pub struct EpollFlags: Int {
         const CLOEXEC = libc::EPOLL_CLOEXEC;
     }
 }
 
 pub struct Epoll {
-    fd: libc::c_int,
+    fd: Int,
 }
 
 impl Epoll {
@@ -98,63 +99,63 @@ impl Epoll {
     }
 
     #[inline]
-    pub fn fd(&self) -> i32 {
-        self.fd as i32
+    pub fn fd(&self) -> Int {
+        self.fd
     }
 
 
-    fn ctl(&mut self, op: CtlOp, fd: i32, events: Events, data: u64) -> io::Result<()> {
+    fn ctl(&mut self, op: CtlOp, fd: Int, events: Events, data: u64) -> io::Result<()> {
         let mut ep_event = libc::epoll_event{events: u32::from(events), u64: data};
 
         super::error::convert(unsafe {
-            libc::epoll_ctl(self.fd, op as libc::c_int, fd as libc::c_int, &mut ep_event)
+            libc::epoll_ctl(self.fd, op as Int, fd, &mut ep_event)
         }, ())
     }
 
     #[inline]
-    pub fn del(&mut self, fd: i32) -> io::Result<()> {
+    pub fn del(&mut self, fd: Int) -> io::Result<()> {
         self.ctl(CtlOp::Del, fd, Events::empty(), 0)
     }
 
 
     #[inline]
-    pub fn add(&mut self, fd: i32, events: Events) -> io::Result<()> {
+    pub fn add(&mut self, fd: Int, events: Events) -> io::Result<()> {
         self.add3(fd, events, fd as u64)
     }
 
     #[inline]
-    pub fn modify(&mut self, fd: i32, events: Events) -> io::Result<()> {
+    pub fn modify(&mut self, fd: Int, events: Events) -> io::Result<()> {
         self.modify3(fd, events, fd as u64)
     }
 
 
     #[inline]
-    pub fn add2(&mut self, fd: i32, event: Event) -> io::Result<()> {
+    pub fn add2(&mut self, fd: Int, event: Event) -> io::Result<()> {
         self.add3(fd, event.events, event.data)
     }
 
     #[inline]
-    pub fn modify2(&mut self, fd: i32, event: Event) -> io::Result<()> {
+    pub fn modify2(&mut self, fd: Int, event: Event) -> io::Result<()> {
         self.modify3(fd, event.events, event.data)
     }
 
 
     #[inline]
-    pub fn add3(&mut self, fd: i32, events: Events, data: u64) -> io::Result<()> {
+    pub fn add3(&mut self, fd: Int, events: Events, data: u64) -> io::Result<()> {
         self.ctl(CtlOp::Add, fd, events, data)
     }
 
     #[inline]
-    pub fn modify3(&mut self, fd: i32, events: Events, data: u64) -> io::Result<()> {
+    pub fn modify3(&mut self, fd: Int, events: Events, data: u64) -> io::Result<()> {
         self.ctl(CtlOp::Mod, fd, events, data)
     }
 
 
-    pub fn pwait(&self, events: &mut [Event], timeout: Option<time::Duration>, sigmask: Option<&super::signal::Sigset>) -> io::Result<i32> {
+    pub fn pwait(&self, events: &mut [Event], timeout: Option<time::Duration>, sigmask: Option<&super::signal::Sigset>) -> io::Result<Int> {
         let maxevents = events.len();
 
         let raw_timeout = match timeout {
-            Some(t) => t.as_millis() as i32,
+            Some(t) => t.as_millis() as Int,
             None => -1,
         };
 
@@ -168,7 +169,7 @@ impl Epoll {
         ep_events.resize(maxevents, libc::epoll_event { events: 0, u64: 0 });
 
         super::error::convert_neg_ret(unsafe {
-            libc::epoll_pwait(self.fd, ep_events.as_mut_ptr(), maxevents as i32, raw_timeout, raw_sigmask)
+            libc::epoll_pwait(self.fd, ep_events.as_mut_ptr(), maxevents as Int, raw_timeout, raw_sigmask)
         }).map(|res| {
             for i in 0..(res as usize) {
                 events[i] = Event::from(ep_events[i]);
@@ -178,7 +179,7 @@ impl Epoll {
     }
 
     #[inline]
-    pub fn wait(&self, events: &mut [Event], timeout: Option<time::Duration>) -> io::Result<i32> {
+    pub fn wait(&self, events: &mut [Event], timeout: Option<time::Duration>) -> io::Result<Int> {
         self.pwait(events, timeout, None)
     }
 

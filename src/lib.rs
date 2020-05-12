@@ -30,6 +30,30 @@ pub mod flock;
 pub mod epoll;
 
 
+pub type Short = libc::c_short;
+pub type Ushort = libc::c_ushort;
+pub type Int = libc::c_int;
+pub type Uint = libc::c_uint;
+pub type Long = libc::c_long;
+pub type Ulong = libc::c_ulong;
+pub type LongLong = libc::c_longlong;
+pub type UlongLong = libc::c_ulonglong;
+
+pub type SizeT = libc::size_t;
+pub type SsizeT = libc::ssize_t;
+
+pub type Char = libc::c_char;
+pub type Schar = libc::c_schar;
+pub type Uchar = libc::c_uchar;
+
+pub type Float = libc::c_float;
+pub type Double = libc::c_double;
+
+pub type IdT = libc::id_t;
+pub type PidT = libc::pid_t;
+pub type UidT = libc::uid_t;
+pub type GidT = libc::gid_t;
+
 /// Flush filesystem write caches.
 ///
 /// See the man page for sync(2) for more details.
@@ -48,7 +72,7 @@ pub fn sync() {
 /// Unlike the `sysconf()` wrapper, this function does not
 /// treat return values < 0 specially; that is left to the
 /// user.
-pub fn sysconf_raw(name: i32) -> io::Result<i64> {
+pub fn sysconf_raw(name: Int) -> io::Result<Long> {
     error::set_errno_success();
     error::convert_if_errno_ret(unsafe {
         libc::sysconf(name)
@@ -65,7 +89,7 @@ pub fn sysconf_raw(name: i32) -> io::Result<i64> {
 /// by the C function `sysconf()` is < 0 (usually indicates
 /// no limit). To differentiate between these two
 /// possibilities, use `sysconf_raw()`.
-pub fn sysconf(name: i32) -> Option<i64> {
+pub fn sysconf(name: Int) -> Option<Long> {
     match sysconf_raw(name) {
         Ok(ret) => {
             if ret < 0 {
@@ -91,8 +115,8 @@ pub fn constrain<T: Ord + Eq>(val: T, min: T, max: T) -> T {
 }
 
 
-pub fn pipe_raw() -> io::Result<(i32, i32)> {
-    let mut fds: [i32; 2] = [0; 2];
+pub fn pipe_raw() -> io::Result<(Int, Int)> {
+    let mut fds: [Int; 2] = [0; 2];
 
     error::convert(unsafe {
         libc::pipe(fds.as_mut_ptr())
@@ -111,8 +135,8 @@ pub fn pipe() -> io::Result<(fs::File, fs::File)> {
     target_os = "netbsd",
     target_os = "dragonfly",
 ))]
-pub fn pipe2_raw(flags: i32) -> io::Result<(i32, i32)> {
-    let mut fds: [i32; 2] = [0; 2];
+pub fn pipe2_raw(flags: Int) -> io::Result<(Int, Int)> {
+    let mut fds: [Int; 2] = [0; 2];
 
     error::convert(unsafe {
         libc::pipe2(fds.as_mut_ptr(), flags)
@@ -126,23 +150,23 @@ pub fn pipe2_raw(flags: i32) -> io::Result<(i32, i32)> {
     target_os = "netbsd",
     target_os = "dragonfly",
 ))]
-pub fn pipe2(flags: i32) -> io::Result<(fs::File, fs::File)> {
+pub fn pipe2(flags: Int) -> io::Result<(fs::File, fs::File)> {
     let (r, w) = pipe2_raw(flags)?;
     unsafe { Ok((fs::File::from_raw_fd(r), fs::File::from_raw_fd(w))) }
 }
 
 
 /// Closes the given file descriptor.
-pub fn close_fd(fd: i32) -> io::Result<()> {
+pub fn close_fd(fd: Int) -> io::Result<()> {
     error::convert_nzero(unsafe { libc::close(fd) }, ())
 }
 
 
 pub enum KillSpec {
     /// Kill by process ID (must be > 0)
-    Pid(i32),
+    Pid(PidT),
     /// Kill by process group ID (must be > 1)
-    Pgid(i32),
+    Pgid(PidT),
     /// All processes in this process's process group
     CurPgrp,
     /// All processes except an implementation-defined list
@@ -151,7 +175,7 @@ pub enum KillSpec {
     All,
 }
 
-pub fn kill(spec: KillSpec, sig: i32) -> io::Result<()> {
+pub fn kill(spec: KillSpec, sig: Int) -> io::Result<()> {
     let pid = match spec {
         KillSpec::Pid(pid) => pid,
         KillSpec::Pgid(pgid) => -pgid,
@@ -162,7 +186,7 @@ pub fn kill(spec: KillSpec, sig: i32) -> io::Result<()> {
     error::convert_nzero(unsafe { libc::kill(pid, sig) }, ())
 }
 
-pub fn killpg(pgid: i32, sig: i32) -> io::Result<()> {
+pub fn killpg(pgid: PidT, sig: Int) -> io::Result<()> {
     error::convert_nzero(unsafe { libc::killpg(pgid, sig) }, ())
 }
 
@@ -175,7 +199,7 @@ pub fn killpg(pgid: i32, sig: i32) -> io::Result<()> {
     target_os = "dragonfly",
 ))]
 pub fn sethostname(name: &ffi::OsString) -> io::Result<()> {
-    let name_vec: Vec<i8> = name.clone().into_vec().iter().map(|&x| x as i8).collect();
+    let name_vec: Vec<Char> = name.clone().into_vec().iter().map(|&x| x as Char).collect();
     error::convert_nzero(unsafe {
         libc::sethostname(name_vec.as_ptr(), name_vec.len())
     }, ())
@@ -194,7 +218,7 @@ pub fn gethostname_raw(name_vec: &mut Vec<i8>) -> io::Result<()> {
 
 /// Attempts to determine the current system hostname.
 pub fn gethostname() -> io::Result<ffi::OsString> {
-    let mut name_vec: Vec<i8> = Vec::new();
+    let mut name_vec: Vec<Char> = Vec::new();
     let orig_size = constrain(sysconf(libc::_SC_HOST_NAME_MAX).unwrap_or(255), 10, 1024) as usize;
     name_vec.resize(orig_size, 0);
 
@@ -235,14 +259,14 @@ pub fn gethostname() -> io::Result<ffi::OsString> {
 
 #[cfg(target_os = "linux")]
 pub fn setdomainname(name: &ffi::OsString) -> io::Result<()> {
-    let name_vec: Vec<i8> = name.clone().into_vec().iter().map(|&x| x as i8).collect();
+    let name_vec: Vec<Char> = name.clone().into_vec().iter().map(|&x| x as Char).collect();
     error::convert_nzero(unsafe {
         libc::setdomainname(name_vec.as_ptr(), name_vec.len())
     }, ())
 }
 
 #[cfg(target_os = "linux")]
-pub fn getdomainname_raw(name_vec: &mut Vec<i8>) -> io::Result<()> {
+pub fn getdomainname_raw(name_vec: &mut Vec<Char>) -> io::Result<()> {
     error::convert_nzero(unsafe {
         libc::getdomainname(name_vec.as_mut_ptr(), name_vec.len())
     }, ())
@@ -250,7 +274,7 @@ pub fn getdomainname_raw(name_vec: &mut Vec<i8>) -> io::Result<()> {
 
 #[cfg(target_os = "linux")]
 pub fn getdomainname() -> io::Result<ffi::OsString> {
-    let mut name_vec: Vec<i8> = Vec::new();
+    let mut name_vec: Vec<Char> = Vec::new();
     let orig_size = 128;
     name_vec.resize(orig_size, 0);
 
@@ -320,8 +344,8 @@ pub fn uname() -> io::Result<Utsname> {
 }
 
 
-/// This takes a type that implements IntoIterator<Item=&i8> and constructs an OsString.
-fn bytes_to_osstring<'a, T: IntoIterator<Item=&'a i8>>(bytes: T) -> ffi::OsString {
+/// This takes a type that implements IntoIterator<Item=&Char> and constructs an OsString.
+fn bytes_to_osstring<'a, T: IntoIterator<Item=&'a Char>>(bytes: T) -> ffi::OsString {
     ffi::OsString::from_vec(bytes.into_iter().take_while(|x| **x > 0).map(|x| *x as u8).collect())
 }
 

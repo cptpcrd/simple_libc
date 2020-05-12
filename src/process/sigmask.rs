@@ -3,9 +3,10 @@ use std::io;
 use libc;
 
 use super::super::signal::Sigset;
+use super::super::Int;
 
 
-fn sigmask(how: i32, set: Option<&Sigset>) ->io::Result<Sigset> {
+fn sigmask(how: Int, set: Option<&Sigset>) ->io::Result<Sigset> {
     let oldset = Sigset::empty();
 
     let raw_set: *const libc::sigset_t = match set {

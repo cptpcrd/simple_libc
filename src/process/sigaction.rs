@@ -4,11 +4,12 @@ use libc;
 use bitflags::bitflags;
 
 use super::super::signal::Sigset;
+use super::super::Int;
 
 
 bitflags! {
     #[derive(Default)]
-    pub struct Flags: i32 {
+    pub struct Flags: Int {
         const SA_NOCLDSTOP = libc::SA_NOCLDSTOP;
         const SA_ONSTACK = libc::SA_ONSTACK;
         const SA_RESETHAND = libc::SA_RESETHAND;
@@ -18,8 +19,8 @@ bitflags! {
     }
 }
 
-impl From<i32> for Flags {
-    fn from(f: i32) -> Flags {
+impl From<Int> for Flags {
+    fn from(f: Int) -> Flags {
         Flags::from_bits_truncate(f)
     }
 }
@@ -28,7 +29,7 @@ impl From<i32> for Flags {
 pub enum SigHandler {
     Default,
     Ignore,
-    Handler(extern "C" fn(i32)),
+    Handler(extern "C" fn(Int)),
 }
 
 pub struct Sigaction {
@@ -103,7 +104,7 @@ impl From<libc::sigaction> for Sigaction {
 }
 
 
-fn sigaction(sig: i32, act: Option<Sigaction>) ->io::Result<Sigaction> {
+fn sigaction(sig: Int, act: Option<Sigaction>) ->io::Result<Sigaction> {
     let mut oldact: libc::sigaction = unsafe { std::mem::zeroed() };
 
     let mut newact: *const libc::sigaction = std::ptr::null();
@@ -116,13 +117,13 @@ fn sigaction(sig: i32, act: Option<Sigaction>) ->io::Result<Sigaction> {
     }, oldact).map(|oldact| Sigaction::from(oldact))
 }
 
-pub fn sig_getaction(sig: i32) ->io::Result<Sigaction> {
+pub fn sig_getaction(sig: Int) ->io::Result<Sigaction> {
     sigaction(sig, None)
 }
 
-pub fn sig_setaction(sig: i32, act: Sigaction) ->io::Result<Sigaction> {
+pub fn sig_setaction(sig: Int, act: Sigaction) ->io::Result<Sigaction> {
     sigaction(sig, Some(act))
 }
 
-pub extern "C" fn empty_sighandler(_sig: i32) {
+pub extern "C" fn empty_sighandler(_sig: Int) {
 }

@@ -1,6 +1,8 @@
 use std::io;
 use libc;
 
+use super::Int;
+
 
 pub fn set_errno_success() {
     unsafe {
@@ -9,12 +11,12 @@ pub fn set_errno_success() {
 }
 
 pub fn convert_ret<T>(ret: T) -> io::Result<T> where
-    T: From<i32> + Eq + Copy {
+    T: From<Int> + Eq + Copy {
     convert(ret, ret)
 }
 
 pub fn convert<T, U>(ret: T, res: U) -> io::Result<U> where
-    T: From<i32> + Eq {
+    T: From<Int> + Eq {
     if ret == T::from(-1) {
         return Err(io::Error::last_os_error());
     }
@@ -23,12 +25,12 @@ pub fn convert<T, U>(ret: T, res: U) -> io::Result<U> where
 }
 
 pub fn convert_if_errno_ret<T>(ret: T) -> io::Result<T> where
-    T: From<i32> + Eq + Copy {
+    T: From<Int> + Eq + Copy {
     convert_if_errno(ret, ret)
 }
 
 pub fn convert_if_errno<T, U>(ret: T, res: U) -> io::Result<U> where
-    T: From<i32> + Eq {
+    T: From<Int> + Eq {
     if ret == T::from(-1) {
         return result_or_os_error(res)
     }

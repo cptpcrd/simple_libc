@@ -4,16 +4,18 @@ use libc;
 
 use bitflags::bitflags;
 
+use super::super::{Int, PidT};
+
 
 pub enum ProcStatus {
-    Exited(i32),
-    Signaled(i32),
-    Stopped(i32),
+    Exited(Int),
+    Signaled(Int),
+    Stopped(Int),
     Continued,
 }
 
 impl ProcStatus {
-    fn from_raw_status(status: i32) -> Self {
+    fn from_raw_status(status: Int) -> Self {
         unsafe {
             if libc::WIFSIGNALED(status) {
                 Self::Signaled(libc::WTERMSIG(status))
@@ -33,8 +35,8 @@ impl ProcStatus {
 }
 
 
-pub fn wait() -> io::Result<(i32, ProcStatus)> {
-    let mut status: i32 = 0;
+pub fn wait() -> io::Result<(PidT, ProcStatus)> {
+    let mut status: Int = 0;
 
     super::super::error::convert_neg_ret(unsafe {
         libc::wait(&mut status)
@@ -43,21 +45,21 @@ pub fn wait() -> io::Result<(i32, ProcStatus)> {
 
 
 pub enum WaitpidSpec {
-    Pid(i32),
-    Pgid(i32),
+    Pid(PidT),
+    Pgid(PidT),
     Any,
     CurrentPgid,
 }
 
 bitflags! {
-    pub struct WaitpidOptions: i32 {
+    pub struct WaitpidOptions: Int {
         const CONTINUED = libc::WCONTINUED;
         const NOHANG = libc::WNOHANG;
         const UNTRACED = libc::WUNTRACED;
     }
 }
 
-pub fn waitpid(spec: WaitpidSpec, options: WaitpidOptions) -> io::Result<Option<(i32, ProcStatus)>> {
+pub fn waitpid(spec: WaitpidSpec, options: WaitpidOptions) -> io::Result<Option<(PidT, ProcStatus)>> {
     let wpid = match spec {
         WaitpidSpec::Pid(pid) => pid,
         WaitpidSpec::Pgid(pgid) => -pgid,
@@ -65,7 +67,7 @@ pub fn waitpid(spec: WaitpidSpec, options: WaitpidOptions) -> io::Result<Option<
         WaitpidSpec::CurrentPgid => 0,
     };
 
-    let mut status: i32 = 0;
+    let mut status: Int = 0;
 
     super::super::error::convert_neg_ret(unsafe {
         libc::waitpid(wpid, &mut status, options.bits)

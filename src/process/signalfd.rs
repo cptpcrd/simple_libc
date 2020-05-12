@@ -4,15 +4,16 @@ use libc;
 
 use super::super::signal::Sigset;
 use super::super::error;
+use super::super::Int;
 
 
 #[derive(Debug)]
 pub struct SignalFd {
-    fd: i32,
+    fd: Int,
 }
 
 impl SignalFd {
-    pub fn new(mask: &Sigset, flags: i32) -> io::Result<SignalFd> {
+    pub fn new(mask: &Sigset, flags: Int) -> io::Result<SignalFd> {
         return error::convert_ret(unsafe {
             libc::signalfd(-1, &mask.raw_set(), flags)
         }).map(|fd| SignalFd { fd })
@@ -70,7 +71,7 @@ impl Drop for SignalFd {
 
 #[derive(Debug, Copy, Clone)]
 pub struct Siginfo {
-    pub sig: i32,
+    pub sig: Int,
     pub errno: i32,
     pub code: i32,
     pub pid: u32,
@@ -92,7 +93,7 @@ pub struct Siginfo {
 impl From<&libc::signalfd_siginfo> for Siginfo {
     fn from(siginfo: &libc::signalfd_siginfo) -> Siginfo {
         Siginfo {
-            sig: siginfo.ssi_signo as i32,
+            sig: siginfo.ssi_signo as Int,
             errno: siginfo.ssi_errno,
             code: siginfo.ssi_code,
             pid: siginfo.ssi_pid,

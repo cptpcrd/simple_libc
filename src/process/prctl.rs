@@ -13,6 +13,8 @@ use serde::de::Deserialize;
 use super::super::constants;
 use super::super::error;
 
+use super::super::{Int, Ulong};
+
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, strum_macros::Display, strum_macros::EnumString, strum_macros::EnumIter)]
 pub enum Cap {
@@ -399,7 +401,7 @@ impl CapState {
         Self::get_for_pid(0)
     }
 
-    pub fn get_for_pid(pid: i32) -> io::Result<Self> {
+    pub fn get_for_pid(pid: Int) -> io::Result<Self> {
         let mut header = c_cap_user_header {
             version: constants::_LINUX_CAPABILITY_VERSION_3,
             pid: pid,
@@ -463,7 +465,7 @@ impl CapState {
 }
 
 
-fn prctl(option: i32, arg2: u64, arg3: u64, arg4: u64, arg5: u64) -> io::Result<i32> {
+fn prctl(option: Int, arg2: Ulong, arg3: Ulong, arg4: Ulong, arg5: Ulong) -> io::Result<Int> {
     error::convert_neg_ret(unsafe {
         libc::prctl(option, arg2, arg3, arg4, arg5)
     })

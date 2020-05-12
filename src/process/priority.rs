@@ -2,17 +2,19 @@ use std::io;
 use libc;
 
 use super::super::error;
+use super::super::{Int, IdT};
 
-pub fn nice(incr: i32) -> io::Result<i32> {
+
+pub fn nice(incr: Int) -> io::Result<Int> {
     error::set_errno_success();
     error::convert_if_errno_ret(unsafe { libc::nice(incr) })
 }
 
 
 pub enum Target {
-    Process(u32),
-    ProcGroup(u32),
-    User(u32),
+    Process(IdT),
+    ProcGroup(IdT),
+    User(IdT),
 }
 
 // Work around GNU not implementing the POSIX standard correctly
@@ -20,7 +22,7 @@ pub enum Target {
 type PriorityWhich = libc::__priority_which_t;
 
 #[cfg(not(any(target_env = "", target_env = "gnu")))]
-type PriorityWhich = i32;
+type PriorityWhich = Int;
 
 impl Target {
     fn unpack(&self) -> (PriorityWhich, u32) {
@@ -32,7 +34,7 @@ impl Target {
     }
 }
 
-pub fn get(t: Target) -> io::Result<i32> {
+pub fn get(t: Target) -> io::Result<Int> {
     let (which, who) = t.unpack();
 
     error::set_errno_success();
@@ -41,7 +43,7 @@ pub fn get(t: Target) -> io::Result<i32> {
     })
 }
 
-pub fn set(t: Target, value: i32) -> io::Result<()> {
+pub fn set(t: Target, value: Int) -> io::Result<()> {
     let (which, who) = t.unpack();
 
     error::convert_nzero(unsafe {

@@ -6,6 +6,8 @@ use libc;
 
 use lazy_static::lazy_static;
 
+use super::Int;
+
 
 #[derive(Debug, Clone)]
 pub struct Passwd {
@@ -52,7 +54,7 @@ impl Passwd {
 
     fn lookup<T, F>(t: &T, getpwfunc: F) -> io::Result<Option<Self>>
         where T: Sized,
-        F: Fn(&T, *mut libc::passwd, *mut libc::c_char, libc::size_t, *mut *mut libc::passwd) -> i32 {
+        F: Fn(&T, *mut libc::passwd, *mut libc::c_char, libc::size_t, *mut *mut libc::passwd) -> Int {
         let mut passwd: libc::passwd = unsafe { std::mem::zeroed() };
 
         let init_size = super::constrain(super::sysconf(libc::_SC_GETPW_R_SIZE_MAX).unwrap_or(1024), 256, 4096) as usize;

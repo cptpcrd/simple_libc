@@ -17,35 +17,37 @@ pub mod signalfd;
 #[cfg(target_os = "linux")]
 pub mod prctl;
 
+use super::{Int, PidT, UidT, GidT};
+
 
 #[inline]
-pub fn getpid() -> i32 {
+pub fn getpid() -> PidT {
     unsafe { libc::getpid() }
 }
 
 
 /// Returns the current real user ID.
 #[inline]
-pub fn getuid() -> u32 {
+pub fn getuid() -> UidT {
     unsafe { libc::getuid() }
 }
 
 /// Returns the current effective user ID.
 #[inline]
-pub fn geteuid() -> u32 {
+pub fn geteuid() -> UidT {
     unsafe { libc::geteuid() }
 }
 
 
 /// Returns the current real group ID.
 #[inline]
-pub fn getgid() -> u32 {
+pub fn getgid() -> GidT {
     unsafe { libc::getgid() }
 }
 
 /// Returns the current effective group ID.
 #[inline]
-pub fn getegid() -> u32 {
+pub fn getegid() -> GidT {
     unsafe { libc::getegid() }
 }
 
@@ -69,9 +71,9 @@ pub fn getegid() -> u32 {
 ///    returned.
 ///
 /// In most cases, the `getgroups()` wrapper should be preferred.
-pub fn getgroups_raw(groups: &mut Vec<u32>) -> io::Result<i32> {
+pub fn getgroups_raw(groups: &mut Vec<GidT>) -> io::Result<Int> {
     super::error::convert_neg_ret(unsafe {
-        libc::getgroups(groups.len() as i32, groups.as_mut_ptr())
+        libc::getgroups(groups.len() as Int, groups.as_mut_ptr())
     })
 }
 
@@ -81,8 +83,8 @@ pub fn getgroups_raw(groups: &mut Vec<u32>) -> io::Result<i32> {
 /// This is a higher-level wrapper that calls `getgroups_raw()` twice,
 /// first to determine the number of groups and then again to actually
 /// fill the list.
-pub fn getgroups() -> io::Result<Vec<u32>> {
-    let mut groups: Vec<u32> = Vec::new();
+pub fn getgroups() -> io::Result<Vec<GidT>> {
+    let mut groups: Vec<GidT> = Vec::new();
 
     let ngroups = getgroups_raw(&mut groups)?;
 
@@ -100,7 +102,7 @@ pub fn getgroups() -> io::Result<Vec<u32>> {
 ///
 /// No guarantees are made about the order of the vector, or the
 /// uniqueness of its elements.
-pub fn getallgroups() -> io::Result<Vec<u32>> {
+pub fn getallgroups() -> io::Result<Vec<GidT>> {
     let mut groups = getgroups()?;
 
     let (rgid, egid) = getregid();
@@ -119,7 +121,7 @@ pub fn getallgroups() -> io::Result<Vec<u32>> {
 
 
 extern "C" {
-    fn getlogin_r(buf: *mut libc::c_char, bufsize: libc::size_t) -> i32;
+    fn getlogin_r(buf: *mut libc::c_char, bufsize: libc::size_t) -> libc::c_int;
 }
 
 /// [NOT RECOMMENDED] Returns the username of the currently logged-in
@@ -148,44 +150,44 @@ pub fn getlogin() -> io::Result<ffi::OsString> {
 }
 
 
-pub fn setuid(uid: u32) -> io::Result<()> {
+pub fn setuid(uid: UidT) -> io::Result<()> {
     super::error::convert_nzero(unsafe {
         libc::setuid(uid)
     }, ())
 }
 
-pub fn seteuid(uid: u32) -> io::Result<()> {
+pub fn seteuid(uid: UidT) -> io::Result<()> {
     super::error::convert_nzero(unsafe {
         libc::seteuid(uid)
     }, ())
 }
 
-pub fn setreuid(ruid: u32, euid: u32) -> io::Result<()> {
+pub fn setreuid(ruid: UidT, euid: UidT) -> io::Result<()> {
     super::error::convert_nzero(unsafe {
         libc::setreuid(ruid, euid)
     }, ())
 }
 
 
-pub fn setgid(gid: u32) -> io::Result<()> {
+pub fn setgid(gid: GidT) -> io::Result<()> {
     super::error::convert_nzero(unsafe {
         libc::setgid(gid)
     }, ())
 }
 
-pub fn setegid(gid: u32) -> io::Result<()> {
+pub fn setegid(gid: GidT) -> io::Result<()> {
     super::error::convert_nzero(unsafe {
         libc::setegid(gid)
     }, ())
 }
 
-pub fn setregid(rgid: u32, egid: u32) -> io::Result<()> {
+pub fn setregid(rgid: GidT, egid: GidT) -> io::Result<()> {
     super::error::convert_nzero(unsafe {
         libc::setregid(rgid, egid)
     }, ())
 }
 
-pub fn setgroups(groups: &[u32]) -> io::Result<()> {
+pub fn setgroups(groups: &[GidT]) -> io::Result<()> {
     super::error::convert_nzero(unsafe {
         libc::setgroups(groups.len(), groups.as_ptr())
     }, ())
@@ -194,52 +196,52 @@ pub fn setgroups(groups: &[u32]) -> io::Result<()> {
 
 cfg_if::cfg_if! {
     if #[cfg(any(target_os = "linux", target_os = "freebsd", target_os = "openbsd", target_os = "dragonfly"))] {
-        pub fn getresuid() -> (u32, u32, u32) {
-            let mut ruid: u32 = 0;
-            let mut euid: u32 = 0;
-            let mut suid: u32 = 0;
+        pub fn getresuid() -> (UidT, UidT, UidT) {
+            let mut ruid: UidT = 0;
+            let mut euid: UidT = 0;
+            let mut suid: UidT = 0;
 
             unsafe { libc::getresuid(&mut ruid, &mut euid, &mut suid); }
             (ruid, euid, suid)
         }
 
-        pub fn getresgid() -> (u32, u32, u32) {
-            let mut rgid: u32 = 0;
-            let mut egid: u32 = 0;
-            let mut sgid: u32 = 0;
+        pub fn getresgid() -> (GidT, GidT, GidT) {
+            let mut rgid: GidT = 0;
+            let mut egid: GidT = 0;
+            let mut sgid: GidT = 0;
 
             unsafe { libc::getresgid(&mut rgid, &mut egid, &mut sgid); }
             (rgid, egid, sgid)
         }
 
-        pub fn setresuid(ruid: u32, euid: u32, suid: u32) -> io::Result<()> {
+        pub fn setresuid(ruid: UidT, euid: UidT, suid: UidT) -> io::Result<()> {
             super::error::convert_nzero(unsafe {
                 libc::setresuid(ruid, euid, suid)
             }, ())
         }
 
-        pub fn setresgid(rgid: u32, egid: u32, sgid: u32) -> io::Result<()> {
+        pub fn setresgid(rgid: GidT, egid: GidT, sgid: GidT) -> io::Result<()> {
             super::error::convert_nzero(unsafe {
                 libc::setresgid(rgid, egid, sgid)
             }, ())
         }
 
-        fn _getreuid() -> (u32, u32) {
+        fn _getreuid() -> (UidT, UidT) {
             let (ruid, euid, _) = getresuid();
             (ruid, euid)
         }
 
-        fn _getregid() -> (u32, u32) {
+        fn _getregid() -> (GidT, GidT) {
             let (rgid, egid, _) = getresgid();
             (rgid, egid)
         }
     }
     else {
-        fn _getreuid() -> (u32, u32) {
+        fn _getreuid() -> (UidT, UidT) {
             (getuid(), geteuid())
         }
 
-        fn _getregid() -> (u32, u32) {
+        fn _getregid() -> (GidT, GidT) {
             (getgid(), getegid())
         }
     }
@@ -251,7 +253,7 @@ cfg_if::cfg_if! {
 /// the saved UID. On other platforms, it combines the results of `getuid()` and
 /// `geteuid()`.
 #[inline]
-pub fn getreuid() -> (u32, u32) {
+pub fn getreuid() -> (UidT, UidT) {
     _getreuid()
 }
 
@@ -261,7 +263,7 @@ pub fn getreuid() -> (u32, u32) {
 /// the saved GID. On other platforms, it combines the results of `getgid()` and
 /// `getegid()`.
 #[inline]
-pub fn getregid() -> (u32, u32) {
+pub fn getregid() -> (GidT, GidT) {
     _getregid()
 }
 
@@ -294,6 +296,6 @@ pub fn chdir<P: AsRef<Path>>(path: P) -> io::Result<()> {
 /// If an error occurred, the Result returned represents the error encountered.
 /// Otherwise, the Ok value of the Result is 0 in the child, and the child's PID
 /// in the parent.
-pub fn fork() -> io::Result<i32> {
+pub fn fork() -> io::Result<Int> {
     super::error::convert_neg_ret(unsafe { libc::fork() })
 }
