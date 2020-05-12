@@ -49,12 +49,6 @@ impl SignalFd {
             Ok(n)
         })
     }
-
-    pub fn close(&self) {
-        unsafe {
-            libc::close(self.fd);
-        }
-    }
 }
 
 impl AsRawFd for SignalFd {
@@ -65,7 +59,9 @@ impl AsRawFd for SignalFd {
 
 impl Drop for SignalFd {
     fn drop(&mut self) {
-        self.close();
+        unsafe {
+            libc::close(self.fd);
+        }
     }
 }
 
