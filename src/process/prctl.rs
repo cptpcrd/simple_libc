@@ -289,6 +289,7 @@ impl IntoIterator for CapSet {
     }
 }
 
+#[allow(clippy::trivially_copy_pass_by_ref)]
 pub fn serialize_capset_raw<S: serde::Serializer>(
     set: &CapSet,
     serializer: S,
@@ -304,6 +305,7 @@ pub fn deserialize_capset_raw<'d, D: serde::Deserializer<'d>>(
     })
 }
 
+#[allow(clippy::trivially_copy_pass_by_ref)]
 pub fn serialize_capset_seq<S: serde::Serializer>(
     set: &CapSet,
     serializer: S,

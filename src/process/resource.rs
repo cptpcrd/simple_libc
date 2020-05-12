@@ -116,6 +116,7 @@ impl<'d> serde::Deserialize<'d> for Resource {
     }
 }
 
+#[allow(clippy::trivially_copy_pass_by_ref)]
 pub fn serialize_limit<S: serde::Serializer>(
     limit: &Limit,
     serializer: S,
