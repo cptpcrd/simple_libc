@@ -131,3 +131,53 @@ pub fn while_erange<F: FnMut(i32) -> io::Result<T>, T>(mut callback: F, max_n: i
         i += 1;
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_convert() {
+        assert_eq!(convert(-2, ()).unwrap(), ());
+        assert_eq!(convert(-1, ()).unwrap_err().raw_os_error(), io::Error::last_os_error().raw_os_error());
+        assert_eq!(convert(0, ()).unwrap(), ());
+        assert_eq!(convert(1, ()).unwrap(), ());
+
+        assert_eq!(convert_ret(-2).unwrap(), -2);
+        assert_eq!(convert_ret(-1).unwrap_err().raw_os_error(), io::Error::last_os_error().raw_os_error());
+        assert_eq!(convert_ret(0).unwrap(), 0);
+        assert_eq!(convert_ret(1).unwrap(), 1);
+    }
+
+    #[test]
+    fn test_convert_neg() {
+        assert_eq!(convert_neg(-1, ()).unwrap_err().raw_os_error(), io::Error::last_os_error().raw_os_error());
+        assert_eq!(convert_neg(-2, ()).unwrap_err().raw_os_error(), io::Error::last_os_error().raw_os_error());
+        assert_eq!(convert_neg(0, ()).unwrap(), ());
+        assert_eq!(convert_neg(1, ()).unwrap(), ());
+
+        assert_eq!(convert_neg_ret(-1).unwrap_err().raw_os_error(), io::Error::last_os_error().raw_os_error());
+        assert_eq!(convert_neg_ret(-2).unwrap_err().raw_os_error(), io::Error::last_os_error().raw_os_error());
+        assert_eq!(convert_neg_ret(0).unwrap(), 0);
+        assert_eq!(convert_neg_ret(1).unwrap(), 1);
+    }
+
+    #[test]
+    fn test_convert_nzero() {
+        assert_eq!(convert_nzero(-1, ()).unwrap_err().raw_os_error(), io::Error::last_os_error().raw_os_error());
+        assert_eq!(convert_nzero(-2, ()).unwrap_err().raw_os_error(), io::Error::last_os_error().raw_os_error());
+        assert_eq!(convert_nzero(0, ()).unwrap(), ());
+        assert_eq!(convert_nzero(1, ()).unwrap_err().raw_os_error(), io::Error::last_os_error().raw_os_error());
+
+        assert_eq!(convert_nzero_ret(-1).unwrap_err().raw_os_error(), io::Error::last_os_error().raw_os_error());
+        assert_eq!(convert_nzero_ret(-2).unwrap_err().raw_os_error(), io::Error::last_os_error().raw_os_error());
+        assert_eq!(convert_nzero_ret(0).unwrap(), 0);
+        assert_eq!(convert_nzero_ret(1).unwrap_err().raw_os_error(), io::Error::last_os_error().raw_os_error());
+    }
+
+    #[test]
+    fn test_set_errno_success() {
+        set_errno_success();
+    }
+}
