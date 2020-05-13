@@ -338,11 +338,6 @@ mod tests {
     }
 
     #[test]
-    fn test_getlogin() {
-        getlogin().unwrap();
-    }
-
-    #[test]
     fn test_getgroups() {
         getgroups().unwrap();
         getallgroups().unwrap();
