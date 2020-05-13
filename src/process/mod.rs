@@ -302,6 +302,14 @@ pub fn fork() -> io::Result<Int> {
     super::error::convert_neg_ret(unsafe { libc::fork() })
 }
 
+pub fn setpgid(pid: PidT, pgid: PidT) -> io::Result<()> {
+    super::error::convert_nzero_ret(unsafe { libc::setpgid(pid, pgid) })
+}
+
+pub fn setsid() -> io::Result<PidT> {
+    super::error::convert_neg_ret(unsafe { libc::setsid() })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
