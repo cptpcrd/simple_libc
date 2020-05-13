@@ -26,6 +26,11 @@ pub fn getpid() -> PidT {
     unsafe { libc::getpid() }
 }
 
+#[inline]
+pub fn getppid() -> PidT {
+    unsafe { libc::getppid() }
+}
+
 /// Returns the current real user ID.
 #[inline]
 pub fn getuid() -> UidT {
