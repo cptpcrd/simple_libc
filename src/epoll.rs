@@ -27,20 +27,6 @@ bitflags! {
     }
 }
 
-impl From<u32> for Events {
-    #[inline]
-    fn from(i: u32) -> Events {
-        Events::from_bits_truncate(i as i32)
-    }
-}
-
-impl From<Events> for u32 {
-    #[inline]
-    fn from(m: Events) -> u32 {
-        m.bits() as u32
-    }
-}
-
 #[derive(Debug, Copy, Clone)]
 pub struct Event {
     pub events: Events,
@@ -53,26 +39,6 @@ impl Default for Event {
         Event {
             events: Events::empty(),
             data: 0,
-        }
-    }
-}
-
-impl From<libc::epoll_event> for Event {
-    #[inline]
-    fn from(ev: libc::epoll_event) -> Event {
-        Event {
-            events: Events::from(ev.events),
-            data: ev.u64,
-        }
-    }
-}
-
-impl From<Event> for libc::epoll_event {
-    #[inline]
-    fn from(ev: Event) -> libc::epoll_event {
-        libc::epoll_event {
-            events: u32::from(ev.events),
-            u64: ev.data,
         }
     }
 }
@@ -102,7 +68,7 @@ impl Epoll {
 
     fn ctl(&mut self, op: CtlOp, fd: Int, events: Events, data: u64) -> io::Result<()> {
         let mut ep_event = libc::epoll_event {
-            events: u32::from(events),
+            events: events.bits as u32,
             u64: data,
         };
 
@@ -180,7 +146,10 @@ impl Epoll {
         })
         .map(|res| {
             for i in 0..(res as usize) {
-                events[i] = Event::from(ep_events[i]);
+                events[i] = Event {
+                    events: Events::from_bits_truncate(ep_events[i].events as i32),
+                    data: ep_events[i].u64,
+                };
             }
             res
         })
