@@ -303,7 +303,7 @@ pub fn fork() -> io::Result<Int> {
 }
 
 pub fn setpgid(pid: PidT, pgid: PidT) -> io::Result<()> {
-    super::error::convert_nzero_ret(unsafe { libc::setpgid(pid, pgid) })
+    super::error::convert_nzero(unsafe { libc::setpgid(pid, pgid) }, ())
 }
 
 pub fn setsid() -> io::Result<PidT> {
