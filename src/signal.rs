@@ -2,21 +2,21 @@ use std::collections::HashMap;
 use std::io;
 
 use lazy_static::lazy_static;
-use libc::{
+pub use libc::{
     SIGABRT, SIGALRM, SIGBUS, SIGCHLD, SIGCONT, SIGFPE, SIGHUP, SIGILL, SIGINT, SIGKILL, SIGPIPE,
     SIGPROF, SIGQUIT, SIGSEGV, SIGSTOP, SIGSYS, SIGTERM, SIGTRAP, SIGTSTP, SIGTTIN, SIGTTOU,
     SIGURG, SIGUSR1, SIGUSR2, SIGVTALRM, SIGXCPU, SIGXFSZ,
 };
 
 #[cfg(target_os = "linux")]
-use libc::SIGPOLL;
+pub use libc::SIGPOLL;
 
 use super::Int;
 
 pub fn can_catch(sig: Int) -> bool {
     match sig {
-        libc::SIGKILL => false,
-        libc::SIGSTOP => false,
+        SIGKILL => false,
+        SIGSTOP => false,
         _ => true,
     }
 }
