@@ -2,7 +2,7 @@ use std::io;
 use std::os::unix;
 use std::os::unix::io::AsRawFd;
 
-use super::{GidT, Int, UidT};
+use super::super::{GidT, Int, UidT};
 
 cfg_if::cfg_if! {
     if #[cfg(any(target_os = "linux", target_os = "openbsd"))] {
@@ -16,13 +16,13 @@ cfg_if::cfg_if! {
         #[repr(C)]
         pub struct Ucred {
             #[cfg(target_os = "linux")]
-            pub pid: super::PidT,
+            pub pid: super::super::PidT,
 
             pub uid: UidT,
             pub gid: GidT,
 
             #[cfg(not(target_os = "linux"))]
-            pub pid: super::PidT,
+            pub pid: super::super::PidT,
         }
 
         fn get_ucred_raw_impl(sockfd: Int) -> io::Result<Ucred> {
@@ -34,7 +34,7 @@ cfg_if::cfg_if! {
 
             let mut len = std::mem::size_of::<Ucred>() as u32;
 
-            super::error::convert(unsafe {
+            super::super::error::convert(unsafe {
                 libc::getsockopt(
                     sockfd,
                     libc::SOL_SOCKET,
