@@ -70,3 +70,25 @@ pub fn get_lock(fd: Int, lock: &mut libc::flock) -> io::Result<()> {
     unsafe { fcntl_raw!(fd, libc::F_GETLK, lock)? };
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use std::os::unix::io::AsRawFd;
+
+    use super::*;
+
+    #[test]
+    fn test_inheritable() {
+        let f = std::fs::File::open("/dev/null").unwrap();
+
+        set_inheritable(f.as_raw_fd(), false).unwrap();
+        assert!(!is_inheritable(f.as_raw_fd()).unwrap());
+        set_inheritable(f.as_raw_fd(), false).unwrap();
+        assert!(!is_inheritable(f.as_raw_fd()).unwrap());
+
+        set_inheritable(f.as_raw_fd(), true).unwrap();
+        assert!(is_inheritable(f.as_raw_fd()).unwrap());
+        set_inheritable(f.as_raw_fd(), true).unwrap();
+        assert!(is_inheritable(f.as_raw_fd()).unwrap());
+    }
+}
