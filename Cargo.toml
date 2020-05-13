@@ -1,6 +1,6 @@
 [package]
 name = "simple_libc"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2018"
 
 description = "Safe, friendly interfaces to some commonly used Unix libc functions."
