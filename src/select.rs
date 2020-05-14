@@ -1,4 +1,5 @@
 use std::io;
+use std::iter::FromIterator;
 use std::time::Duration;
 
 use super::signal::Sigset;
@@ -59,11 +60,41 @@ impl FdSet {
 }
 
 impl Default for FdSet {
+    #[inline]
     fn default() -> Self {
         Self::empty()
     }
 }
 
+impl FromIterator<Int> for FdSet {
+    #[inline]
+    fn from_iter<T: IntoIterator<Item = Int>>(fds: T) -> Self {
+        build_fdset(fds).0
+    }
+}
+
+pub fn build_fdset<T: IntoIterator<Item = Int>>(fds: T) -> (FdSet, Int) {
+    let mut fdset = FdSet::empty();
+    let mut nfds: Int = 0;
+    for fd in fds {
+        fdset.add(fd);
+        nfds = std::cmp::max(nfds, fd + 1);
+    }
+    (fdset, nfds)
+}
+
+pub fn build_fdset_slice(fds: &[Int]) -> (FdSet, Int) {
+    let mut fdset = FdSet::empty();
+    let mut nfds: Int = 0;
+    for fd in fds {
+        let fd = *fd;
+        fdset.add(fd);
+        nfds = std::cmp::max(nfds, fd + 1);
+    }
+    (fdset, nfds)
+}
+
+#[inline]
 fn raw_opt_fdset(set: Option<&mut FdSet>) -> *mut libc::fd_set {
     match set {
         Some(s) => &mut s.raw,
@@ -130,6 +161,122 @@ pub fn select_raw(
         )
     })
     .map(|n| n as usize)
+}
+
+fn build_raw_setup(
+    readfds: &[Int],
+    writefds: &[Int],
+    errorfds: &[Int],
+) -> (Int, Option<FdSet>, Option<FdSet>, Option<FdSet>) {
+    let mut nfds: Int = 0;
+
+    let readfdset = if readfds.is_empty() {
+        None
+    } else {
+        let (fdset, n) = build_fdset_slice(readfds);
+        nfds = std::cmp::max(nfds, n);
+        Some(fdset)
+    };
+
+    let writefdset = if writefds.is_empty() {
+        None
+    } else {
+        let (fdset, n) = build_fdset_slice(writefds);
+        nfds = std::cmp::max(nfds, n);
+        Some(fdset)
+    };
+
+    let errorfdset = if errorfds.is_empty() {
+        None
+    } else {
+        let (fdset, n) = build_fdset_slice(errorfds);
+        nfds = std::cmp::max(nfds, n);
+        Some(fdset)
+    };
+
+    (nfds, readfdset, writefdset, errorfdset)
+}
+
+fn build_return_vec(
+    mut n: usize,
+    orig_fds: &[Int],
+    fdset: Option<&mut FdSet>,
+) -> (usize, Vec<Int>) {
+    if n == 0 {
+        return (n, Vec::new());
+    }
+
+    match fdset {
+        Some(s) => {
+            let mut res: Vec<Int> = Vec::with_capacity(orig_fds.len());
+            for fd in orig_fds {
+                if s.contains(*fd) {
+                    res.push(*fd);
+                    n -= 1;
+                    if n == 0 {
+                        break;
+                    }
+                }
+            }
+            res.shrink_to_fit();
+            (n, res)
+        }
+        None => (n, Vec::new()),
+    }
+}
+
+pub fn select_simple(
+    readfds: &[Int],
+    writefds: &[Int],
+    errorfds: &[Int],
+    timeout: Option<Duration>,
+) -> io::Result<(Vec<Int>, Vec<Int>, Vec<Int>)> {
+    let (nfds, mut readfdset, mut writefdset, mut errorfdset) =
+        build_raw_setup(readfds, writefds, errorfds);
+
+    let n = select_raw(
+        nfds,
+        readfdset.as_mut(),
+        writefdset.as_mut(),
+        errorfdset.as_mut(),
+        timeout,
+    )?;
+
+    let (n, ready_readfds) = build_return_vec(n, readfds, readfdset.as_mut());
+    let (n, ready_writefds) = build_return_vec(n, writefds, writefdset.as_mut());
+    let (n, ready_errorfds) = build_return_vec(n, errorfds, errorfdset.as_mut());
+
+    debug_assert_eq!(n, 0);
+
+    Ok((ready_readfds, ready_writefds, ready_errorfds))
+}
+
+pub fn pselect_simple(
+    readfds: &[Int],
+    writefds: &[Int],
+    errorfds: &[Int],
+    timeout: Option<Duration>,
+    sigmask: Option<Sigset>,
+) -> io::Result<(Vec<Int>, Vec<Int>, Vec<Int>)> {
+    let (nfds, mut readfdset, mut writefdset, mut errorfdset) =
+        build_raw_setup(readfds, writefds, errorfds);
+
+    let n = pselect_raw(
+        nfds,
+        readfdset.as_mut(),
+        writefdset.as_mut(),
+        errorfdset.as_mut(),
+        timeout,
+        sigmask,
+    )?;
+
+    let (n, ready_readfds) = build_return_vec(n, readfds, readfdset.as_mut());
+    let (n, ready_writefds) = build_return_vec(n, writefds, writefdset.as_mut());
+    let (n, ready_errorfds) = build_return_vec(n, errorfds, errorfdset.as_mut());
+
+    debug_assert_eq!(n, 0);
+
+    Ok((ready_readfds, ready_writefds, ready_errorfds))
 }
 
 #[cfg(test)]
