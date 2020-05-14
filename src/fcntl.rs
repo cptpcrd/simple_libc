@@ -90,5 +90,23 @@ mod tests {
         assert!(is_inheritable(f.as_raw_fd()).unwrap());
         set_inheritable(f.as_raw_fd(), true).unwrap();
         assert!(is_inheritable(f.as_raw_fd()).unwrap());
+
+        set_inheritable(f.as_raw_fd(), false).unwrap();
+        assert!(!is_inheritable(f.as_raw_fd()).unwrap());
+        set_inheritable(f.as_raw_fd(), false).unwrap();
+        assert!(!is_inheritable(f.as_raw_fd()).unwrap());
+    }
+
+    #[test]
+    fn test_dupfd() {
+        let f = std::fs::File::open("/dev/null").unwrap();
+
+        let f2 = dupfd(f.as_raw_fd(), 0).unwrap();
+        assert!(is_inheritable(f2).unwrap());
+        super::super::close_fd(f2).unwrap();
+
+        let f2 = dupfd_cloexec(f.as_raw_fd(), 0).unwrap();
+        assert!(!is_inheritable(f2).unwrap());
+        super::super::close_fd(f2).unwrap();
     }
 }
