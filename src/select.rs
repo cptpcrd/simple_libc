@@ -1,3 +1,4 @@
+use std::convert::TryInto;
 use std::io;
 use std::iter::FromIterator;
 use std::time::Duration;
@@ -112,7 +113,7 @@ pub fn pselect_raw(
 ) -> io::Result<usize> {
     let raw_timeout = match timeout {
         Some(t) => &libc::timespec {
-            tv_sec: t.as_secs() as libc::time_t,
+            tv_sec: t.as_secs().try_into().unwrap_or(libc::time_t::MAX),
             tv_nsec: t.subsec_nanos() as Long,
         },
         None => std::ptr::null(),
@@ -145,7 +146,7 @@ pub fn select_raw(
 ) -> io::Result<usize> {
     let raw_timeout = match timeout {
         Some(t) => &mut libc::timeval {
-            tv_sec: t.as_secs() as libc::time_t,
+            tv_sec: t.as_secs().try_into().unwrap_or(libc::time_t::MAX),
             tv_usec: t.subsec_micros() as libc::suseconds_t,
         },
         None => std::ptr::null_mut(),
