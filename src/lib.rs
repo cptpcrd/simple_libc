@@ -15,6 +15,7 @@ pub mod poll;
 pub mod power;
 pub mod process;
 pub mod pwd;
+pub mod select;
 pub mod signal;
 
 #[cfg(any(
