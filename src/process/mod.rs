@@ -352,10 +352,10 @@ mod tests {
     ))]
     #[test]
     fn test_resuidgid() {
-        let (ruid, euid, suid) = getresuid();
+        let (ruid, euid, _suid) = getresuid();
         assert_eq!((getuid(), geteuid()), (ruid, euid));
 
-        let (rgid, egid, sgid) = getresgid();
+        let (rgid, egid, _sgid) = getresgid();
         assert_eq!((getgid(), getegid()), (rgid, egid));
     }
 
