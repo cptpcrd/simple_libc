@@ -330,8 +330,12 @@ mod tests {
     // Which is about all we can do for a lot of them.
 
     #[test]
-    fn test_getpid() {
+    fn test_getpids_tid() {
         getpid();
+        getppid();
+
+        #[cfg(target_os = "linux")]
+        gettid();
     }
 
     #[test]
