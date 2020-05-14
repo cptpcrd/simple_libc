@@ -397,4 +397,192 @@ mod tests {
         assert!(writefds.contains(w1.as_raw_fd()));
         assert!(writefds.contains(w2.as_raw_fd()));
     }
+
+    #[test]
+    fn test_pselect() {
+        let timeout_0 = Some(Duration::from_secs(0));
+
+        let (r1, mut w1) = pipe2(libc::O_CLOEXEC).unwrap();
+        let (r2, mut w2) = pipe2(libc::O_CLOEXEC).unwrap();
+
+        let maxfd: Int = [&r1, &w1, &r2, &w2]
+            .iter()
+            .cloned()
+            .map(AsRawFd::as_raw_fd)
+            .max()
+            .unwrap();
+
+        let mut readfds = FdSet::empty();
+        let mut writefds = FdSet::empty();
+
+        // Nothing to start
+        assert_eq!(
+            pselect_raw(
+                maxfd + 1,
+                Some(&mut readfds),
+                Some(&mut writefds),
+                None,
+                timeout_0,
+                None,
+            )
+            .unwrap(),
+            0,
+        );
+
+        // Now we write some data and test again
+        w1.write(b"a").unwrap();
+        readfds.clear();
+        readfds.add(r1.as_raw_fd());
+        readfds.add(r2.as_raw_fd());
+        writefds.clear();
+        assert_eq!(
+            pselect_raw(
+                maxfd + 1,
+                Some(&mut readfds),
+                Some(&mut writefds),
+                None,
+                timeout_0,
+                None,
+            )
+            .unwrap(),
+            1,
+        );
+        assert!(readfds.contains(r1.as_raw_fd()));
+
+        // Now make sure reading two files works
+        w2.write(b"a").unwrap();
+        readfds.clear();
+        readfds.add(r1.as_raw_fd());
+        readfds.add(r2.as_raw_fd());
+        writefds.clear();
+        assert_eq!(
+            pselect_raw(
+                maxfd + 1,
+                Some(&mut readfds),
+                Some(&mut writefds),
+                None,
+                timeout_0,
+                None,
+            )
+            .unwrap(),
+            2,
+        );
+        assert!(readfds.contains(r1.as_raw_fd()));
+        assert!(readfds.contains(r2.as_raw_fd()));
+
+        // And checking if they're ready for writing
+        readfds.clear();
+        readfds.add(r1.as_raw_fd());
+        readfds.add(r2.as_raw_fd());
+        writefds.clear();
+        writefds.add(w1.as_raw_fd());
+        writefds.add(w2.as_raw_fd());
+        assert_eq!(
+            pselect_raw(
+                maxfd + 1,
+                Some(&mut readfds),
+                Some(&mut writefds),
+                None,
+                timeout_0,
+                None,
+            )
+            .unwrap(),
+            4,
+        );
+        assert!(readfds.contains(r1.as_raw_fd()));
+        assert!(readfds.contains(r2.as_raw_fd()));
+        assert!(writefds.contains(w1.as_raw_fd()));
+        assert!(writefds.contains(w2.as_raw_fd()));
+    }
+
+    #[test]
+    fn test_select_simple() {
+        let timeout_0 = Some(Duration::from_secs(0));
+
+        let (r1, mut w1) = pipe2(libc::O_CLOEXEC).unwrap();
+        let (r2, mut w2) = pipe2(libc::O_CLOEXEC).unwrap();
+
+        // Nothing to start
+        assert_eq!(
+            select_simple(&[], &[], &[], timeout_0).unwrap(),
+            (vec![], vec![], vec![]),
+        );
+
+        // Now we write some data and test again
+        w1.write(b"a").unwrap();
+        assert_eq!(
+            select_simple(&[r1.as_raw_fd(), r2.as_raw_fd()], &[], &[], timeout_0).unwrap(),
+            (vec![r1.as_raw_fd()], vec![], vec![]),
+        );
+
+        // Now make sure reading two files works
+        w2.write(b"a").unwrap();
+        assert_eq!(
+            select_simple(&[r1.as_raw_fd(), r2.as_raw_fd()], &[], &[], timeout_0).unwrap(),
+            (vec![r1.as_raw_fd(), r2.as_raw_fd()], vec![], vec![]),
+        );
+
+        // And checking if they're ready for writing
+        w2.write(b"a").unwrap();
+        assert_eq!(
+            select_simple(
+                &[r1.as_raw_fd(), r2.as_raw_fd()],
+                &[w1.as_raw_fd(), w2.as_raw_fd()],
+                &[],
+                timeout_0,
+            )
+            .unwrap(),
+            (
+                vec![r1.as_raw_fd(), r2.as_raw_fd()],
+                vec![w1.as_raw_fd(), w2.as_raw_fd()],
+                vec![],
+            ),
+        );
+    }
+
+    #[test]
+    fn test_pselect_simple() {
+        let timeout_0 = Some(Duration::from_secs(0));
+
+        let (r1, mut w1) = pipe2(libc::O_CLOEXEC).unwrap();
+        let (r2, mut w2) = pipe2(libc::O_CLOEXEC).unwrap();
+
+        // Nothing to start
+        assert_eq!(
+            pselect_simple(&[], &[], &[], timeout_0, None).unwrap(),
+            (vec![], vec![], vec![]),
+        );
+
+        // Now we write some data and test again
+        w1.write(b"a").unwrap();
+        assert_eq!(
+            pselect_simple(&[r1.as_raw_fd(), r2.as_raw_fd()], &[], &[], timeout_0, None).unwrap(),
+            (vec![r1.as_raw_fd()], vec![], vec![]),
+        );
+
+        // Now make sure reading two files works
+        w2.write(b"a").unwrap();
+        assert_eq!(
+            pselect_simple(&[r1.as_raw_fd(), r2.as_raw_fd()], &[], &[], timeout_0, None).unwrap(),
+            (vec![r1.as_raw_fd(), r2.as_raw_fd()], vec![], vec![]),
+        );
+
+        // And checking if they're ready for writing
+        w2.write(b"a").unwrap();
+        assert_eq!(
+            pselect_simple(
+                &[r1.as_raw_fd(), r2.as_raw_fd()],
+                &[w1.as_raw_fd(), w2.as_raw_fd()],
+                &[],
+                timeout_0,
+                None,
+            )
+            .unwrap(),
+            (
+                vec![r1.as_raw_fd(), r2.as_raw_fd()],
+                vec![w1.as_raw_fd(), w2.as_raw_fd()],
+                vec![],
+            ),
+        );
+    }
 }
