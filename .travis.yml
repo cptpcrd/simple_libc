@@ -42,10 +42,10 @@ jobs:
 install:
   - rustup target install "$TARGET"
   - if [[ "$TRAVIS_RUST_VERSION" == stable ]] && [[ "$TARGET" == x86_64-unknown-linux-gnu ]]; then COVERAGE=true; fi
-  - '[[ "$COVERAGE" == true ]] && cargo install cargo-tarpaulin'
+  - if [[ "$COVERAGE" == true ]]; then cargo install cargo-tarpaulin; fi
 
 script:
   - cargo clean
   - cargo build --verbose --target="$TARGET"
   - case "$TRAVIS_OS_NAME-$TARGET" in linux-x86_64-unknown-linux-*|osx-x86_64-apple-darwin) cargo test --verbose --target="$TARGET";; esac
-  - '[[ "$COVERAGE" == true ]] && cargo tarpaulin --out Xml && bash <(curl -s https://codecov.io/bash)'
+  - if [[ "$COVERAGE" == true ]]; then cargo tarpaulin --out Xml && bash <(curl -s https://codecov.io/bash); fi
