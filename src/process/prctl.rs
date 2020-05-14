@@ -218,14 +218,14 @@ impl CapSet {
     #[inline]
     pub fn union_with(self, other: Self) -> Self {
         Self {
-            bits: self.bits & other.bits,
+            bits: self.bits | other.bits,
         }
     }
 
     #[inline]
     pub fn intersection_with(self, other: Self) -> Self {
         Self {
-            bits: self.bits | other.bits,
+            bits: self.bits & other.bits,
         }
     }
 
@@ -233,17 +233,17 @@ impl CapSet {
         let mut bits: u64 = 0;
 
         for capset in capsets {
-            bits &= capset.bits;
+            bits |= capset.bits;
         }
 
         Self { bits }
     }
 
     pub fn intersection(capsets: &[Self]) -> Self {
-        let mut bits: u64 = 0;
+        let mut bits: u64 = CAP_BITMASK;
 
         for capset in capsets {
-            bits |= capset.bits;
+            bits &= capset.bits;
         }
 
         Self { bits }
