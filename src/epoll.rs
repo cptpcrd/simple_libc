@@ -14,16 +14,17 @@ enum CtlOp {
 
 bitflags! {
     #[derive(Default)]
-    pub struct Events: i32 {
-        const IN = libc::EPOLLIN;
-        const OUT = libc::EPOLLOUT;
-        const ERR = libc::EPOLLERR;
-        const ET = libc::EPOLLET;
-        const HUP = libc::EPOLLHUP;
-        const RDHUP = libc::EPOLLRDHUP;
-        const ONESHOT = libc::EPOLLONESHOT;
-        const WAKEUP = libc::EPOLLWAKEUP;
-        const EXCLUSIVE = libc::EPOLLEXCLUSIVE;
+    #[repr(transparent)]
+    pub struct Events: u32 {
+        const IN = libc::EPOLLIN as u32;
+        const OUT = libc::EPOLLOUT as u32;
+        const ERR = libc::EPOLLERR as u32;
+        const ET = libc::EPOLLET as u32;
+        const HUP = libc::EPOLLHUP as u32;
+        const RDHUP = libc::EPOLLRDHUP as u32;
+        const ONESHOT = libc::EPOLLONESHOT as u32;
+        const WAKEUP = libc::EPOLLWAKEUP as u32;
+        const EXCLUSIVE = libc::EPOLLEXCLUSIVE as u32;
     }
 }
 
@@ -147,7 +148,7 @@ impl Epoll {
         .map(|res| {
             for i in 0..(res as usize) {
                 events[i] = Event {
-                    events: Events::from_bits_truncate(ep_events[i].events as i32),
+                    events: Events::from_bits_truncate(ep_events[i].events),
                     data: ep_events[i].u64,
                 };
             }
