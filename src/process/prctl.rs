@@ -671,19 +671,30 @@ mod tests {
     }
 
     #[test]
+    fn test_cap_serde() {
+        assert_tokens(&Cap::Chown, &[Token::Str("CAP_CHOWN")]);
+    }
+
+    #[test]
     fn test_capset_empty() {
         let mut set = CapSet::full();
         for cap in Cap::iter() {
             set.drop(cap);
         }
         assert_eq!(set.bits, 0);
+        assert!(set.is_empty());
+        assert!(!set.is_full());
 
         set = CapSet::empty();
         assert_eq!(set.bits, 0);
+        assert!(set.is_empty());
+        assert!(!set.is_full());
 
         set = CapSet::full();
         set.clear();
         assert_eq!(set.bits, 0);
+        assert!(set.is_empty());
+        assert!(!set.is_full());
 
         assert!(!Cap::iter().any(|c| set.has(c)));
     }
@@ -695,13 +706,19 @@ mod tests {
             set.add(cap);
         }
         assert_eq!(set.bits, CAP_BITMASK);
+        assert!(set.is_full());
+        assert!(!set.is_empty());
 
         set = CapSet::full();
         assert_eq!(set.bits, CAP_BITMASK);
+        assert!(set.is_full());
+        assert!(!set.is_empty());
 
         set = CapSet::empty();
         set.fill();
         assert_eq!(set.bits, CAP_BITMASK);
+        assert!(set.is_full());
+        assert!(!set.is_empty());
 
         assert!(Cap::iter().all(|c| set.has(c)));
     }
@@ -711,15 +728,19 @@ mod tests {
         let mut set = CapSet::empty();
         set.add(Cap::Chown);
         assert!(set.has(Cap::Chown));
+        assert!(!set.is_empty());
 
         set.drop(Cap::Chown);
         assert!(!set.has(Cap::Chown));
+        assert!(set.is_empty());
 
         set.set_state(Cap::Chown, true);
         assert!(set.has(Cap::Chown));
+        assert!(!set.is_empty());
 
         set.set_state(Cap::Chown, false);
         assert!(!set.has(Cap::Chown));
+        assert!(set.is_empty());
     }
 
     #[test]
@@ -742,6 +763,45 @@ mod tests {
 
         set.drop_multi(vec![Cap::Kill]);
         assert_eq!(set.iter().collect::<Vec<Cap>>(), vec![]);
+    }
+
+    #[test]
+    fn test_capset_from_iter() {
+        let set = CapSet::from_iter(vec![Cap::Chown, Cap::Fowner]);
+        assert_eq!(
+            set.iter().collect::<Vec<Cap>>(),
+            vec![Cap::Chown, Cap::Fowner],
+        );
+    }
+
+    #[test]
+    fn test_capset_union() {
+        let a = CapSet::from_iter(vec![Cap::Chown, Cap::Fowner]);
+        let b = CapSet::from_iter(vec![Cap::Fowner, Cap::Kill]);
+        let c = CapSet::from_iter(vec![Cap::Chown, Cap::Fowner, Cap::Kill]);
+        assert_eq!(a.union_with(b), c);
+        assert_eq!(CapSet::union(&[a, b]), c);
+    }
+
+    #[test]
+    fn test_capset_intersection() {
+        let a = CapSet::from_iter(vec![Cap::Chown, Cap::Fowner]);
+        let b = CapSet::from_iter(vec![Cap::Fowner, Cap::Kill]);
+        let c = CapSet::from_iter(vec![Cap::Fowner]);
+        assert_eq!(a.intersection_with(b), c);
+        assert_eq!(CapSet::intersection(&[a, b]), c);
+    }
+
+    #[test]
+    fn test_capset_not() {
+        assert_eq!(!CapSet::full(), CapSet::empty());
+        assert_eq!(CapSet::full(), !CapSet::empty());
+
+        let mut a = CapSet::full();
+        let mut b = CapSet::empty();
+        a.add(Cap::Chown);
+        b.drop(Cap::Chown);
+        assert_eq!(!a, b);
     }
 
     #[test]
@@ -894,5 +954,33 @@ mod tests {
                 Token::StructEnd,
             ],
         );
+    }
+
+    #[test]
+    fn test_capstate() {
+        CapState::get_current().unwrap();
+    }
+
+    #[test]
+    fn test_nnp_keepcaps() {
+        get_no_new_privs().unwrap();
+        get_keepcaps().unwrap();
+    }
+
+    #[test]
+    fn test_ambient() {
+        ambient::probe().unwrap();
+        assert!(ambient::is_supported());
+    }
+
+    #[test]
+    fn test_bounding() {
+        bounding::probe().unwrap();
+        bounding::is_set(Cap::Chown).unwrap();
+    }
+
+    #[test]
+    fn test_secbits() {
+        secbits::get().unwrap();
     }
 }
