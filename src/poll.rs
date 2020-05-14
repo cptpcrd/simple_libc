@@ -48,15 +48,33 @@ pub fn poll(fds: &mut [PollFd], timeout: Option<Duration>) -> io::Result<usize> 
 mod tests {
     use super::*;
 
+    use std::fs;
     use std::io::Write;
     use std::os::unix::io::AsRawFd;
 
-    use super::super::pipe2;
+    #[cfg(any(
+        target_os = "linux",
+        target_os = "freebsd",
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "dragonfly",
+    ))]
+    fn pipe_cloexec() -> io::Result<(fs::File, fs::File)> {
+        super::super::pipe2(libc::O_CLOEXEC)
+    }
+
+    #[cfg(target_os = "macos")]
+    fn pipe_cloexec() -> io::Result<(fs::File, fs::File)> {
+        let (r, w) = super::super::pipe()?;
+        super::fcntl::set_inheritable(r.as_raw_fd(), false);
+        super::fcntl::set_inheritable(w.as_raw_fd(), false);
+        Ok((r, w))
+    }
 
     #[test]
     fn test_poll() {
-        let (r1, mut w1) = pipe2(libc::O_CLOEXEC).unwrap();
-        let (r2, mut w2) = pipe2(libc::O_CLOEXEC).unwrap();
+        let (r1, mut w1) = pipe_cloexec().unwrap();
+        let (r2, mut w2) = pipe_cloexec().unwrap();
 
         let mut fds = [
             PollFd {

@@ -291,6 +291,7 @@ mod tests {
         });
     }
 
+    #[cfg(target_os = "linux")]
     #[test]
     fn test_nice_rlimit_thresh() {
         assert_eq!(nice_rlimit_to_thresh(LIMIT_INFINITY), -20);
