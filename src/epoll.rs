@@ -190,7 +190,13 @@ mod tests {
 
         poller.add(r1.as_raw_fd(), Events::IN).unwrap();
         poller
-            .add3(r2.as_raw_fd(), Events::IN, w2.as_raw_fd() as u64)
+            .add2(
+                r2.as_raw_fd(),
+                Event {
+                    events: Events::IN,
+                    data: w2.as_raw_fd() as u64,
+                },
+            )
             .unwrap();
 
         // Nothing to start
@@ -222,6 +228,17 @@ mod tests {
         );
         assert_eq!(events[0].data, r1.as_raw_fd() as u64);
         assert_eq!(events[0].events, Events::IN);
+        assert_eq!(events[1].data, w2.as_raw_fd() as u64);
+        assert_eq!(events[1].events, Events::IN);
+
+        // Now remove one of the files
+        poller.del(r1.as_raw_fd()).unwrap();
+        assert_eq!(
+            poller
+                .wait(&mut events, Some(time::Duration::from_secs(0)))
+                .unwrap(),
+            1,
+        );
         assert_eq!(events[1].data, w2.as_raw_fd() as u64);
         assert_eq!(events[1].events, Events::IN);
     }
