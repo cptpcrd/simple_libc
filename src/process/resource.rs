@@ -220,6 +220,26 @@ mod tests {
     use super::*;
 
     use serde_test::{assert_de_tokens, assert_ser_tokens, assert_tokens, Token};
+    use strum::IntoEnumIterator;
+
+    #[test]
+    fn test_get_set_rlimits() {
+        for res in Resource::iter() {
+            let limits = getrlimit(res).unwrap();
+            setrlimit(res, limits).unwrap();
+            assert_eq!(getrlimit(res).unwrap(), limits);
+        }
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn test_prlimit() {
+        for res in Resource::iter() {
+            let limits = prlimit(0, res, None).unwrap();
+            assert_eq!(prlimit(0, res, Some(limits)).unwrap(), limits);
+            assert_eq!(prlimit(0, res, None).unwrap(), limits);
+        }
+    }
 
     #[test]
     fn test_resource_serde() {
