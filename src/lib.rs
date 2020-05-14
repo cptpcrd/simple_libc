@@ -180,6 +180,14 @@ pub fn killpg(pgid: PidT, sig: Int) -> io::Result<()> {
     error::convert_nzero(unsafe { libc::killpg(pgid, sig) }, ())
 }
 
+#[cfg(target_os = "linux")]
+pub fn tgkill(tgid: Int, tid: Int, sig: Int) -> io::Result<()> {
+    error::convert_nzero(
+        unsafe { libc::syscall(libc::SYS_tgkill, tgid, tid, sig) },
+        (),
+    )
+}
+
 #[cfg(any(target_os = "linux", target_os = "openbsd", target_os = "netbsd"))]
 type SetHostnameSize = SizeT;
 
