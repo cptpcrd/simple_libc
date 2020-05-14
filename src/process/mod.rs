@@ -244,22 +244,22 @@ cfg_if::cfg_if! {
             }, ())
         }
 
-        fn _getreuid() -> (UidT, UidT) {
+        fn getreuid_impl() -> (UidT, UidT) {
             let (ruid, euid, _) = getresuid();
             (ruid, euid)
         }
 
-        fn _getregid() -> (GidT, GidT) {
+        fn getregid_impl() -> (GidT, GidT) {
             let (rgid, egid, _) = getresgid();
             (rgid, egid)
         }
     }
     else {
-        fn _getreuid() -> (UidT, UidT) {
+        fn getreuid_impl() -> (UidT, UidT) {
             (getuid(), geteuid())
         }
 
-        fn _getregid() -> (GidT, GidT) {
+        fn getregid_impl() -> (GidT, GidT) {
             (getgid(), getegid())
         }
     }
@@ -272,7 +272,7 @@ cfg_if::cfg_if! {
 /// `geteuid()`.
 #[inline]
 pub fn getreuid() -> (UidT, UidT) {
-    _getreuid()
+    getreuid_impl()
 }
 
 /// Gets the real and effective group IDs via the most efficient method possible.
@@ -282,7 +282,7 @@ pub fn getreuid() -> (UidT, UidT) {
 /// `getegid()`.
 #[inline]
 pub fn getregid() -> (GidT, GidT) {
-    _getregid()
+    getregid_impl()
 }
 
 /// Attempts to change the root directory of the current process to the specified
