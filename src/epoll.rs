@@ -170,3 +170,59 @@ impl Drop for Epoll {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use std::io::Write;
+    use std::os::unix::io::AsRawFd;
+
+    use super::super::pipe2;
+
+    #[test]
+    fn test_epoll() {
+        let mut poller = Epoll::new(EpollFlags::CLOEXEC).unwrap();
+        let mut events = [Event::default(); 3];
+
+        let (r1, mut w1) = pipe2(libc::O_CLOEXEC).unwrap();
+        let (r2, mut w2) = pipe2(libc::O_CLOEXEC).unwrap();
+
+        poller.add(r1.as_raw_fd(), Events::IN).unwrap();
+        poller
+            .add3(r2.as_raw_fd(), Events::IN, w2.as_raw_fd() as u64)
+            .unwrap();
+
+        // Nothing to start
+        assert_eq!(
+            poller
+                .wait(&mut events, Some(time::Duration::from_secs(0)))
+                .unwrap(),
+            0,
+        );
+
+        // Now we write some data and test again
+        w1.write(b"a").unwrap();
+        assert_eq!(
+            poller
+                .wait(&mut events, Some(time::Duration::from_secs(0)))
+                .unwrap(),
+            1,
+        );
+        assert_eq!(events[0].data, r1.as_raw_fd() as u64);
+        assert_eq!(events[0].events, Events::IN);
+
+        // Now make sure reading two files works
+        w2.write(b"a").unwrap();
+        assert_eq!(
+            poller
+                .wait(&mut events, Some(time::Duration::from_secs(0)))
+                .unwrap(),
+            2,
+        );
+        assert_eq!(events[0].data, r1.as_raw_fd() as u64);
+        assert_eq!(events[0].events, Events::IN);
+        assert_eq!(events[1].data, w2.as_raw_fd() as u64);
+        assert_eq!(events[1].events, Events::IN);
+    }
+}
