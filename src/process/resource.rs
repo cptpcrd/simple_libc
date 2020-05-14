@@ -130,10 +130,7 @@ pub fn serialize_limit<S: serde::Serializer>(
 pub fn deserialize_limit<'a, D: serde::Deserializer<'a>>(
     deserializer: D,
 ) -> Result<Limit, D::Error> {
-    Ok(match Option::<Limit>::deserialize(deserializer)? {
-        Some(limit) => limit,
-        None => LIMIT_INFINITY,
-    })
+    Ok(Option::<Limit>::deserialize(deserializer)?.unwrap_or(LIMIT_INFINITY))
 }
 
 pub type Limit = libc::rlim_t;
