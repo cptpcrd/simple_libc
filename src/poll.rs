@@ -44,6 +44,61 @@ pub fn poll(fds: &mut [PollFd], timeout: Option<Duration>) -> io::Result<usize> 
     .map(|n| n as usize)
 }
 
+#[cfg(target_os = "netbsd")]
+const LIBC_PPOLL: unsafe extern "C" fn(
+    *mut libc::pollfd,
+    libc::nfds_t,
+    *const libc::timespec,
+    *const libc::sigset_t,
+) -> libc::c_int = super::externs::pollts;
+#[cfg(any(
+    target_os = "linux",
+    target_os = "freebsd",
+    target_os = "openbsd",
+    target_os = "dragonfly",
+))]
+const LIBC_PPOLL: unsafe extern "C" fn(
+    *mut libc::pollfd,
+    libc::nfds_t,
+    *const libc::timespec,
+    *const libc::sigset_t,
+) -> libc::c_int = libc::ppoll;
+
+#[cfg(any(
+    target_os = "linux",
+    target_os = "freebsd",
+    target_os = "openbsd",
+    target_os = "netbsd",
+))]
+pub fn ppoll(
+    fds: &mut [PollFd],
+    timeout: Option<Duration>,
+    sigmask: Option<super::signal::Sigset>,
+) -> io::Result<usize> {
+    let raw_timeout = match timeout {
+        Some(t) => &libc::timespec {
+            tv_sec: t.as_secs().try_into().unwrap_or(libc::time_t::MAX),
+            tv_nsec: t.subsec_nanos() as super::Long,
+        },
+        None => std::ptr::null(),
+    };
+
+    let raw_sigmask = match sigmask {
+        Some(s) => &s.raw_set(),
+        None => std::ptr::null(),
+    };
+
+    super::error::convert_neg_ret(unsafe {
+        LIBC_PPOLL(
+            fds.as_mut_ptr() as *mut libc::pollfd,
+            fds.len() as libc::nfds_t,
+            raw_timeout,
+            raw_sigmask,
+        )
+    })
+    .map(|n| n as usize)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -101,6 +156,57 @@ mod tests {
         // Now make sure reading two files works
         w2.write(b"a").unwrap();
         assert_eq!(poll(&mut fds, Some(Duration::from_secs(0))).unwrap(), 2);
+        assert_eq!(fds[0].fd, r1.as_raw_fd());
+        assert_eq!(fds[0].revents, Events::IN);
+        assert_eq!(fds[1].fd, r2.as_raw_fd());
+        assert_eq!(fds[1].revents, Events::IN);
+    }
+
+    #[cfg(any(
+        target_os = "linux",
+        target_os = "freebsd",
+        target_os = "openbsd",
+        target_os = "netbsd",
+    ))]
+    #[test]
+    fn test_ppoll() {
+        let (r1, mut w1) = pipe_cloexec().unwrap();
+        let (r2, mut w2) = pipe_cloexec().unwrap();
+
+        let mut fds = [
+            PollFd {
+                fd: r1.as_raw_fd(),
+                events: Events::IN,
+                revents: Events::empty(),
+            },
+            PollFd {
+                fd: r2.as_raw_fd(),
+                events: Events::IN,
+                revents: Events::empty(),
+            },
+        ];
+
+        // Nothing to start
+        assert_eq!(
+            ppoll(&mut fds, Some(Duration::from_secs(0)), None).unwrap(),
+            0,
+        );
+
+        // Now we write some data and test again
+        w1.write(b"a").unwrap();
+        assert_eq!(
+            ppoll(&mut fds, Some(Duration::from_secs(0)), None).unwrap(),
+            1,
+        );
+        assert_eq!(fds[0].fd, r1.as_raw_fd());
+        assert_eq!(fds[0].revents, Events::IN);
+
+        // Now make sure reading two files works
+        w2.write(b"a").unwrap();
+        assert_eq!(
+            ppoll(&mut fds, Some(Duration::from_secs(0)), None).unwrap(),
+            2,
+        );
         assert_eq!(fds[0].fd, r1.as_raw_fd());
         assert_eq!(fds[0].revents, Events::IN);
         assert_eq!(fds[1].fd, r2.as_raw_fd());

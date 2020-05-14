@@ -15,6 +15,14 @@ extern "C" {
 
     #[cfg(target_os = "netbsd")]
     pub fn reboot(howto: libc::c_int, bootstr: *mut libc::c_char) -> libc::c_int;
+
+    #[cfg(target_os = "netbsd")]
+    pub fn pollts(
+        fds: *mut libc::pollfd,
+        nfds: libc::nfds_t,
+        ts: *const libc::timespec,
+        sigmask: *const libc::sigset_t,
+    ) -> libc::c_int;
 }
 
 cfg_if! {
