@@ -354,11 +354,9 @@ mod tests {
     fn test_resuidgid() {
         let (ruid, euid, suid) = getresuid();
         assert_eq!((getuid(), geteuid()), (ruid, euid));
-        setresuid(ruid, euid, suid).unwrap();
 
         let (rgid, egid, sgid) = getresgid();
         assert_eq!((getgid(), getegid()), (rgid, egid));
-        setresgid(rgid, egid, sgid).unwrap();
     }
 
     #[test]
