@@ -364,6 +364,11 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_sync() {
+        sync();
+    }
+
+    #[test]
     fn test_constrain() {
         assert_eq!(constrain(-1, 0, 10), 0);
         assert_eq!(constrain(3, 0, 10), 3);

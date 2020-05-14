@@ -64,3 +64,29 @@ pub fn get_ucred(sock: &unix::net::UnixStream) -> io::Result<Ucred> {
 pub fn get_ucred_raw(sockfd: Int) -> io::Result<Ucred> {
     get_ucred_raw_impl(sockfd)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use std::os::unix::net::UnixStream;
+
+    use super::super::super::process;
+
+    #[test]
+    fn test_get_ucred() {
+        let (a, b) = UnixStream::pair().unwrap();
+
+        let acred = get_ucred(&a).unwrap();
+        assert_eq!(acred.uid, process::getuid());
+        assert_eq!(acred.gid, process::getgid());
+        #[cfg(any(target_os = "linux", target_os = "openbsd"))]
+        assert_eq!(acred.pid, process::getpid());
+
+        let bcred = get_ucred(&b).unwrap();
+        assert_eq!(bcred.uid, process::getuid());
+        assert_eq!(bcred.gid, process::getgid());
+        #[cfg(any(target_os = "linux", target_os = "openbsd"))]
+        assert_eq!(bcred.pid, process::getpid());
+    }
+}
