@@ -2,7 +2,7 @@ use std::io;
 
 use bitflags::bitflags;
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum Action {
     /// Reboot the system
     ForceReboot,
@@ -17,6 +17,7 @@ bitflags! {
     ///
     /// Note: The values of these bitmasks have NO MEANING to the OS.
     /// Do NOT pass them directly to `libc::reboot()`.
+    #[derive(Default)]
     pub struct ActionFlags: u32 {
         /// Do not sync the disks before halting/rebooting.
         ///

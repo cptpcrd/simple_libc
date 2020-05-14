@@ -6,6 +6,7 @@ use bitflags::bitflags;
 
 use super::Int;
 
+#[derive(Debug, Copy, Clone)]
 enum CtlOp {
     Add = libc::EPOLL_CTL_ADD as isize,
     Mod = libc::EPOLL_CTL_MOD as isize,

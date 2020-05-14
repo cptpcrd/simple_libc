@@ -8,7 +8,7 @@ pub fn nice(incr: Int) -> io::Result<Int> {
     error::convert_if_errno_ret(unsafe { libc::nice(incr) })
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum Target {
     Process(IdT),
     ProcGroup(IdT),

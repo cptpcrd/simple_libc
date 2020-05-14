@@ -4,7 +4,7 @@ use bitflags::bitflags;
 
 use super::super::{Int, PidT};
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum ProcStatus {
     Exited(Int),
     Signaled(Int),
@@ -36,7 +36,7 @@ pub fn wait() -> io::Result<(PidT, ProcStatus)> {
         .map(|pid| (pid, ProcStatus::from_raw_status(status)))
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum WaitpidSpec {
     Pid(PidT),
     Pgid(PidT),
