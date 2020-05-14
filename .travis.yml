@@ -4,11 +4,6 @@ rust:
   - beta
   - nightly
 
-jobs:
-  allow_failures:
-    - rust: nightly
-  fast_finish: true
-
 cache: cargo
 
 env:
@@ -24,12 +19,19 @@ env:
   - TARGET=x86_64-unknown-netbsd
 
 jobs:
+  allow_failures:
+    - rust: nightly
+  fast_finish: true
+
   include:
     - os: osx
-      rust:
-        - stable
-        - beta
-        - nightly
+      rust: stable
+      env: TARGET=x86_64-apple-darwin
+    - os: osx
+      rust: beta
+      env: TARGET=x86_64-apple-darwin
+    - os: osx
+      rust: nightly
       env: TARGET=x86_64-apple-darwin
 
 install:
