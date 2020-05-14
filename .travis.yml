@@ -6,6 +6,11 @@ rust:
 
 cache: cargo
 
+addons:
+  apt:
+    packages:
+      - libssl-dev
+
 env:
   - TARGET=x86_64-unknown-linux-gnu
   - TARGET=x86_64-unknown-linux-musl
@@ -36,7 +41,11 @@ jobs:
 
 install:
   - rustup target install "$TARGET"
+  - if [[ "$TRAVIS_RUST_VERSION" == stable ]] && [[ "$TARGET" == x86_64-unknown-linux-gnu ]]; then COVERAGE=true; fi
+  - [[ "$COVERAGE" == true ]] && cargo install cargo-tarpaulin
 
 script:
+  - cargo clean
   - cargo build --verbose --target="$TARGET"
   - case "$TRAVIS_OS_NAME-$TARGET" in linux-x86_64-unknown-linux-*|osx-x86_64-apple-darwin) cargo test --verbose --target="$TARGET";; esac
+  - [[ "$COVERAGE" == true ]] && cargo tarpaulin --out Xml && bash <(curl -s https://codecov.io/bash)
