@@ -28,8 +28,8 @@ type RawResourceType = Int;
 )]
 #[repr(isize)]
 pub enum Resource {
-    // OpenBSD is missing this for some reason
-    #[cfg(not(any(target_os = "openbsd", target_os = "netbsd")))]
+    // OpenBSD and macOS are missing this for some reason
+    #[cfg(not(any(target_os = "openbsd", target_os = "macos", target_os = "netbsd")))]
     AS = libc::RLIMIT_AS as isize,
     #[cfg(target_os = "netbsd")]
     AS = constants::RLIMIT_AS as isize,
@@ -42,13 +42,14 @@ pub enum Resource {
     FSIZE = libc::RLIMIT_FSIZE as isize,
     STACK = libc::RLIMIT_STACK as isize,
 
-    // Linux and the BSDs
+    // Linux, the BSDs, and macOS
     #[cfg(any(
         target_os = "linux",
         target_os = "openbsd",
         target_os = "freebsd",
         target_os = "netbsd",
-        target_os = "dragonfly"
+        target_os = "dragonfly",
+        target_os = "macos",
     ))]
     NPROC = libc::RLIMIT_NPROC as isize,
     #[cfg(any(
@@ -56,7 +57,8 @@ pub enum Resource {
         target_os = "openbsd",
         target_os = "freebsd",
         target_os = "netbsd",
-        target_os = "dragonfly"
+        target_os = "dragonfly",
+        target_os = "macos",
     ))]
     MEMLOCK = libc::RLIMIT_MEMLOCK as isize,
     #[cfg(any(
@@ -64,7 +66,8 @@ pub enum Resource {
         target_os = "openbsd",
         target_os = "freebsd",
         target_os = "netbsd",
-        target_os = "dragonfly"
+        target_os = "dragonfly",
+        target_os = "macos",
     ))]
     RSS = libc::RLIMIT_RSS as isize,
 

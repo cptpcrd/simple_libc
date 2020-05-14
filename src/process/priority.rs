@@ -28,6 +28,9 @@ type PriorityWho = IdT;
 #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
 type PriorityWho = Int;
 
+#[cfg(any(target_os = "macos"))]
+type PriorityWho = super::super::Uint;
+
 impl Target {
     fn unpack(&self) -> (PriorityWhich, PriorityWho) {
         match self {
