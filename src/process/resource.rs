@@ -227,7 +227,6 @@ mod tests {
         for res in Resource::iter() {
             let limits = getrlimit(res).unwrap();
             setrlimit(res, limits).unwrap();
-            assert_eq!(getrlimit(res).unwrap(), limits);
         }
     }
 
