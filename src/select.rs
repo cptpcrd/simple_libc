@@ -284,10 +284,28 @@ pub fn pselect_simple(
 mod tests {
     use super::*;
 
+    use std::fs;
     use std::io::Write;
     use std::os::unix::io::AsRawFd;
 
-    use super::super::pipe2;
+    #[cfg(any(
+        target_os = "linux",
+        target_os = "freebsd",
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "dragonfly",
+    ))]
+    fn pipe_cloexec() -> io::Result<(fs::File, fs::File)> {
+        super::super::pipe2(libc::O_CLOEXEC)
+    }
+
+    #[cfg(target_os = "macos")]
+    fn pipe_cloexec() -> io::Result<(fs::File, fs::File)> {
+        let (r, w) = super::super::pipe()?;
+        super::super::fcntl::set_inheritable(r.as_raw_fd(), false);
+        super::super::fcntl::set_inheritable(w.as_raw_fd(), false);
+        Ok((r, w))
+    }
 
     #[test]
     fn test_fdset() {
@@ -309,8 +327,8 @@ mod tests {
     fn test_select() {
         let timeout_0 = Some(Duration::from_secs(0));
 
-        let (r1, mut w1) = pipe2(libc::O_CLOEXEC).unwrap();
-        let (r2, mut w2) = pipe2(libc::O_CLOEXEC).unwrap();
+        let (r1, mut w1) = pipe_cloexec().unwrap();
+        let (r2, mut w2) = pipe_cloexec().unwrap();
 
         let maxfd: Int = [&r1, &w1, &r2, &w2]
             .iter()
@@ -402,8 +420,8 @@ mod tests {
     fn test_pselect() {
         let timeout_0 = Some(Duration::from_secs(0));
 
-        let (r1, mut w1) = pipe2(libc::O_CLOEXEC).unwrap();
-        let (r2, mut w2) = pipe2(libc::O_CLOEXEC).unwrap();
+        let (r1, mut w1) = pipe_cloexec().unwrap();
+        let (r2, mut w2) = pipe_cloexec().unwrap();
 
         let maxfd: Int = [&r1, &w1, &r2, &w2]
             .iter()
@@ -499,8 +517,8 @@ mod tests {
     fn test_select_simple() {
         let timeout_0 = Some(Duration::from_secs(0));
 
-        let (r1, mut w1) = pipe2(libc::O_CLOEXEC).unwrap();
-        let (r2, mut w2) = pipe2(libc::O_CLOEXEC).unwrap();
+        let (r1, mut w1) = pipe_cloexec().unwrap();
+        let (r2, mut w2) = pipe_cloexec().unwrap();
 
         // Nothing to start
         assert_eq!(
@@ -544,8 +562,8 @@ mod tests {
     fn test_pselect_simple() {
         let timeout_0 = Some(Duration::from_secs(0));
 
-        let (r1, mut w1) = pipe2(libc::O_CLOEXEC).unwrap();
-        let (r2, mut w2) = pipe2(libc::O_CLOEXEC).unwrap();
+        let (r1, mut w1) = pipe_cloexec().unwrap();
+        let (r2, mut w2) = pipe_cloexec().unwrap();
 
         // Nothing to start
         assert_eq!(
