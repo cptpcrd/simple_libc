@@ -70,6 +70,7 @@ const LIBC_PPOLL: unsafe extern "C" fn(
     target_os = "freebsd",
     target_os = "openbsd",
     target_os = "netbsd",
+    target_os = "dragonfly",
 ))]
 pub fn ppoll(
     fds: &mut [PollFd],
@@ -168,6 +169,7 @@ mod tests {
         target_os = "freebsd",
         target_os = "openbsd",
         target_os = "netbsd",
+        target_os = "dragonfly",
     ))]
     #[test]
     fn test_ppoll() {
