@@ -95,6 +95,32 @@ pub fn build_fdset_slice(fds: &[Int]) -> (FdSet, Int) {
     (fdset, nfds)
 }
 
+pub fn build_fdset_opt<T: IntoIterator<Item = Int>>(fds: T, mut nfds: Int) -> (Option<FdSet>, Int) {
+    let mut fdset: Option<FdSet> = None;
+    for fd in fds {
+        if fdset.is_none() {
+            fdset = Some(FdSet::empty());
+        }
+        fdset.as_mut().unwrap().add(fd);
+        nfds = std::cmp::max(nfds, fd + 1);
+    }
+    (fdset, nfds)
+}
+
+pub fn build_fdset_opt_slice(fds: &[Int], mut nfds: Int) -> (Option<FdSet>, Int) {
+    if fds.is_empty() {
+        return (None, nfds);
+    }
+
+    let mut fdset = FdSet::empty();
+    for fd in fds {
+        let fd = *fd;
+        fdset.add(fd);
+        nfds = std::cmp::max(nfds, fd + 1);
+    }
+    (Some(fdset), nfds)
+}
+
 #[inline]
 fn raw_opt_fdset(set: Option<&mut FdSet>) -> *mut libc::fd_set {
     match set {
@@ -169,31 +195,9 @@ fn build_raw_setup(
     writefds: &[Int],
     errorfds: &[Int],
 ) -> (Int, Option<FdSet>, Option<FdSet>, Option<FdSet>) {
-    let mut nfds: Int = 0;
-
-    let readfdset = if readfds.is_empty() {
-        None
-    } else {
-        let (fdset, n) = build_fdset_slice(readfds);
-        nfds = std::cmp::max(nfds, n);
-        Some(fdset)
-    };
-
-    let writefdset = if writefds.is_empty() {
-        None
-    } else {
-        let (fdset, n) = build_fdset_slice(writefds);
-        nfds = std::cmp::max(nfds, n);
-        Some(fdset)
-    };
-
-    let errorfdset = if errorfds.is_empty() {
-        None
-    } else {
-        let (fdset, n) = build_fdset_slice(errorfds);
-        nfds = std::cmp::max(nfds, n);
-        Some(fdset)
-    };
+    let (readfdset, nfds) = build_fdset_opt_slice(readfds, 0);
+    let (writefdset, nfds) = build_fdset_opt_slice(writefds, nfds);
+    let (errorfdset, nfds) = build_fdset_opt_slice(errorfds, nfds);
 
     (nfds, readfdset, writefdset, errorfdset)
 }
