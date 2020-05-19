@@ -153,6 +153,29 @@ mod tests {
         poller.register(r2.as_raw_fd(), Events::READ).unwrap();
         assert_eq!(poller.poll(timeout_0).unwrap(), vec![]);
 
+        // Errors raised
+        assert_eq!(
+            poller
+                .register(r1.as_raw_fd(), Events::READ)
+                .unwrap_err()
+                .raw_os_error(),
+            Some(libc::EEXIST),
+        );
+        assert_eq!(
+            poller
+                .modify(w1.as_raw_fd(), Events::READ)
+                .unwrap_err()
+                .raw_os_error(),
+            Some(libc::ENOENT),
+        );
+        assert_eq!(
+            poller
+                .unregister(w1.as_raw_fd())
+                .unwrap_err()
+                .raw_os_error(),
+            Some(libc::ENOENT),
+        );
+
         // Now we write some data and test again
         w1.write(b"a").unwrap();
         assert_eq!(
