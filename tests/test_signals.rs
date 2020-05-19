@@ -36,6 +36,10 @@ cfg_if! {
                 sigfd.read(&mut sigs).unwrap_err().kind(),
                 io::ErrorKind::WouldBlock,
             );
+            assert_eq!(
+                sigfd.read_one().unwrap_err().kind(),
+                io::ErrorKind::WouldBlock,
+            );
 
             // Send a signal to ourselves
             tgkill(getpid(), gettid(), SIGUSR1).unwrap();
@@ -43,6 +47,13 @@ cfg_if! {
             assert_eq!(sigs[0].sig as Int, SIGUSR1);
             assert_eq!(sigs[0].pid as PidT, getpid());
             assert_eq!(sigs[0].uid as UidT, getuid());
+
+            // Send another signal
+            tgkill(getpid(), gettid(), SIGUSR1).unwrap();
+            let siginfo = sigfd.read_one().unwrap();
+            assert_eq!(siginfo.sig as Int, SIGUSR1);
+            assert_eq!(siginfo.pid as PidT, getpid());
+            assert_eq!(siginfo.uid as UidT, getuid());
 
             // Send two signals
             tgkill(getpid(), gettid(), SIGUSR1).unwrap();
