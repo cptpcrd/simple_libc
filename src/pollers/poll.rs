@@ -4,8 +4,17 @@ use std::os::unix::io::RawFd;
 use std::time::Duration;
 
 use super::{Events, Flags, Poller, Ppoller};
-use crate::poll::{poll, ppoll, Events as PollEvents, PollFd};
+use crate::poll::{poll, Events as PollEvents, PollFd};
 use crate::signal::Sigset;
+
+#[cfg(any(
+    target_os = "linux",
+    target_os = "freebsd",
+    target_os = "openbsd",
+    target_os = "netbsd",
+    target_os = "dragonfly",
+))]
+use crate::poll:: ppoll;
 
 pub struct PollPoller {
     pollfds: Vec<PollFd>,
