@@ -38,7 +38,7 @@ cfg_if::cfg_if! {
             super::error::convert(unsafe { libc::reboot(cmd) }, ())
         }
 
-        pub fn perform_action(action: &Action, flags: ActionFlags) -> io::Result<()> {
+        pub fn perform_action(action: Action, flags: ActionFlags) -> io::Result<()> {
             let reboot_flags = match action {
                 Action::ForceReboot => libc::LINUX_REBOOT_CMD_RESTART,
                 Action::ForceHalt => libc::LINUX_REBOOT_CMD_HALT,
