@@ -32,11 +32,11 @@ type PriorityWho = Int;
 type PriorityWho = super::super::Uint;
 
 impl Target {
-    fn unpack(&self) -> (PriorityWhich, PriorityWho) {
+    fn unpack(self) -> (PriorityWhich, PriorityWho) {
         match self {
-            Self::Process(w) => (libc::PRIO_PROCESS as PriorityWhich, *w as PriorityWho),
-            Self::ProcGroup(w) => (libc::PRIO_PGRP as PriorityWhich, *w as PriorityWho),
-            Self::User(w) => (libc::PRIO_USER as PriorityWhich, *w as PriorityWho),
+            Self::Process(w) => (libc::PRIO_PROCESS as PriorityWhich, w as PriorityWho),
+            Self::ProcGroup(w) => (libc::PRIO_PGRP as PriorityWhich, w as PriorityWho),
+            Self::User(w) => (libc::PRIO_USER as PriorityWhich, w as PriorityWho),
         }
     }
 }
