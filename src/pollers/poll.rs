@@ -14,7 +14,7 @@ use crate::signal::Sigset;
     target_os = "netbsd",
     target_os = "dragonfly",
 ))]
-use crate::poll:: ppoll;
+use crate::poll::ppoll;
 
 pub struct PollPoller {
     pollfds: Vec<PollFd>,
