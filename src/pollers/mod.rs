@@ -3,9 +3,16 @@ use std::os::unix::io::RawFd;
 use std::time::Duration;
 
 use bitflags::bitflags;
+use cfg_if::cfg_if;
 
+#[cfg(target_os = "linux")]
+mod epoll;
+mod poll;
 mod select;
 
+#[cfg(target_os = "linux")]
+pub use epoll::EpollPoller;
+pub use poll::PollPoller;
 pub use select::SelectPoller;
 
 use super::signal::Sigset;
@@ -56,5 +63,20 @@ pub trait Ppoller: Poller {
     ) -> io::Result<Vec<(RawFd, Events)>>;
 }
 
-pub type DefaultPoller = SelectPoller;
-pub type DefaultPpoller = SelectPoller;
+cfg_if! {
+    if #[cfg(target_os = "linux")] {
+        pub type DefaultPoller = EpollPoller;
+        pub type DefaultPpoller = EpollPoller;
+    } else if #[cfg(any(
+        target_os = "freebsd",
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "dragonfly",
+    ))] {
+        pub type DefaultPoller = PollPoller;
+        pub type DefaultPpoller = PollPoller;
+    } else {
+        pub type DefaultPoller = PollPoller;
+        pub type DefaultPpoller = SelectPoller;
+    }
+}
