@@ -57,6 +57,7 @@ impl PollPoller {
         }
     }
 
+    #[allow(clippy::trivially_copy_pass_by_ref)]
     fn translate_pollfd_event(pfd: &PollFd) -> Option<(RawFd, Events)> {
         match Self::translate_events_rev(pfd.revents) {
             Some(ev) => Some((pfd.fd, ev)),
