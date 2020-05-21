@@ -77,33 +77,40 @@ impl FromIterator<Int> for FdSet {
 pub fn build_fdset<T: IntoIterator<Item = Int>>(fds: T) -> (FdSet, Int) {
     let mut fdset = FdSet::empty();
     let mut nfds: Int = 0;
+
     for fd in fds {
         fdset.add(fd);
         nfds = std::cmp::max(nfds, fd + 1);
     }
+
     (fdset, nfds)
 }
 
 pub fn build_fdset_slice(fds: &[Int]) -> (FdSet, Int) {
     let mut fdset = FdSet::empty();
     let mut nfds: Int = 0;
+
     for fd in fds {
         let fd = *fd;
         fdset.add(fd);
         nfds = std::cmp::max(nfds, fd + 1);
     }
+
     (fdset, nfds)
 }
 
 pub fn build_fdset_opt<T: IntoIterator<Item = Int>>(fds: T, mut nfds: Int) -> (Option<FdSet>, Int) {
     let mut fdset: Option<FdSet> = None;
+
     for fd in fds {
         if fdset.is_none() {
             fdset = Some(FdSet::empty());
         }
+
         fdset.as_mut().unwrap().add(fd);
         nfds = std::cmp::max(nfds, fd + 1);
     }
+
     (fdset, nfds)
 }
 
@@ -118,6 +125,7 @@ pub fn build_fdset_opt_slice(fds: &[Int], mut nfds: Int) -> (Option<FdSet>, Int)
         fdset.add(fd);
         nfds = std::cmp::max(nfds, fd + 1);
     }
+
     (Some(fdset), nfds)
 }
 
@@ -214,15 +222,18 @@ fn build_return_vec(
     match fdset {
         Some(s) => {
             let mut res: Vec<Int> = Vec::with_capacity(orig_fds.len());
+
             for fd in orig_fds {
                 if s.contains(*fd) {
                     res.push(*fd);
                     n -= 1;
+
                     if n == 0 {
                         break;
                     }
                 }
             }
+
             res.shrink_to_fit();
             (n, res)
         }
