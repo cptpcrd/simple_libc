@@ -4,8 +4,8 @@ use cfg_if::cfg_if;
 
 cfg_if! {
     if #[cfg(target_os = "linux")] {
-        use simple_libc::process::sigmask;
-        use simple_libc::process::signalfd;
+        use simple_libc::sigmask;
+        use simple_libc::signalfd;
         use simple_libc::process::{getpid, gettid, getuid};
         use simple_libc::signal::{Sigset, SIGUSR1, SIGUSR2};
         use simple_libc::{tgkill, Int, PidT, UidT};
