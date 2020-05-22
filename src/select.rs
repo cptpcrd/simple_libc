@@ -369,7 +369,7 @@ mod tests {
         );
 
         // Now we write some data and test again
-        w1.write(b"a").unwrap();
+        w1.write_all(b"a").unwrap();
         readfds.clear();
         readfds.add(r1.as_raw_fd());
         readfds.add(r2.as_raw_fd());
@@ -388,7 +388,7 @@ mod tests {
         assert!(readfds.contains(r1.as_raw_fd()));
 
         // Now make sure reading two files works
-        w2.write(b"a").unwrap();
+        w2.write_all(b"a").unwrap();
         readfds.clear();
         readfds.add(r1.as_raw_fd());
         readfds.add(r2.as_raw_fd());
@@ -463,7 +463,7 @@ mod tests {
         );
 
         // Now we write some data and test again
-        w1.write(b"a").unwrap();
+        w1.write_all(b"a").unwrap();
         readfds.clear();
         readfds.add(r1.as_raw_fd());
         readfds.add(r2.as_raw_fd());
@@ -483,7 +483,7 @@ mod tests {
         assert!(readfds.contains(r1.as_raw_fd()));
 
         // Now make sure reading two files works
-        w2.write(b"a").unwrap();
+        w2.write_all(b"a").unwrap();
         readfds.clear();
         readfds.add(r1.as_raw_fd());
         readfds.add(r2.as_raw_fd());
@@ -542,21 +542,21 @@ mod tests {
         );
 
         // Now we write some data and test again
-        w1.write(b"a").unwrap();
+        w1.write_all(b"a").unwrap();
         assert_eq!(
             select_simple(&[r1.as_raw_fd(), r2.as_raw_fd()], &[], &[], timeout_0).unwrap(),
             (vec![r1.as_raw_fd()], vec![], vec![]),
         );
 
         // Now make sure reading two files works
-        w2.write(b"a").unwrap();
+        w2.write_all(b"a").unwrap();
         assert_eq!(
             select_simple(&[r1.as_raw_fd(), r2.as_raw_fd()], &[], &[], timeout_0).unwrap(),
             (vec![r1.as_raw_fd(), r2.as_raw_fd()], vec![], vec![]),
         );
 
         // And checking if they're ready for writing
-        w2.write(b"a").unwrap();
+        w2.write_all(b"a").unwrap();
         assert_eq!(
             select_simple(
                 &[r1.as_raw_fd(), r2.as_raw_fd()],
@@ -587,21 +587,21 @@ mod tests {
         );
 
         // Now we write some data and test again
-        w1.write(b"a").unwrap();
+        w1.write_all(b"a").unwrap();
         assert_eq!(
             pselect_simple(&[r1.as_raw_fd(), r2.as_raw_fd()], &[], &[], timeout_0, None).unwrap(),
             (vec![r1.as_raw_fd()], vec![], vec![]),
         );
 
         // Now make sure reading two files works
-        w2.write(b"a").unwrap();
+        w2.write_all(b"a").unwrap();
         assert_eq!(
             pselect_simple(&[r1.as_raw_fd(), r2.as_raw_fd()], &[], &[], timeout_0, None).unwrap(),
             (vec![r1.as_raw_fd(), r2.as_raw_fd()], vec![], vec![]),
         );
 
         // And checking if they're ready for writing
-        w2.write(b"a").unwrap();
+        w2.write_all(b"a").unwrap();
         assert_eq!(
             pselect_simple(
                 &[r1.as_raw_fd(), r2.as_raw_fd()],

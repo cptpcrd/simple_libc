@@ -394,11 +394,11 @@ mod tests {
         let mut buf: Vec<u8> = Vec::new();
 
         buf.resize(5, 10);
-        w.write(&[0, 1, 2, 3]).unwrap();
+        w.write_all(&[0, 1, 2, 3]).unwrap();
         assert_eq!(r.read(&mut buf).unwrap(), 4);
         assert_eq!(buf, &[0, 1, 2, 3, 10]);
 
-        w.write(&[4, 5, 6, 7]).unwrap();
+        w.write_all(&[4, 5, 6, 7]).unwrap();
         drop(w);
         buf.clear();
         r.read_to_end(&mut buf).unwrap();
@@ -416,11 +416,11 @@ mod tests {
         let mut buf: Vec<u8> = Vec::new();
 
         buf.resize(5, 10);
-        w.write(&[0, 1, 2, 3]).unwrap();
+        w.write_all(&[0, 1, 2, 3]).unwrap();
         assert_eq!(r.read(&mut buf).unwrap(), 4);
         assert_eq!(buf, &[0, 1, 2, 3, 10]);
 
-        w.write(&[4, 5, 6, 7]).unwrap();
+        w.write_all(&[4, 5, 6, 7]).unwrap();
         drop(w);
         buf.clear();
         r.read_to_end(&mut buf).unwrap();

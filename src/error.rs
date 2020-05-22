@@ -171,13 +171,13 @@ mod tests {
 
     #[test]
     fn test_convert() {
-        assert_eq!(convert(-2, ()).unwrap(), ());
+        assert_eq!(convert(-2, 19).unwrap(), 19);
         assert_eq!(
             convert(-1, ()).unwrap_err().raw_os_error(),
             io::Error::last_os_error().raw_os_error()
         );
-        assert_eq!(convert(0, ()).unwrap(), ());
-        assert_eq!(convert(1, ()).unwrap(), ());
+        assert_eq!(convert(0, 19).unwrap(), 19);
+        assert_eq!(convert(1, 19).unwrap(), 19);
 
         assert_eq!(convert_ret(-2).unwrap(), -2);
         assert_eq!(
@@ -198,8 +198,8 @@ mod tests {
             convert_neg(-2, ()).unwrap_err().raw_os_error(),
             io::Error::last_os_error().raw_os_error()
         );
-        assert_eq!(convert_neg(0, ()).unwrap(), ());
-        assert_eq!(convert_neg(1, ()).unwrap(), ());
+        assert_eq!(convert_neg(0, 19).unwrap(), 19);
+        assert_eq!(convert_neg(1, 19).unwrap(), 19);
 
         assert_eq!(
             convert_neg_ret(-1).unwrap_err().raw_os_error(),
@@ -223,7 +223,7 @@ mod tests {
             convert_nzero(-2, ()).unwrap_err().raw_os_error(),
             io::Error::last_os_error().raw_os_error()
         );
-        assert_eq!(convert_nzero(0, ()).unwrap(), ());
+        assert_eq!(convert_nzero(0, 19).unwrap(), 19);
         assert_eq!(
             convert_nzero(1, ()).unwrap_err().raw_os_error(),
             io::Error::last_os_error().raw_os_error()

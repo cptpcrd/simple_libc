@@ -209,7 +209,7 @@ mod tests {
         );
 
         // Now we write some data and test again
-        w1.write(b"a").unwrap();
+        w1.write_all(b"a").unwrap();
         assert_eq!(
             poller
                 .wait(&mut events, Some(time::Duration::from_secs(0)))
@@ -220,7 +220,7 @@ mod tests {
         assert_eq!(events[0].events, Events::IN);
 
         // Now make sure reading two files works
-        w2.write(b"a").unwrap();
+        w2.write_all(b"a").unwrap();
         assert_eq!(
             poller
                 .wait(&mut events, Some(time::Duration::from_secs(0)))

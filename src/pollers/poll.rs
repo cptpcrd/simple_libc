@@ -226,14 +226,14 @@ mod tests {
         );
 
         // Now we write some data and test again
-        w1.write(b"a").unwrap();
+        w1.write_all(b"a").unwrap();
         assert_eq!(
             poller.poll(timeout_0).unwrap(),
             vec![(r1.as_raw_fd(), Events::READ)],
         );
 
         // Now make sure reading two files works
-        w2.write(b"a").unwrap();
+        w2.write_all(b"a").unwrap();
         assert_eq!(
             poller.poll(timeout_0).unwrap(),
             vec![

@@ -150,13 +150,13 @@ mod tests {
         assert_eq!(poll(&mut fds, Some(Duration::from_secs(0))).unwrap(), 0);
 
         // Now we write some data and test again
-        w1.write(b"a").unwrap();
+        w1.write_all(b"a").unwrap();
         assert_eq!(poll(&mut fds, Some(Duration::from_secs(0))).unwrap(), 1);
         assert_eq!(fds[0].fd, r1.as_raw_fd());
         assert_eq!(fds[0].revents, Events::IN);
 
         // Now make sure reading two files works
-        w2.write(b"a").unwrap();
+        w2.write_all(b"a").unwrap();
         assert_eq!(poll(&mut fds, Some(Duration::from_secs(0))).unwrap(), 2);
         assert_eq!(fds[0].fd, r1.as_raw_fd());
         assert_eq!(fds[0].revents, Events::IN);
@@ -196,7 +196,7 @@ mod tests {
         );
 
         // Now we write some data and test again
-        w1.write(b"a").unwrap();
+        w1.write_all(b"a").unwrap();
         assert_eq!(
             ppoll(&mut fds, Some(Duration::from_secs(0)), None).unwrap(),
             1,
@@ -205,7 +205,7 @@ mod tests {
         assert_eq!(fds[0].revents, Events::IN);
 
         // Now make sure reading two files works
-        w2.write(b"a").unwrap();
+        w2.write_all(b"a").unwrap();
         assert_eq!(
             ppoll(&mut fds, Some(Duration::from_secs(0)), None).unwrap(),
             2,

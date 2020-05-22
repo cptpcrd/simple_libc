@@ -306,7 +306,6 @@ mod tests {
                     Token::StructEnd,
                 ],
             );
-            ()
         });
     }
 
