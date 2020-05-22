@@ -962,9 +962,18 @@ mod tests {
     }
 
     #[test]
-    fn test_nnp_keepcaps() {
+    fn test_nnp() {
         get_no_new_privs().unwrap();
-        get_keepcaps().unwrap();
+    }
+
+    #[test]
+    fn test_keepcaps() {
+        let old_keepcaps = get_keepcaps().unwrap();
+        set_keepcaps(true).unwrap();
+        assert!(get_keepcaps().unwrap());
+        set_keepcaps(false).unwrap();
+        assert!(!get_keepcaps().unwrap());
+        set_keepcaps(old_keepcaps).unwrap();
     }
 
     #[test]
