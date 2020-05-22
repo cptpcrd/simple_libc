@@ -621,20 +621,21 @@ pub mod secbits {
     use bitflags::bitflags;
 
     use super::super::Ulong;
+    use super::super::constants;
 
     bitflags! {
         pub struct SecFlags: Ulong {
-            const SECBIT_KEEP_CAPS = super::super::constants::SECBIT_KEEP_CAPS;
-            const SECBIT_KEEP_CAPS_LOCKED = super::super::constants::SECBIT_KEEP_CAPS_LOCKED;
+            const SECBIT_KEEP_CAPS = constants::SECBIT_KEEP_CAPS;
+            const SECBIT_KEEP_CAPS_LOCKED = constants::SECBIT_KEEP_CAPS_LOCKED;
 
-            const SECBIT_NO_SETUID_FIXUP = super::super::constants::SECBIT_NO_SETUID_FIXUP;
-            const SECBIT_NO_SETUID_FIXUP_LOCKED = super::super::constants::SECBIT_NO_SETUID_FIXUP_LOCKED;
+            const SECBIT_NO_SETUID_FIXUP = constants::SECBIT_NO_SETUID_FIXUP;
+            const SECBIT_NO_SETUID_FIXUP_LOCKED = constants::SECBIT_NO_SETUID_FIXUP_LOCKED;
 
-            const SECBIT_NOROOT = super::super::constants::SECBIT_NOROOT;
-            const SECBIT_NOROOT_LOCKED = super::super::constants::SECBIT_NOROOT_LOCKED;
+            const SECBIT_NOROOT = constants::SECBIT_NOROOT;
+            const SECBIT_NOROOT_LOCKED = constants::SECBIT_NOROOT_LOCKED;
 
-            const SECBIT_NO_CAP_AMBIENT_RAISE = super::super::constants::SECBIT_NO_CAP_AMBIENT_RAISE;
-            const SECBIT_NO_CAP_AMBIENT_RAISE_LOCKED = super::super::constants::SECBIT_NO_CAP_AMBIENT_RAISE_LOCKED;
+            const SECBIT_NO_CAP_AMBIENT_RAISE = constants::SECBIT_NO_CAP_AMBIENT_RAISE;
+            const SECBIT_NO_CAP_AMBIENT_RAISE_LOCKED = constants::SECBIT_NO_CAP_AMBIENT_RAISE_LOCKED;
         }
     }
 
