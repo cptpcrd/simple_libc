@@ -6,9 +6,10 @@ use std::os::unix::ffi::OsStringExt;
 use std::os::unix::io::FromRawFd;
 
 mod constants;
+mod externs;
+
 pub mod error;
 pub mod exec;
-mod externs;
 pub mod fcntl;
 pub mod grp;
 pub mod net;
