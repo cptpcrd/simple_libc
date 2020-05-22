@@ -216,14 +216,14 @@ impl CapSet {
     }
 
     #[inline]
-    pub fn union_with(self, other: Self) -> Self {
+    pub const fn union_with(self, other: Self) -> Self {
         Self {
             bits: self.bits | other.bits,
         }
     }
 
     #[inline]
-    pub fn intersection_with(self, other: Self) -> Self {
+    pub const fn intersection_with(self, other: Self) -> Self {
         Self {
             bits: self.bits & other.bits,
         }
