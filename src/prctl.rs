@@ -620,8 +620,8 @@ pub mod secbits {
 
     use bitflags::bitflags;
 
-    use super::super::Ulong;
     use super::super::constants;
+    use super::super::Ulong;
 
     bitflags! {
         pub struct SecFlags: Ulong {
