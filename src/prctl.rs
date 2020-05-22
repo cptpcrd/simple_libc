@@ -672,6 +672,19 @@ mod tests {
     }
 
     #[test]
+    fn test_cap_bits() {
+        let mut mask: u64 = 0;
+
+        for cap in Cap::iter() {
+            let cap_bits = cap.to_single_bitfield();
+            assert_eq!(2u64.pow(cap as u32), cap_bits);
+            mask |= cap_bits;
+        }
+
+        assert_eq!(mask, CAP_BITMASK);
+    }
+
+    #[test]
     fn test_cap_serde() {
         assert_tokens(&Cap::Chown, &[Token::Str("CAP_CHOWN")]);
     }
