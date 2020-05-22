@@ -1,7 +1,7 @@
 use std::io;
 
-use super::super::error;
-use super::super::{IdT, Int};
+use super::error;
+use super::{IdT, Int};
 
 pub fn nice(incr: Int) -> io::Result<Int> {
     error::set_errno_success();
@@ -29,7 +29,7 @@ type PriorityWho = IdT;
 type PriorityWho = Int;
 
 #[cfg(any(target_os = "macos"))]
-type PriorityWho = super::super::Uint;
+type PriorityWho = super::Uint;
 
 impl Target {
     fn unpack(self) -> (PriorityWhich, PriorityWho) {

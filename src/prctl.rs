@@ -8,10 +8,10 @@ use serde::de::Deserialize;
 use serde::ser::SerializeSeq;
 use strum::IntoEnumIterator;
 
-use super::super::constants;
-use super::super::error;
+use super::constants;
+use super::error;
 
-use super::super::{Int, Ulong};
+use super::{Int, Ulong};
 
 #[derive(
     Copy,
@@ -509,7 +509,7 @@ pub mod ambient {
 
     use strum::IntoEnumIterator;
 
-    use super::super::super::Ulong;
+    use super::super::Ulong;
     use super::{Cap, CapSet};
 
     #[inline]
@@ -583,7 +583,7 @@ pub mod bounding {
 
     use strum::IntoEnumIterator;
 
-    use super::super::super::Ulong;
+    use super::super::Ulong;
     use super::{Cap, CapSet};
 
     #[inline]
@@ -620,21 +620,21 @@ pub mod secbits {
 
     use bitflags::bitflags;
 
-    use super::super::super::Ulong;
+    use super::super::Ulong;
 
     bitflags! {
         pub struct SecFlags: Ulong {
-            const SECBIT_KEEP_CAPS = super::super::super::constants::SECBIT_KEEP_CAPS;
-            const SECBIT_KEEP_CAPS_LOCKED = super::super::super::constants::SECBIT_KEEP_CAPS_LOCKED;
+            const SECBIT_KEEP_CAPS = super::super::constants::SECBIT_KEEP_CAPS;
+            const SECBIT_KEEP_CAPS_LOCKED = super::super::constants::SECBIT_KEEP_CAPS_LOCKED;
 
-            const SECBIT_NO_SETUID_FIXUP = super::super::super::constants::SECBIT_NO_SETUID_FIXUP;
-            const SECBIT_NO_SETUID_FIXUP_LOCKED = super::super::super::constants::SECBIT_NO_SETUID_FIXUP_LOCKED;
+            const SECBIT_NO_SETUID_FIXUP = super::super::constants::SECBIT_NO_SETUID_FIXUP;
+            const SECBIT_NO_SETUID_FIXUP_LOCKED = super::super::constants::SECBIT_NO_SETUID_FIXUP_LOCKED;
 
-            const SECBIT_NOROOT = super::super::super::constants::SECBIT_NOROOT;
-            const SECBIT_NOROOT_LOCKED = super::super::super::constants::SECBIT_NOROOT_LOCKED;
+            const SECBIT_NOROOT = super::super::constants::SECBIT_NOROOT;
+            const SECBIT_NOROOT_LOCKED = super::super::constants::SECBIT_NOROOT_LOCKED;
 
-            const SECBIT_NO_CAP_AMBIENT_RAISE = super::super::super::constants::SECBIT_NO_CAP_AMBIENT_RAISE;
-            const SECBIT_NO_CAP_AMBIENT_RAISE_LOCKED = super::super::super::constants::SECBIT_NO_CAP_AMBIENT_RAISE_LOCKED;
+            const SECBIT_NO_CAP_AMBIENT_RAISE = super::super::constants::SECBIT_NO_CAP_AMBIENT_RAISE;
+            const SECBIT_NO_CAP_AMBIENT_RAISE_LOCKED = super::super::constants::SECBIT_NO_CAP_AMBIENT_RAISE_LOCKED;
         }
     }
 
@@ -652,7 +652,7 @@ pub mod secbits {
 
 #[cfg(test)]
 mod tests {
-    use super::super::super::constants;
+    use super::super::constants;
     use super::*;
 
     use serde_test::{assert_de_tokens, assert_tokens, Token};

@@ -7,6 +7,7 @@ use std::os::unix::io::FromRawFd;
 
 mod constants;
 pub mod error;
+pub mod exec;
 mod externs;
 pub mod fcntl;
 pub mod grp;
@@ -14,10 +15,15 @@ pub mod net;
 pub mod poll;
 pub mod pollers;
 pub mod power;
+pub mod priority;
 pub mod process;
 pub mod pwd;
+pub mod resource;
 pub mod select;
+pub mod sigaction;
+pub mod sigmask;
 pub mod signal;
+pub mod wait;
 
 #[cfg(any(
     target_os = "linux",
@@ -33,6 +39,12 @@ pub mod flock;
 pub mod epoll;
 #[cfg(target_os = "linux")]
 pub mod inotify;
+#[cfg(target_os = "linux")]
+pub mod namespace;
+#[cfg(target_os = "linux")]
+pub mod prctl;
+#[cfg(target_os = "linux")]
+pub mod signalfd;
 
 pub type Short = libc::c_short;
 pub type Ushort = libc::c_ushort;

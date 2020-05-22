@@ -1,7 +1,7 @@
 use std::ffi;
 use std::io;
 
-use super::super::Char;
+use super::Char;
 
 fn build_c_string_vec<U: Into<Vec<u8>> + Clone + Sized>(vals: &[U]) -> io::Result<Vec<*mut Char>> {
     let mut c_vals: Vec<*mut Char> = Vec::with_capacity(vals.len() + 1);
@@ -81,7 +81,7 @@ pub fn execve<U: Into<Vec<u8>> + Clone + Sized, V: Into<Vec<u8>> + Clone + Sized
 /// If this function returns, it means an error occurred.
 #[cfg(target_os = "linux")]
 pub fn fexecve<U: Into<Vec<u8>> + Clone + Sized, V: Into<Vec<u8>> + Clone + Sized>(
-    fd: super::super::Int,
+    fd: super::Int,
     argv: &[U],
     env: &[V],
 ) -> io::Result<()> {

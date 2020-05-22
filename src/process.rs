@@ -4,22 +4,15 @@ use std::os::unix::ffi::OsStrExt;
 use std::os::unix::ffi::OsStringExt;
 use std::path::Path;
 
-pub mod exec;
-pub mod priority;
-pub mod resource;
-pub mod sigaction;
-pub mod sigmask;
-pub mod wait;
-
-#[cfg(target_os = "linux")]
-pub mod namespace;
-#[cfg(target_os = "linux")]
-pub mod prctl;
-#[cfg(target_os = "linux")]
-pub mod signalfd;
-
 use super::externs;
 use super::{Char, GidT, Int, PidT, UidT};
+
+#[deprecated(since = "0.4.0", note = "Moved out of the 'process' module")]
+pub use super::{exec, priority, resource, sigaction, sigmask, wait};
+
+#[deprecated(since = "0.4.0", note = "Moved out of the 'process' module")]
+#[cfg(target_os = "linux")]
+pub use super::{namespace, prctl, signalfd};
 
 #[inline]
 pub fn getpid() -> PidT {
