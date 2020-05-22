@@ -229,7 +229,7 @@ impl CapSet {
         }
     }
 
-    pub fn union(capsets: &[Self]) -> Self {
+    pub fn union<'a, T: IntoIterator<Item = &'a Self>>(capsets: T) -> Self {
         let mut bits: u64 = 0;
 
         for capset in capsets {
@@ -239,7 +239,7 @@ impl CapSet {
         Self { bits }
     }
 
-    pub fn intersection(capsets: &[Self]) -> Self {
+    pub fn intersection<'a, T: IntoIterator<Item = &'a Self>>(capsets: T) -> Self {
         let mut bits: u64 = CAP_BITMASK;
 
         for capset in capsets {
@@ -782,6 +782,9 @@ mod tests {
         let c = CapSet::from_iter(vec![Cap::Chown, Cap::Fowner, Cap::Kill]);
         assert_eq!(a.union_with(b), c);
         assert_eq!(CapSet::union(&[a, b]), c);
+        assert_eq!(CapSet::union([a, b].iter()), c);
+        assert_eq!(CapSet::union(&vec![a, b]), c);
+        assert_eq!(CapSet::union(vec![a, b].iter()), c);
     }
 
     #[test]
@@ -791,6 +794,9 @@ mod tests {
         let c = CapSet::from_iter(vec![Cap::Fowner]);
         assert_eq!(a.intersection_with(b), c);
         assert_eq!(CapSet::intersection(&[a, b]), c);
+        assert_eq!(CapSet::intersection([a, b].iter()), c);
+        assert_eq!(CapSet::intersection(&vec![a, b]), c);
+        assert_eq!(CapSet::intersection(vec![a, b].iter()), c);
     }
 
     #[test]
