@@ -12,6 +12,7 @@ pub mod error;
 pub mod exec;
 pub mod fcntl;
 pub mod grp;
+pub mod lockf;
 pub mod net;
 pub mod poll;
 pub mod pollers;
@@ -70,6 +71,7 @@ pub type IdT = libc::id_t;
 pub type PidT = libc::pid_t;
 pub type UidT = libc::uid_t;
 pub type GidT = libc::gid_t;
+pub type OffT = libc::off_t;
 
 /// Flush filesystem write caches.
 ///
