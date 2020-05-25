@@ -8,11 +8,50 @@ use super::externs;
 use super::{Char, GidT, Int, PidT, UidT};
 
 #[deprecated(since = "0.4.0", note = "Moved out of the 'process' module")]
-pub use super::{exec, priority, resource, sigaction, sigmask, wait};
+pub mod exec {
+    pub use crate::exec::*;
+}
+
+#[deprecated(since = "0.4.0", note = "Moved out of the 'process' module")]
+pub mod priority {
+    pub use crate::priority::*;
+}
+
+#[deprecated(since = "0.4.0", note = "Moved out of the 'process' module")]
+pub mod resource {
+    pub use crate::resource::*;
+}
+
+#[deprecated(since = "0.4.0", note = "Moved out of the 'process' module")]
+pub mod sigaction {
+    pub use crate::sigaction::*;
+}
+
+#[deprecated(since = "0.4.0", note = "Moved out of the 'process' module")]
+pub mod sigmask {
+    pub use crate::sigmask::*;
+}
+
+#[deprecated(since = "0.4.0", note = "Moved out of the 'process' module")]
+pub mod wait {
+    pub use crate::wait::*;
+}
 
 #[deprecated(since = "0.4.0", note = "Moved out of the 'process' module")]
 #[cfg(target_os = "linux")]
-pub use super::{namespace, prctl, signalfd};
+pub mod namespace {
+    pub use crate::namespace::*;
+}
+#[deprecated(since = "0.4.0", note = "Moved out of the 'process' module")]
+#[cfg(target_os = "linux")]
+pub mod prctl {
+    pub use crate::prctl::*;
+}
+#[deprecated(since = "0.4.0", note = "Moved out of the 'process' module")]
+#[cfg(target_os = "linux")]
+pub mod signalfd {
+    pub use crate::signalfd::*;
+}
 
 #[inline]
 pub fn getpid() -> PidT {
