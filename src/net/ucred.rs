@@ -10,19 +10,21 @@ cfg_if::cfg_if! {
         // The only difference is the order of the fields in the
         // credentials struct, and we can special-case that.
 
+        use crate::PidT;
+
         /// Stores the received credentials. WARNING: Several aspects of this struct
         /// are system-dependent!
         #[derive(Debug)]
         #[repr(C)]
         pub struct Ucred {
             #[cfg(target_os = "linux")]
-            pub pid: super::super::PidT,
+            pub pid: PidT,
 
             pub uid: UidT,
             pub gid: GidT,
 
-            #[cfg(not(target_os = "linux"))]
-            pub pid: super::super::PidT,
+            #[cfg(target_os = "openbsd")]
+            pub pid: PidT,
         }
 
         fn get_ucred_raw_impl(sockfd: Int) -> io::Result<Ucred> {
