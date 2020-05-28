@@ -2,31 +2,24 @@ use std::io;
 use std::os::unix;
 use std::os::unix::io::AsRawFd;
 
-use crate::{GidT, Int, SocklenT, UidT};
+use crate::{Int, SocklenT};
 
 // Linux, NetBSD, and OpenBSD use almost exactly the same interface.
-// The only difference is the order of the fields in the
-// credentials struct, and we can special-case that.
+// The only differences are 1) the name of the socket option and 2) the order
+// the fields in the resulting struct. We can special-case both of those.
 //
 // Note that on OpenBSD this is called 'sockpeercred', and on NetBSD
 // it is called 'unpcbid'. But it's still pretty much the same
 // interface.
 
-use crate::PidT;
+#[cfg(target_os = "linux")]
+pub type Ucred = libc::ucred;
 
-/// Stores the received credentials.
-#[derive(Debug, Copy, Clone)]
-#[repr(C)]
-pub struct Ucred {
-    #[cfg(any(target_os = "linux", target_os = "netbsd"))]
-    pub pid: PidT,
+#[cfg(target_os = "openbsd")]
+pub type Ucred = libc::sockpeercred;
 
-    pub uid: UidT,
-    pub gid: GidT,
-
-    #[cfg(target_os = "openbsd")]
-    pub pid: PidT,
-}
+#[cfg(target_os = "netbsd")]
+pub type Ucred = crate::types::unpcbid;
 
 #[cfg(target_os = "netbsd")]
 const SO_PEERCRED: Int = crate::constants::LOCAL_PEEREID;

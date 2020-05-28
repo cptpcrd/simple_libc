@@ -36,5 +36,15 @@ cfg_if::cfg_if! {
                 self._cr.pid
             }
         }
+    } else if #[cfg(target_os = "netbsd")] {
+        use crate::{UidT, GidT, PidT};
+
+        #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
+        #[repr(C)]
+        pub struct unpcbid {
+            pub pid: PidT,
+            pub uid: UidT,
+            pub gid: GidT,
+        }
     }
 }
