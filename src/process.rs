@@ -464,9 +464,26 @@ mod tests {
 
     #[test]
     fn test_getgroups() {
-        let groups = getgroups().unwrap();
+        // Get the group list
+        let mut groups = getgroups().unwrap();
+
+        // Make sure the length matches
         assert_eq!(groups.len(), getgroups_raw(&mut []).unwrap() as usize);
 
+        // Now get the list the other way -- with a vector of size NGROUPS_MAX.
+        let mut groups2 = Vec::new();
+        groups2.resize(crate::sysconf(libc::_SC_NGROUPS_MAX).unwrap() as usize, 0);
+        let ngroups2 = getgroups_raw(&mut groups2).unwrap();
+        groups2.resize(ngroups2 as usize, 0);
+
+        // Sort both, remove duplicates, and make sure they match.
+        groups.sort();
+        groups.dedup();
+        groups2.sort();
+        groups2.dedup();
+        assert_eq!(groups, groups2);
+
+        // Just check for success
         getallgroups().unwrap();
     }
 
