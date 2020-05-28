@@ -231,11 +231,11 @@ pub fn sethostname(name: &ffi::OsString) -> io::Result<()> {
     )
 }
 
-/// Attempts to read the current system hostname into the given vector.
+/// Attempts to read the current system hostname into the given slice.
 ///
 /// The result is null-terminated. Behavior in the case that the vector
 /// is not long enough is system-dependent.
-pub fn gethostname_raw(name_vec: &mut Vec<Char>) -> io::Result<()> {
+pub fn gethostname_raw(name_vec: &mut [Char]) -> io::Result<()> {
     error::convert_nzero(
         unsafe { libc::gethostname(name_vec.as_mut_ptr(), name_vec.len()) },
         (),
