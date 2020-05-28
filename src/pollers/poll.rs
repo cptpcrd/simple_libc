@@ -3,9 +3,8 @@ use std::io;
 use std::os::unix::io::RawFd;
 use std::time::Duration;
 
-use super::{Events, Flags, Poller, Ppoller};
+use super::{Events, Flags, Poller};
 use crate::poll::{poll, Events as PollEvents, PollFd};
-use crate::signal::Sigset;
 
 #[cfg(any(
     target_os = "linux",
@@ -138,11 +137,11 @@ impl Poller for PollPoller {
     target_os = "netbsd",
     target_os = "dragonfly",
 ))]
-impl Ppoller for PollPoller {
+impl super::Ppoller for PollPoller {
     fn ppoll(
         &mut self,
         timeout: Option<Duration>,
-        sigmask: Option<Sigset>,
+        sigmask: Option<crate::signal::Sigset>,
     ) -> io::Result<Vec<(RawFd, Events)>> {
         let n = ppoll(&mut self.pollfds, timeout, sigmask)?;
         Ok(self

@@ -1,5 +1,3 @@
-use std::io;
-
 use bitflags::bitflags;
 
 #[derive(Debug, Copy, Clone)]
@@ -28,6 +26,8 @@ bitflags! {
 
 cfg_if::cfg_if! {
     if #[cfg(target_os = "linux")] {
+        use std::io;
+
         pub fn set_cad_enabled_status(enabled: bool) -> io::Result<()> {
             let cmd = if enabled {
                 libc::LINUX_REBOOT_CMD_CAD_ON
@@ -56,6 +56,8 @@ cfg_if::cfg_if! {
         }
     }
     else if #[cfg(any(target_os = "freebsd", target_os = "openbsd", target_os = "dragonfly", target_os = "netbsd"))] {
+        use std::io;
+
         use crate::externs;
         use crate::constants;
 
