@@ -96,8 +96,9 @@ pub unsafe fn getsockopt_raw<T: Sized>(
             &mut len,
         ),
         (),
-    )
-    .map(|()| len)
+    )?;
+
+    Ok(len)
 }
 
 #[cfg(test)]
