@@ -39,7 +39,7 @@ pub fn get_xucred_raw(sockfd: Int) -> io::Result<Xucred> {
         )
     }
     .and_then(|len| {
-        if len != std::mem::size_of::<Xucred>() as SocklenT {
+        if len != std::mem::size_of::<RawXucred>() as SocklenT {
             return Err(io::Error::from_raw_os_error(libc::EINVAL));
         }
 
@@ -93,7 +93,6 @@ mod tests {
         groups.sort();
 
         let mut acred = get_xucred(&a).unwrap();
-        println!("{:?}", acred);
         assert_eq!(acred.uid, process::geteuid());
         assert_eq!(acred.gid, process::getegid());
 
@@ -104,7 +103,6 @@ mod tests {
         assert_eq!(acred.pid, process::getpid());
 
         let mut bcred = get_xucred(&b).unwrap();
-        println!("{:?}", acred);
         assert_eq!(bcred.uid, process::geteuid());
         assert_eq!(bcred.gid, process::getegid());
 
