@@ -23,11 +23,11 @@ type RawXucred = crate::types::xucred;
 type RawXucred = libc::xucred;
 
 pub fn get_xucred_raw(sockfd: Int) -> io::Result<Xucred> {
-    let mut raw_xucred_arr: [RawXucred; 1] = [unsafe { std::mem::zeroed() }];
+    let mut raw_xucred: RawXucred = unsafe { std::mem::zeroed() };
 
     #[cfg(not(target_os = "openbsd"))]
     {
-        raw_xucred_arr[0].cr_version = libc::XUCRED_VERSION;
+        raw_xucred.cr_version = libc::XUCRED_VERSION;
     }
 
     unsafe {
@@ -35,15 +35,13 @@ pub fn get_xucred_raw(sockfd: Int) -> io::Result<Xucred> {
             sockfd,
             libc::SOL_SOCKET,
             libc::LOCAL_PEERCRED,
-            &mut raw_xucred_arr,
+            std::slice::from_mut(&mut raw_xucred),
         )
     }
     .and_then(|len| {
         if len != std::mem::size_of::<Xucred>() as SocklenT {
             return Err(io::Error::from_raw_os_error(libc::EINVAL));
         }
-
-        let raw_xucred = raw_xucred_arr[0];
 
         #[cfg(not(target_os = "openbsd"))]
         {

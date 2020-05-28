@@ -31,16 +31,16 @@ const SO_PEERCRED: Int = libc::SO_PEERCRED;
 /// On Linux, this can also be used with `SOCK_DGRAM` sockets created using
 /// `socketpair()`.
 pub fn get_ucred_raw(sockfd: Int) -> io::Result<Ucred> {
-    let mut ucred_arr = [Ucred {
+    let mut ucred = Ucred {
         pid: 0,
         uid: 0,
         gid: 0,
-    }];
+    };
 
-    unsafe { super::getsockopt_raw(sockfd, libc::SOL_SOCKET, SO_PEERCRED, &mut ucred_arr) }
+    unsafe { super::getsockopt_raw(sockfd, libc::SOL_SOCKET, SO_PEERCRED, std::slice::from_mut(&mut ucred)) }
         .and_then(|len| {
             if len == std::mem::size_of::<Ucred>() as SocklenT {
-                Ok(ucred_arr[0])
+                Ok(ucred)
             } else {
                 Err(io::Error::from_raw_os_error(libc::EINVAL))
             }
