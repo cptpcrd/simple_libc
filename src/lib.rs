@@ -169,7 +169,7 @@ pub fn pipe2(flags: Int) -> io::Result<(fs::File, fs::File)> {
 
 /// Closes the given file descriptor.
 pub fn close_fd(fd: Int) -> io::Result<()> {
-    error::convert_nzero(unsafe { libc::close(fd) }, ())
+    error::convert_nzero_ret(unsafe { libc::close(fd) })
 }
 
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
@@ -194,18 +194,17 @@ pub fn kill(spec: KillSpec, sig: Int) -> io::Result<()> {
         KillSpec::All => -1,
     };
 
-    error::convert_nzero(unsafe { libc::kill(pid, sig) }, ())
+    error::convert_nzero_ret(unsafe { libc::kill(pid, sig) })
 }
 
 pub fn killpg(pgid: PidT, sig: Int) -> io::Result<()> {
-    error::convert_nzero(unsafe { libc::killpg(pgid, sig) }, ())
+    error::convert_nzero_ret(unsafe { libc::killpg(pgid, sig) })
 }
 
 #[cfg(target_os = "linux")]
 pub fn tgkill(tgid: Int, tid: Int, sig: Int) -> io::Result<()> {
-    error::convert_nzero(
+    error::convert_nzero_ret(
         unsafe { libc::syscall(libc::SYS_tgkill, tgid, tid, sig) },
-        (),
     )
 }
 
@@ -225,9 +224,8 @@ type SetHostnameSize = Int;
 ))]
 pub fn sethostname(name: &ffi::OsString) -> io::Result<()> {
     let name_vec: Vec<Char> = name.clone().into_vec().iter().map(|&x| x as Char).collect();
-    error::convert_nzero(
+    error::convert_nzero_ret(
         unsafe { libc::sethostname(name_vec.as_ptr(), name_vec.len() as SetHostnameSize) },
-        (),
     )
 }
 
@@ -236,9 +234,8 @@ pub fn sethostname(name: &ffi::OsString) -> io::Result<()> {
 /// The result is null-terminated. Behavior in the case that the vector
 /// is not long enough is system-dependent.
 pub fn gethostname_raw(name_vec: &mut [Char]) -> io::Result<()> {
-    error::convert_nzero(
+    error::convert_nzero_ret(
         unsafe { libc::gethostname(name_vec.as_mut_ptr(), name_vec.len()) },
-        (),
     )
 }
 
@@ -285,17 +282,15 @@ pub fn gethostname() -> io::Result<ffi::OsString> {
 #[cfg(target_os = "linux")]
 pub fn setdomainname(name: &ffi::OsString) -> io::Result<()> {
     let name_vec: Vec<Char> = name.clone().into_vec().iter().map(|&x| x as Char).collect();
-    error::convert_nzero(
+    error::convert_nzero_ret(
         unsafe { libc::setdomainname(name_vec.as_ptr(), name_vec.len()) },
-        (),
     )
 }
 
 #[cfg(target_os = "linux")]
 pub fn getdomainname_raw(name_vec: &mut Vec<Char>) -> io::Result<()> {
-    error::convert_nzero(
+    error::convert_nzero_ret(
         unsafe { libc::getdomainname(name_vec.as_mut_ptr(), name_vec.len()) },
-        (),
     )
 }
 
@@ -351,7 +346,7 @@ pub struct Utsname {
 pub fn uname() -> io::Result<Utsname> {
     let mut utsname = unsafe { std::mem::zeroed::<libc::utsname>() };
 
-    error::convert_nzero(unsafe { libc::uname(&mut utsname) }, ())?;
+    error::convert_nzero_ret(unsafe { libc::uname(&mut utsname) })?;
 
     Ok(Utsname {
         sysname: bytes_to_osstring(utsname.sysname.iter()),

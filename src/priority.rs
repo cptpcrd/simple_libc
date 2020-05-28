@@ -51,7 +51,7 @@ pub fn get(t: Target) -> io::Result<Int> {
 pub fn set(t: Target, value: Int) -> io::Result<()> {
     let (which, who) = t.unpack();
 
-    error::convert_nzero(unsafe { libc::setpriority(which, who, value) }, ())
+    error::convert_nzero_ret(unsafe { libc::setpriority(which, who, value) })
 }
 
 #[cfg(test)]

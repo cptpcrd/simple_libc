@@ -477,7 +477,7 @@ impl CapState {
             },
         ];
 
-        error::convert_nzero(unsafe { capset(&mut header, &raw_dat[0]) }, ())
+        error::convert_nzero_ret(unsafe { capset(&mut header, &raw_dat[0]) })
     }
 }
 

@@ -81,11 +81,11 @@ where
 }
 
 #[inline]
-pub fn convert_nzero_ret<T>(ret: T) -> io::Result<T>
+pub fn convert_nzero_ret<T>(ret: T) -> io::Result<()>
 where
-    T: Default + Eq + Copy,
+    T: Default + Eq,
 {
-    convert_nzero(ret, ret)
+    convert_nzero(ret, ())
 }
 
 pub fn convert_nzero<T, U>(ret: T, res: U) -> io::Result<U>
@@ -237,7 +237,7 @@ mod tests {
             convert_nzero_ret(-2).unwrap_err().raw_os_error(),
             io::Error::last_os_error().raw_os_error()
         );
-        assert_eq!(convert_nzero_ret(0).unwrap(), 0);
+        assert_eq!(convert_nzero_ret(0).unwrap(), ());
         assert_eq!(
             convert_nzero_ret(1).unwrap_err().raw_os_error(),
             io::Error::last_os_error().raw_os_error()

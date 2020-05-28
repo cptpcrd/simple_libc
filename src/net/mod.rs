@@ -33,7 +33,7 @@ pub fn getpeereid_raw(sockfd: Int) -> io::Result<(UidT, GidT)> {
     let mut uid = 0;
     let mut gid = 0;
 
-    crate::error::convert_nzero(unsafe { libc::getpeereid(sockfd, &mut uid, &mut gid) }, ())
+    crate::error::convert_nzero_ret(unsafe { libc::getpeereid(sockfd, &mut uid, &mut gid) })
         .map(|()| (uid, gid))
 }
 
@@ -87,7 +87,7 @@ pub unsafe fn getsockopt_raw<T: Sized>(
 ) -> io::Result<SocklenT> {
     let mut len = (data.len() * std::mem::size_of::<T>()) as SocklenT;
 
-    crate::error::convert_nzero(
+    crate::error::convert_nzero_ret(
         libc::getsockopt(
             sockfd,
             level,
@@ -95,7 +95,6 @@ pub unsafe fn getsockopt_raw<T: Sized>(
             data.as_mut_ptr() as *mut libc::c_void,
             &mut len,
         ),
-        (),
     )?;
 
     Ok(len)
@@ -117,7 +116,7 @@ pub unsafe fn setsockopt_raw<T: Sized>(
     optname: Int,
     data: &[T],
 ) -> io::Result<()> {
-    crate::error::convert_nzero(
+    crate::error::convert_nzero_ret(
         libc::setsockopt(
             sockfd,
             level,
@@ -125,7 +124,6 @@ pub unsafe fn setsockopt_raw<T: Sized>(
             data.as_ptr() as *mut libc::c_void,
             (data.len() * std::mem::size_of::<T>()) as SocklenT,
         ),
-        (),
     )
 }
 

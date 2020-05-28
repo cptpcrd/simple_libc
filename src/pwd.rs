@@ -85,7 +85,7 @@ impl Passwd {
 
                 let ret = getpwfunc(&t, &mut passwd, buffer.as_mut_ptr(), buflen, &mut result);
 
-                crate::error::convert_nzero_ret(ret).and_then(|_| {
+                crate::error::convert_nzero_ret(ret).and_then(|()| {
                     if result.is_null() {
                         return Ok(None);
                     }

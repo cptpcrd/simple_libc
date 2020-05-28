@@ -245,27 +245,27 @@ pub fn getlogin() -> io::Result<ffi::OsString> {
 }
 
 pub fn setuid(uid: UidT) -> io::Result<()> {
-    crate::error::convert_nzero(unsafe { libc::setuid(uid) }, ())
+    crate::error::convert_nzero_ret(unsafe { libc::setuid(uid) })
 }
 
 pub fn seteuid(uid: UidT) -> io::Result<()> {
-    crate::error::convert_nzero(unsafe { libc::seteuid(uid) }, ())
+    crate::error::convert_nzero_ret(unsafe { libc::seteuid(uid) })
 }
 
 pub fn setreuid(ruid: UidT, euid: UidT) -> io::Result<()> {
-    crate::error::convert_nzero(unsafe { externs::setreuid(ruid, euid) }, ())
+    crate::error::convert_nzero_ret(unsafe { externs::setreuid(ruid, euid) })
 }
 
 pub fn setgid(gid: GidT) -> io::Result<()> {
-    crate::error::convert_nzero(unsafe { libc::setgid(gid) }, ())
+    crate::error::convert_nzero_ret(unsafe { libc::setgid(gid) })
 }
 
 pub fn setegid(gid: GidT) -> io::Result<()> {
-    crate::error::convert_nzero(unsafe { libc::setegid(gid) }, ())
+    crate::error::convert_nzero_ret(unsafe { libc::setegid(gid) })
 }
 
 pub fn setregid(rgid: GidT, egid: GidT) -> io::Result<()> {
-    crate::error::convert_nzero(unsafe { externs::setregid(rgid, egid) }, ())
+    crate::error::convert_nzero_ret(unsafe { externs::setregid(rgid, egid) })
 }
 
 #[cfg(target_os = "linux")]
@@ -281,9 +281,8 @@ type SetGroupsSize = crate::SizeT;
 type SetGroupsSize = Int;
 
 pub fn setgroups(groups: &[GidT]) -> io::Result<()> {
-    crate::error::convert_nzero(
+    crate::error::convert_nzero_ret(
         unsafe { libc::setgroups(groups.len() as SetGroupsSize, groups.as_ptr()) },
-        (),
     )
 }
 
@@ -336,15 +335,15 @@ cfg_if::cfg_if! {
         }
 
         pub fn setresuid(ruid: UidT, euid: UidT, suid: UidT) -> io::Result<()> {
-            crate::error::convert_nzero(unsafe {
+            crate::error::convert_nzero_ret(unsafe {
                 externs::setresuid(ruid, euid, suid)
-            }, ())
+            })
         }
 
         pub fn setresgid(rgid: GidT, egid: GidT, sgid: GidT) -> io::Result<()> {
-            crate::error::convert_nzero(unsafe {
+            crate::error::convert_nzero_ret(unsafe {
                 externs::setresgid(rgid, egid, sgid)
-            }, ())
+            })
         }
 
         fn getreuid_impl() -> (UidT, UidT) {
@@ -396,7 +395,7 @@ pub fn getregid() -> (GidT, GidT) {
 pub fn chroot<P: AsRef<Path>>(path: P) -> io::Result<()> {
     let path = ffi::CString::new(path.as_ref().as_os_str().as_bytes())?;
 
-    crate::error::convert_nzero(unsafe { libc::chroot(path.as_ptr()) }, ())
+    crate::error::convert_nzero_ret(unsafe { libc::chroot(path.as_ptr()) })
 }
 
 /// Change the current working directory to the specified path.
@@ -418,7 +417,7 @@ pub fn fork() -> io::Result<Int> {
 }
 
 pub fn setpgid(pid: PidT, pgid: PidT) -> io::Result<()> {
-    crate::error::convert_nzero(unsafe { libc::setpgid(pid, pgid) }, ())
+    crate::error::convert_nzero_ret(unsafe { libc::setpgid(pid, pgid) })
 }
 
 pub fn setsid() -> io::Result<PidT> {

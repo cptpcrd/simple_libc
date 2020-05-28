@@ -133,7 +133,7 @@ impl Inotify {
 
     /// Remove a previously added watch.
     pub fn rm_watch(&mut self, watch: Watch) -> io::Result<()> {
-        crate::error::convert_nzero(unsafe { libc::inotify_rm_watch(self.fd, watch.wd) }, ())
+        crate::error::convert_nzero_ret(unsafe { libc::inotify_rm_watch(self.fd, watch.wd) })
     }
 
     /// Read a list of events from the inotify file descriptor, or return an
@@ -141,9 +141,8 @@ impl Inotify {
     pub fn read_nowait(&mut self) -> io::Result<Vec<Event>> {
         // See how much data is ready for reading
         let mut nbytes: i32 = 0;
-        crate::error::convert_nzero(
+        crate::error::convert_nzero_ret(
             unsafe { libc::ioctl(self.fd, libc::FIONREAD, &mut nbytes) },
-            (),
         )?;
 
         // No data? Return an empty vector.
