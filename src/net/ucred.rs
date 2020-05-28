@@ -15,7 +15,7 @@ use super::super::{GidT, Int, UidT};
 use crate::PidT;
 
 /// Stores the received credentials.
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 #[repr(C)]
 pub struct Ucred {
     #[cfg(any(target_os = "linux", target_os = "netbsd"))]

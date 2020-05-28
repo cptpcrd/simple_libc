@@ -5,7 +5,7 @@ use std::os::unix::io::AsRawFd;
 use crate::error;
 use crate::{GidT, Int, UidT};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Xucred {
     pub uid: UidT,
     pub gid: GidT,
