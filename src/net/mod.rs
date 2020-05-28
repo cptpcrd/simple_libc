@@ -101,6 +101,34 @@ pub unsafe fn getsockopt_raw<T: Sized>(
     Ok(len)
 }
 
+/// Sets the value of the given socket option.
+///
+/// This function is a simple wrapper around `libc::getsockopt()` that sets
+/// the value of the socket option to the contents of a generic slice.
+///
+/// # Safety
+///
+/// This function has no way to verify that the slice containing the data is
+/// the correct format for representing the given socket option. If that can
+/// be verified, then this function should be safe for use.
+pub unsafe fn setsockopt_raw<T: Sized>(
+    sockfd: Int,
+    level: Int,
+    optname: Int,
+    data: &[T],
+) -> io::Result<()> {
+    crate::error::convert_nzero(
+        libc::setsockopt(
+            sockfd,
+            level,
+            optname,
+            data.as_ptr() as *mut libc::c_void,
+            (data.len() * std::mem::size_of::<T>()) as SocklenT,
+        ),
+        (),
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
