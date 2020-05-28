@@ -2,7 +2,7 @@ use std::io;
 
 use bitflags::bitflags;
 
-use super::{Int, PidT};
+use crate::{Int, PidT};
 
 #[derive(Debug, Copy, Clone)]
 pub enum ProcStatus {
@@ -32,7 +32,7 @@ impl ProcStatus {
 pub fn wait() -> io::Result<(PidT, ProcStatus)> {
     let mut status: Int = 0;
 
-    super::error::convert_neg_ret(unsafe { libc::wait(&mut status) })
+    crate::error::convert_neg_ret(unsafe { libc::wait(&mut status) })
         .map(|pid| (pid, ProcStatus::from_raw_status(status)))
 }
 
@@ -65,7 +65,7 @@ pub fn waitpid(
 
     let mut status: Int = 0;
 
-    super::error::convert_neg_ret(unsafe { libc::waitpid(wpid, &mut status, options.bits) }).map(
+    crate::error::convert_neg_ret(unsafe { libc::waitpid(wpid, &mut status, options.bits) }).map(
         |pid| match pid {
             0 => None,
             _ => Some((pid, ProcStatus::from_raw_status(status))),

@@ -33,7 +33,7 @@ pub fn getpeereid_raw(sockfd: Int) -> io::Result<(UidT, GidT)> {
     let mut uid = 0;
     let mut gid = 0;
 
-    super::error::convert_nzero(unsafe { libc::getpeereid(sockfd, &mut uid, &mut gid) }, ())
+    crate::error::convert_nzero(unsafe { libc::getpeereid(sockfd, &mut uid, &mut gid) }, ())
         .map(|()| (uid, gid))
 }
 
@@ -70,7 +70,7 @@ pub unsafe fn getsockopt_raw<T: Sized>(
 ) -> io::Result<SocklenT> {
     let mut len = (data.len() * std::mem::size_of::<T>()) as SocklenT;
 
-    super::error::convert_nzero(
+    crate::error::convert_nzero(
         libc::getsockopt(
             sockfd,
             level,

@@ -1,7 +1,7 @@
 use std::io;
 
-use super::error;
-use super::Int;
+use crate::error;
+use crate::Int;
 
 macro_rules! fcntl_raw {
     ($fd:expr, $cmd:expr$(, $args:expr)*) => {
@@ -103,10 +103,10 @@ mod tests {
 
         let f2 = dupfd(f.as_raw_fd(), 0).unwrap();
         assert!(is_inheritable(f2).unwrap());
-        super::super::close_fd(f2).unwrap();
+        crate::close_fd(f2).unwrap();
 
         let f2 = dupfd_cloexec(f.as_raw_fd(), 0).unwrap();
         assert!(!is_inheritable(f2).unwrap());
-        super::super::close_fd(f2).unwrap();
+        crate::close_fd(f2).unwrap();
     }
 }

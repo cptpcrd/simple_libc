@@ -1,9 +1,9 @@
 use std::io;
 use std::os::unix::io::AsRawFd;
 
-use super::error;
-use super::signal::Sigset;
-use super::Int;
+use crate::error;
+use crate::signal::Sigset;
+use crate::Int;
 
 #[derive(Debug)]
 pub struct SignalFd {

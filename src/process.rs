@@ -4,8 +4,8 @@ use std::os::unix::ffi::OsStrExt;
 use std::os::unix::ffi::OsStringExt;
 use std::path::Path;
 
-use super::externs;
-use super::{Char, GidT, Int, PidT, UidT};
+use crate::externs;
+use crate::{Char, GidT, Int, PidT, UidT};
 
 #[deprecated(since = "0.4.0", note = "Moved out of the 'process' module")]
 pub mod exec {
@@ -114,7 +114,7 @@ pub fn getegid() -> GidT {
 ///
 /// In most cases, the `getgroups()` wrapper should be preferred.
 pub fn getgroups_raw(groups: &mut [GidT]) -> io::Result<Int> {
-    super::error::convert_neg_ret(unsafe {
+    crate::error::convert_neg_ret(unsafe {
         libc::getgroups(groups.len() as Int, groups.as_mut_ptr())
     })
 }
@@ -170,18 +170,18 @@ pub fn getallgroups() -> io::Result<Vec<GidT>> {
 /// `pwd::Passwd::lookup_uid()`.
 pub fn getlogin() -> io::Result<ffi::OsString> {
     // Get the initial buffer length from sysconf(), setting some sane defaults/constraints.
-    let init_length = super::constrain(
-        super::sysconf(libc::_SC_LOGIN_NAME_MAX).unwrap_or(256),
+    let init_length = crate::constrain(
+        crate::sysconf(libc::_SC_LOGIN_NAME_MAX).unwrap_or(256),
         64,
         1024,
     ) as usize;
 
-    super::error::while_erange(
+    crate::error::while_erange(
         |i| {
             let length = init_length * (i as usize + 1);
             let mut buf: Vec<Char> = Vec::new();
 
-            super::error::convert_nzero(
+            crate::error::convert_nzero(
                 unsafe {
                     buf.resize(length, 0);
                     externs::getlogin_r(buf.as_mut_ptr(), length)
@@ -202,31 +202,31 @@ pub fn getlogin() -> io::Result<ffi::OsString> {
 }
 
 pub fn setuid(uid: UidT) -> io::Result<()> {
-    super::error::convert_nzero(unsafe { libc::setuid(uid) }, ())
+    crate::error::convert_nzero(unsafe { libc::setuid(uid) }, ())
 }
 
 pub fn seteuid(uid: UidT) -> io::Result<()> {
-    super::error::convert_nzero(unsafe { libc::seteuid(uid) }, ())
+    crate::error::convert_nzero(unsafe { libc::seteuid(uid) }, ())
 }
 
 pub fn setreuid(ruid: UidT, euid: UidT) -> io::Result<()> {
-    super::error::convert_nzero(unsafe { externs::setreuid(ruid, euid) }, ())
+    crate::error::convert_nzero(unsafe { externs::setreuid(ruid, euid) }, ())
 }
 
 pub fn setgid(gid: GidT) -> io::Result<()> {
-    super::error::convert_nzero(unsafe { libc::setgid(gid) }, ())
+    crate::error::convert_nzero(unsafe { libc::setgid(gid) }, ())
 }
 
 pub fn setegid(gid: GidT) -> io::Result<()> {
-    super::error::convert_nzero(unsafe { libc::setegid(gid) }, ())
+    crate::error::convert_nzero(unsafe { libc::setegid(gid) }, ())
 }
 
 pub fn setregid(rgid: GidT, egid: GidT) -> io::Result<()> {
-    super::error::convert_nzero(unsafe { externs::setregid(rgid, egid) }, ())
+    crate::error::convert_nzero(unsafe { externs::setregid(rgid, egid) }, ())
 }
 
 #[cfg(target_os = "linux")]
-type SetGroupsSize = super::SizeT;
+type SetGroupsSize = crate::SizeT;
 
 #[cfg(any(
     target_os = "openbsd",
@@ -238,7 +238,7 @@ type SetGroupsSize = super::SizeT;
 type SetGroupsSize = Int;
 
 pub fn setgroups(groups: &[GidT]) -> io::Result<()> {
-    super::error::convert_nzero(
+    crate::error::convert_nzero(
         unsafe { libc::setgroups(groups.len() as SetGroupsSize, groups.as_ptr()) },
         (),
     )
@@ -293,13 +293,13 @@ cfg_if::cfg_if! {
         }
 
         pub fn setresuid(ruid: UidT, euid: UidT, suid: UidT) -> io::Result<()> {
-            super::error::convert_nzero(unsafe {
+            crate::error::convert_nzero(unsafe {
                 externs::setresuid(ruid, euid, suid)
             }, ())
         }
 
         pub fn setresgid(rgid: GidT, egid: GidT, sgid: GidT) -> io::Result<()> {
-            super::error::convert_nzero(unsafe {
+            crate::error::convert_nzero(unsafe {
                 externs::setresgid(rgid, egid, sgid)
             }, ())
         }
@@ -353,7 +353,7 @@ pub fn getregid() -> (GidT, GidT) {
 pub fn chroot<P: AsRef<Path>>(path: P) -> io::Result<()> {
     let path = ffi::CString::new(path.as_ref().as_os_str().as_bytes())?;
 
-    super::error::convert_nzero(unsafe { libc::chroot(path.as_ptr()) }, ())
+    crate::error::convert_nzero(unsafe { libc::chroot(path.as_ptr()) }, ())
 }
 
 /// Change the current working directory to the specified path.
@@ -371,15 +371,15 @@ pub fn chdir<P: AsRef<Path>>(path: P) -> io::Result<()> {
 /// Otherwise, the Ok value of the Result is 0 in the child, and the child's PID
 /// in the parent.
 pub fn fork() -> io::Result<Int> {
-    super::error::convert_neg_ret(unsafe { libc::fork() })
+    crate::error::convert_neg_ret(unsafe { libc::fork() })
 }
 
 pub fn setpgid(pid: PidT, pgid: PidT) -> io::Result<()> {
-    super::error::convert_nzero(unsafe { libc::setpgid(pid, pgid) }, ())
+    crate::error::convert_nzero(unsafe { libc::setpgid(pid, pgid) }, ())
 }
 
 pub fn setsid() -> io::Result<PidT> {
-    super::error::convert_neg_ret(unsafe { libc::setsid() })
+    crate::error::convert_neg_ret(unsafe { libc::setsid() })
 }
 
 #[cfg(test)]

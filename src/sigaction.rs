@@ -2,8 +2,8 @@ use std::io;
 
 use bitflags::bitflags;
 
-use super::signal::Sigset;
-use super::Int;
+use crate::signal::Sigset;
+use crate::Int;
 
 bitflags! {
     #[derive(Default)]
@@ -114,7 +114,7 @@ fn sigaction(sig: Int, act: Option<Sigaction>) -> io::Result<Sigaction> {
         newact = &libc::sigaction::from(a);
     }
 
-    super::error::convert(unsafe { libc::sigaction(sig, newact, &mut oldact) }, oldact)
+    crate::error::convert(unsafe { libc::sigaction(sig, newact, &mut oldact) }, oldact)
         .map(Sigaction::from)
 }
 

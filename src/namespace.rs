@@ -26,14 +26,14 @@ bitflags! {
 }
 
 pub fn unshare(nstypes: NamespaceTypes, extra_flags: ExtraUnshareFlags) -> io::Result<()> {
-    super::error::convert_nzero(
+    crate::error::convert_nzero(
         unsafe { libc::unshare(nstypes.bits | extra_flags.bits) },
         (),
     )
 }
 
 pub fn setns_raw(fd: i32, nstype: NamespaceTypes) -> io::Result<()> {
-    super::error::convert_nzero(unsafe { libc::setns(fd, nstype.bits) }, ())
+    crate::error::convert_nzero(unsafe { libc::setns(fd, nstype.bits) }, ())
 }
 
 pub fn setns(f: &File, nstype: NamespaceTypes) -> io::Result<()> {

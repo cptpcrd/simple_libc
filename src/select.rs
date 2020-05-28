@@ -3,8 +3,8 @@ use std::io;
 use std::iter::FromIterator;
 use std::time::Duration;
 
-use super::signal::Sigset;
-use super::{Int, Long};
+use crate::signal::Sigset;
+use crate::{Int, Long};
 
 #[derive(Copy, Clone)]
 pub struct FdSet {
@@ -158,7 +158,7 @@ pub fn pselect_raw(
         None => std::ptr::null(),
     };
 
-    super::error::convert_neg_ret(unsafe {
+    crate::error::convert_neg_ret(unsafe {
         libc::pselect(
             nfds,
             raw_opt_fdset(readfds),
@@ -186,7 +186,7 @@ pub fn select_raw(
         None => std::ptr::null_mut(),
     };
 
-    super::error::convert_neg_ret(unsafe {
+    crate::error::convert_neg_ret(unsafe {
         libc::select(
             nfds,
             raw_opt_fdset(readfds),
@@ -311,14 +311,14 @@ mod tests {
         target_os = "dragonfly",
     ))]
     fn pipe_cloexec() -> io::Result<(fs::File, fs::File)> {
-        super::super::pipe2(libc::O_CLOEXEC)
+        crate::pipe2(libc::O_CLOEXEC)
     }
 
     #[cfg(target_os = "macos")]
     fn pipe_cloexec() -> io::Result<(fs::File, fs::File)> {
-        let (r, w) = super::super::pipe()?;
-        super::super::fcntl::set_inheritable(r.as_raw_fd(), false).unwrap();
-        super::super::fcntl::set_inheritable(w.as_raw_fd(), false).unwrap();
+        let (r, w) = crate::pipe()?;
+        crate::fcntl::set_inheritable(r.as_raw_fd(), false).unwrap();
+        crate::fcntl::set_inheritable(w.as_raw_fd(), false).unwrap();
         Ok((r, w))
     }
 

@@ -2,7 +2,7 @@ use std::io;
 use std::os::unix;
 use std::os::unix::io::AsRawFd;
 
-use super::super::{GidT, Int, SocklenT, UidT};
+use crate::{GidT, Int, SocklenT, UidT};
 
 // Linux, NetBSD, and OpenBSD use almost exactly the same interface.
 // The only difference is the order of the fields in the
@@ -29,7 +29,7 @@ pub struct Ucred {
 }
 
 #[cfg(target_os = "netbsd")]
-pub const SO_PEERCRED: Int = super::super::constants::LOCAL_PEEREID;
+pub const SO_PEERCRED: Int = crate::constants::LOCAL_PEEREID;
 #[cfg(not(target_os = "netbsd"))]
 pub const SO_PEERCRED: Int = libc::SO_PEERCRED;
 
@@ -65,7 +65,7 @@ mod tests {
 
     use std::os::unix::net::UnixStream;
 
-    use super::super::super::process;
+    use crate::process;
 
     #[test]
     fn test_get_ucred() {

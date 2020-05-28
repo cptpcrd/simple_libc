@@ -112,7 +112,7 @@ mod tests {
     use std::io::Write;
     use std::os::unix::io::AsRawFd;
 
-    use super::super::super::pipe2;
+    use crate::pipe2;
 
     #[test]
     fn test_epoll_poller() {

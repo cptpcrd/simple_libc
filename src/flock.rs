@@ -1,9 +1,9 @@
 use std::io;
 
-use super::Int;
+use crate::Int;
 
 pub fn flock_raw(fd: Int, op: i32) -> io::Result<()> {
-    super::error::convert(unsafe { libc::flock(fd, op) }, ())
+    crate::error::convert(unsafe { libc::flock(fd, op) }, ())
 }
 
 pub fn lock(fd: Int, exclusive: bool, block: bool) -> io::Result<()> {

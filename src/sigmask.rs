@@ -1,7 +1,7 @@
 use std::io;
 
-use super::signal::Sigset;
-use super::Int;
+use crate::signal::Sigset;
+use crate::Int;
 
 fn sigmask(how: Int, set: Option<&Sigset>) -> io::Result<Sigset> {
     let oldset = Sigset::empty();
@@ -11,7 +11,7 @@ fn sigmask(how: Int, set: Option<&Sigset>) -> io::Result<Sigset> {
         None => std::ptr::null(),
     };
 
-    super::error::convert(
+    crate::error::convert(
         unsafe { libc::pthread_sigmask(how, raw_set, &mut oldset.raw_set()) },
         oldset,
     )

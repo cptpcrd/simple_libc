@@ -32,13 +32,13 @@ fn build_abstract_addr(name: &OsString) -> io::Result<(libc::sockaddr_un, libc::
 }
 
 pub fn unix_stream_abstract_bind(name: &OsString) -> io::Result<UnixListener> {
-    let fd = super::super::error::convert_neg_ret(unsafe {
+    let fd = crate::error::convert_neg_ret(unsafe {
         libc::socket(libc::AF_UNIX, libc::SOCK_STREAM | libc::SOCK_CLOEXEC, 0)
     })?;
 
     let (addr, addrlen) = build_abstract_addr(name)?;
 
-    super::super::error::convert_nzero(
+    crate::error::convert_nzero(
         unsafe {
             libc::bind(
                 fd,
@@ -49,19 +49,19 @@ pub fn unix_stream_abstract_bind(name: &OsString) -> io::Result<UnixListener> {
         (),
     )?;
 
-    super::super::error::convert_nzero(unsafe { libc::listen(fd, 128) }, ())?;
+    crate::error::convert_nzero(unsafe { libc::listen(fd, 128) }, ())?;
 
     Ok(unsafe { UnixListener::from_raw_fd(fd) })
 }
 
 pub fn unix_stream_abstract_connect(name: &OsString) -> io::Result<UnixStream> {
-    let fd = super::super::error::convert_neg_ret(unsafe {
+    let fd = crate::error::convert_neg_ret(unsafe {
         libc::socket(libc::AF_UNIX, libc::SOCK_STREAM | libc::SOCK_CLOEXEC, 0)
     })?;
 
     let (addr, addrlen) = build_abstract_addr(name)?;
 
-    super::super::error::convert_nzero(
+    crate::error::convert_nzero(
         unsafe {
             libc::connect(
                 fd,

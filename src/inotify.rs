@@ -7,7 +7,7 @@ use std::path::Path;
 
 use bitflags::bitflags;
 
-use super::constants;
+use crate::constants;
 
 bitflags! {
     pub struct Events: u32 {
@@ -85,14 +85,14 @@ const RAW_EVENT_SIZE: usize = std::mem::size_of::<libc::inotify_event>();
 impl Inotify {
     /// Construct a new inotify file descriptor with the given options.
     pub fn new(flags: InotifyFlags) -> io::Result<Self> {
-        super::error::convert_neg_ret(unsafe { libc::inotify_init1(flags.bits) })
+        crate::error::convert_neg_ret(unsafe { libc::inotify_init1(flags.bits) })
             .map(|fd| Self { fd })
     }
 
     fn add_watch_impl<P: AsRef<Path>>(&mut self, path: P, flags: u32) -> io::Result<Watch> {
         let c_path = ffi::CString::new(path.as_ref().as_os_str().as_bytes())?;
 
-        super::error::convert_neg_ret(unsafe {
+        crate::error::convert_neg_ret(unsafe {
             libc::inotify_add_watch(self.fd, c_path.as_ptr(), flags)
         })
         .map(|wd| Watch { wd })
@@ -133,7 +133,7 @@ impl Inotify {
 
     /// Remove a previously added watch.
     pub fn rm_watch(&mut self, watch: Watch) -> io::Result<()> {
-        super::error::convert_nzero(unsafe { libc::inotify_rm_watch(self.fd, watch.wd) }, ())
+        crate::error::convert_nzero(unsafe { libc::inotify_rm_watch(self.fd, watch.wd) }, ())
     }
 
     /// Read a list of events from the inotify file descriptor, or return an
@@ -141,7 +141,7 @@ impl Inotify {
     pub fn read_nowait(&mut self) -> io::Result<Vec<Event>> {
         // See how much data is ready for reading
         let mut nbytes: i32 = 0;
-        super::error::convert_nzero(
+        crate::error::convert_nzero(
             unsafe { libc::ioctl(self.fd, libc::FIONREAD, &mut nbytes) },
             (),
         )?;
@@ -156,7 +156,7 @@ impl Inotify {
         buf.resize(nbytes as usize, 0);
 
         // Read the data
-        let nbytes: isize = super::error::convert_neg_ret(unsafe {
+        let nbytes: isize = crate::error::convert_neg_ret(unsafe {
             libc::read(
                 self.fd,
                 buf.as_mut_ptr() as *mut libc::c_void,
@@ -186,7 +186,7 @@ impl Inotify {
 
         let mut i = 0;
         loop {
-            match super::error::convert_neg_ret(unsafe {
+            match crate::error::convert_neg_ret(unsafe {
                 libc::read(self.fd, buf.as_mut_ptr() as *mut libc::c_void, buf.len())
             }) {
                 Ok(nbytes) => {
@@ -197,7 +197,7 @@ impl Inotify {
                     return Ok(Self::parse_multi(&buf));
                 }
                 Err(e) => {
-                    if i < 10 && super::error::is_einval(&e) {
+                    if i < 10 && crate::error::is_einval(&e) {
                         buf.resize(buf.len() * 2, 0);
                     } else {
                         return Err(e);

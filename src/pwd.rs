@@ -5,7 +5,7 @@ use std::sync;
 
 use lazy_static::lazy_static;
 
-use super::{Char, GidT, Int, UidT};
+use crate::{Char, GidT, Int, UidT};
 
 #[derive(Debug, Clone)]
 pub struct Passwd {
@@ -33,7 +33,7 @@ impl Passwd {
         let mut passwds: Vec<Self> = Vec::new();
 
         loop {
-            super::error::set_errno_success();
+            crate::error::set_errno_success();
             let passwd: *mut libc::passwd = unsafe { libc::getpwent() };
             if passwd.is_null() {
                 break;
@@ -42,7 +42,7 @@ impl Passwd {
             passwds.push(Self::parse(unsafe { *passwd }));
         }
 
-        let err = super::error::result_or_os_error(()).err();
+        let err = crate::error::result_or_os_error(()).err();
 
         unsafe {
             libc::endpwent();
@@ -67,8 +67,8 @@ impl Passwd {
     {
         let mut passwd: libc::passwd = unsafe { std::mem::zeroed() };
 
-        let init_size = super::constrain(
-            super::sysconf(libc::_SC_GETPW_R_SIZE_MAX).unwrap_or(1024),
+        let init_size = crate::constrain(
+            crate::sysconf(libc::_SC_GETPW_R_SIZE_MAX).unwrap_or(1024),
             256,
             4096,
         ) as usize;
@@ -77,7 +77,7 @@ impl Passwd {
 
         let mut result: *mut libc::passwd = std::ptr::null_mut();
 
-        super::error::while_erange(
+        crate::error::while_erange(
             |i| {
                 let buflen: usize = (i as usize + 1) * init_size;
 
@@ -85,7 +85,7 @@ impl Passwd {
 
                 let ret = getpwfunc(&t, &mut passwd, buffer.as_mut_ptr(), buflen, &mut result);
 
-                super::error::convert_nzero_ret(ret).and_then(|_| {
+                crate::error::convert_nzero_ret(ret).and_then(|_| {
                     if result.is_null() {
                         return Ok(None);
                     }
@@ -144,8 +144,8 @@ impl Passwd {
         )
     }
 
-    pub fn list_groups(&self) -> io::Result<Vec<super::grp::Group>> {
-        let mut groups = super::grp::Group::list()?;
+    pub fn list_groups(&self) -> io::Result<Vec<crate::grp::Group>> {
+        let mut groups = crate::grp::Group::list()?;
 
         groups.retain(|group| {
             for mem in &group.members {

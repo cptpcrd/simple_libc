@@ -7,7 +7,7 @@ use crate::{GidT, Int, SocklenT, UidT};
 #[derive(Debug, Clone)]
 pub struct Xucred {
     #[cfg(target_os = "freebsd")]
-    pub pid: super::super::PidT,
+    pub pid: crate::PidT,
     pub uid: UidT,
     pub gid: GidT,
     pub groups: Vec<GidT>,
@@ -18,7 +18,7 @@ pub struct Xucred {
 // FreeBSD passes the PID in a private union field. However, libc makes that
 // field private, so we use a custom struct to get access to it.
 #[cfg(any(target_os = "dragonfly", target_os = "freebsd"))]
-type RawXucred = super::super::types::xucred;
+type RawXucred = crate::types::xucred;
 #[cfg(not(any(target_os = "dragonfly", target_os = "freebsd")))]
 type RawXucred = libc::xucred;
 
@@ -84,7 +84,7 @@ mod tests {
 
     use std::os::unix::net::UnixStream;
 
-    use super::super::super::process;
+    use crate::process;
 
     #[test]
     fn test_get_xucred() {

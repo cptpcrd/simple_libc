@@ -5,7 +5,7 @@ use std::sync;
 
 use lazy_static::lazy_static;
 
-use super::{Char, GidT, Int};
+use crate::{Char, GidT, Int};
 
 #[derive(Debug, Clone)]
 pub struct Group {
@@ -30,7 +30,7 @@ impl Group {
         let mut groups: Vec<Self> = Vec::new();
 
         loop {
-            super::error::set_errno_success();
+            crate::error::set_errno_success();
             let group: *mut libc::group = unsafe { libc::getgrent() };
             if group.is_null() {
                 break;
@@ -39,7 +39,7 @@ impl Group {
             groups.push(unsafe { Self::parse(*group) });
         }
 
-        let err = super::error::result_or_os_error(()).err();
+        let err = crate::error::result_or_os_error(()).err();
 
         unsafe {
             libc::endgrent();
@@ -58,8 +58,8 @@ impl Group {
     {
         let mut group: libc::group = unsafe { std::mem::zeroed() };
 
-        let init_size = super::constrain(
-            super::sysconf(libc::_SC_GETPW_R_SIZE_MAX).unwrap_or(1024),
+        let init_size = crate::constrain(
+            crate::sysconf(libc::_SC_GETPW_R_SIZE_MAX).unwrap_or(1024),
             256,
             4096,
         ) as usize;
@@ -68,7 +68,7 @@ impl Group {
 
         let mut result: *mut libc::group = std::ptr::null_mut();
 
-        super::error::while_erange(
+        crate::error::while_erange(
             |i| {
                 let buflen: usize = (i as usize + 1) * init_size;
 
@@ -76,7 +76,7 @@ impl Group {
 
                 let ret = getgrfunc(&t, &mut group, buffer.as_mut_ptr(), buflen, &mut result);
 
-                super::error::convert_nzero_ret(ret).and_then(|_| {
+                crate::error::convert_nzero_ret(ret).and_then(|_| {
                     if result.is_null() {
                         return Ok(None);
                     }

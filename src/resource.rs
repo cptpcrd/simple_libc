@@ -3,11 +3,11 @@ use std::str::FromStr;
 
 use serde::Deserialize;
 
-use super::error;
-use super::Int;
+use crate::error;
+use crate::Int;
 
 #[cfg(target_os = "netbsd")]
-use super::constants;
+use crate::constants;
 
 // Work around GNU not implementing the POSIX standard correctly
 #[cfg(all(target_os = "linux", any(target_env = "", target_env = "gnu")))]
@@ -166,7 +166,7 @@ pub fn setrlimit(resource: Resource, new_limits: (Limit, Limit)) -> io::Result<(
 
 #[cfg(target_os = "linux")]
 pub fn prlimit(
-    pid: super::PidT,
+    pid: crate::PidT,
     resource: Resource,
     new_limits: Option<(Limit, Limit)>,
 ) -> io::Result<(Limit, Limit)> {
@@ -207,12 +207,12 @@ pub fn nice_rlimit_to_thresh(nice_rlim: Limit) -> Int {
         return -20;
     }
 
-    20 - (super::constrain(nice_rlim, 1, 40) as Int)
+    20 - (crate::constrain(nice_rlim, 1, 40) as Int)
 }
 
 #[cfg(target_os = "linux")]
 pub fn nice_thresh_to_rlimit(nice_thresh: Int) -> Limit {
-    (20 - super::constrain(nice_thresh, -20, 19)) as Limit
+    (20 - crate::constrain(nice_thresh, -20, 19)) as Limit
 }
 
 #[cfg(test)]

@@ -1,6 +1,6 @@
 use std::io;
 
-use super::{Int, OffT};
+use crate::{Int, OffT};
 
 enum Cmd {
     LOCK = libc::F_LOCK as isize,
@@ -10,7 +10,7 @@ enum Cmd {
 }
 
 fn lockf_raw(fd: Int, cmd: Cmd, len: OffT) -> io::Result<()> {
-    super::error::convert(unsafe { libc::lockf(fd, cmd as Int, len) }, ())
+    crate::error::convert(unsafe { libc::lockf(fd, cmd as Int, len) }, ())
 }
 
 /// Lock the section of the given file starting at the current position

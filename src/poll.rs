@@ -4,7 +4,7 @@ use std::time::Duration;
 
 use bitflags::bitflags;
 
-use super::{Int, Short};
+use crate::{Int, Short};
 
 bitflags! {
     pub struct Events: Short {
@@ -35,7 +35,7 @@ pub fn poll(fds: &mut [PollFd], timeout: Option<Duration>) -> io::Result<usize> 
         None => -1,
     };
 
-    super::error::convert_neg_ret(unsafe {
+    crate::error::convert_neg_ret(unsafe {
         libc::poll(
             fds.as_mut_ptr() as *mut libc::pollfd,
             fds.len() as libc::nfds_t,
@@ -51,7 +51,7 @@ const LIBC_PPOLL: unsafe extern "C" fn(
     libc::nfds_t,
     *const libc::timespec,
     *const libc::sigset_t,
-) -> libc::c_int = super::externs::pollts;
+) -> libc::c_int = crate::externs::pollts;
 #[cfg(any(
     target_os = "linux",
     target_os = "freebsd",
@@ -75,12 +75,12 @@ const LIBC_PPOLL: unsafe extern "C" fn(
 pub fn ppoll(
     fds: &mut [PollFd],
     timeout: Option<Duration>,
-    sigmask: Option<super::signal::Sigset>,
+    sigmask: Option<crate::signal::Sigset>,
 ) -> io::Result<usize> {
     let raw_timeout = match timeout {
         Some(t) => &libc::timespec {
             tv_sec: t.as_secs().try_into().unwrap_or(libc::time_t::MAX),
-            tv_nsec: t.subsec_nanos() as super::Long,
+            tv_nsec: t.subsec_nanos() as crate::Long,
         },
         None => std::ptr::null(),
     };
@@ -90,7 +90,7 @@ pub fn ppoll(
         None => std::ptr::null(),
     };
 
-    super::error::convert_neg_ret(unsafe {
+    crate::error::convert_neg_ret(unsafe {
         LIBC_PPOLL(
             fds.as_mut_ptr() as *mut libc::pollfd,
             fds.len() as libc::nfds_t,
@@ -117,14 +117,14 @@ mod tests {
         target_os = "dragonfly",
     ))]
     fn pipe_cloexec() -> io::Result<(fs::File, fs::File)> {
-        super::super::pipe2(libc::O_CLOEXEC)
+        crate::pipe2(libc::O_CLOEXEC)
     }
 
     #[cfg(target_os = "macos")]
     fn pipe_cloexec() -> io::Result<(fs::File, fs::File)> {
-        let (r, w) = super::super::pipe()?;
-        super::super::fcntl::set_inheritable(r.as_raw_fd(), false).unwrap();
-        super::super::fcntl::set_inheritable(w.as_raw_fd(), false).unwrap();
+        let (r, w) = crate::pipe()?;
+        crate::fcntl::set_inheritable(r.as_raw_fd(), false).unwrap();
+        crate::fcntl::set_inheritable(w.as_raw_fd(), false).unwrap();
         Ok((r, w))
     }
 

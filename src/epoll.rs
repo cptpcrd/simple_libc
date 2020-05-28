@@ -4,7 +4,7 @@ use std::time;
 
 use bitflags::bitflags;
 
-use super::Int;
+use crate::Int;
 
 #[derive(Debug, Copy, Clone)]
 enum CtlOp {
@@ -60,7 +60,7 @@ impl Epoll {
     pub fn new(flags: EpollFlags) -> io::Result<Epoll> {
         let fd = unsafe { libc::epoll_create1(flags.bits) };
 
-        super::error::convert_neg_ret(fd).map(|fd| Epoll { fd })
+        crate::error::convert_neg_ret(fd).map(|fd| Epoll { fd })
     }
 
     #[inline]
@@ -74,7 +74,7 @@ impl Epoll {
             u64: data,
         };
 
-        super::error::convert(
+        crate::error::convert(
             unsafe { libc::epoll_ctl(self.fd, op as Int, fd, &mut ep_event) },
             (),
         )
@@ -119,7 +119,7 @@ impl Epoll {
         &self,
         events: &mut [Event],
         timeout: Option<time::Duration>,
-        sigmask: Option<&super::signal::Sigset>,
+        sigmask: Option<&crate::signal::Sigset>,
     ) -> io::Result<Int> {
         let maxevents = events.len();
 
@@ -137,7 +137,7 @@ impl Epoll {
 
         ep_events.resize(maxevents, libc::epoll_event { events: 0, u64: 0 });
 
-        super::error::convert_neg_ret(unsafe {
+        crate::error::convert_neg_ret(unsafe {
             libc::epoll_pwait(
                 self.fd,
                 ep_events.as_mut_ptr(),
@@ -179,7 +179,7 @@ mod tests {
     use std::io::Write;
     use std::os::unix::io::AsRawFd;
 
-    use super::super::pipe2;
+    use crate::pipe2;
 
     #[test]
     fn test_epoll() {

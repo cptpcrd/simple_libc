@@ -11,7 +11,7 @@ pub use libc::{
 #[cfg(target_os = "linux")]
 pub use libc::SIGPOLL;
 
-use super::Int;
+use crate::Int;
 
 pub fn can_catch(sig: Int) -> bool {
     match sig {
@@ -99,15 +99,15 @@ impl Sigset {
     }
 
     pub fn add(&mut self, sig: i32) -> io::Result<()> {
-        super::error::convert(unsafe { libc::sigaddset(&mut self.set, sig) }, ())
+        crate::error::convert(unsafe { libc::sigaddset(&mut self.set, sig) }, ())
     }
 
     pub fn del(&mut self, sig: i32) -> io::Result<()> {
-        super::error::convert(unsafe { libc::sigdelset(&mut self.set, sig) }, ())
+        crate::error::convert(unsafe { libc::sigdelset(&mut self.set, sig) }, ())
     }
 
     pub fn ismember(&self, sig: i32) -> io::Result<bool> {
-        super::error::convert_ret(unsafe { libc::sigismember(&self.set, sig) }).map(|res| res != 0)
+        crate::error::convert_ret(unsafe { libc::sigismember(&self.set, sig) }).map(|res| res != 0)
     }
 
     #[inline]

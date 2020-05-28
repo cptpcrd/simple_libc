@@ -1,6 +1,6 @@
 use std::io;
 
-use super::Int;
+use crate::Int;
 
 #[cfg(target_os = "linux")]
 pub fn set_errno_success() {

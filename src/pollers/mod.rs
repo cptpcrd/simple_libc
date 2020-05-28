@@ -15,7 +15,7 @@ pub use epoll::EpollPoller;
 pub use poll::PollPoller;
 pub use select::SelectPoller;
 
-use super::signal::Sigset;
+use crate::signal::Sigset;
 
 bitflags! {
     pub struct Events: u32 {

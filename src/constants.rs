@@ -5,7 +5,7 @@ use cfg_if::cfg_if;
 
 cfg_if! {
     if #[cfg(target_os = "linux")] {
-        use super::Ulong;
+        use crate::Ulong;
 
         // BEGIN USED BY process/capabilities.rs
 
@@ -76,7 +76,7 @@ cfg_if! {
         // END USED by inotify.rs
     }
     else if #[cfg(target_os = "openbsd")] {
-        use super::Int;
+        use crate::Int;
 
         // BEGIN USED by power.rs
         pub const RB_AUTOBOOT: Int = 0;
@@ -86,7 +86,7 @@ cfg_if! {
         // END USED by power.rs
     }
     else if #[cfg(target_os = "netbsd")] {
-        use super::Int;
+        use crate::Int;
 
         // USED by net/ucred.rs
         pub const LOCAL_PEEREID: Int = 3;
@@ -105,7 +105,7 @@ cfg_if! {
         // END USED by power.rs
     }
     else if #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))] {
-        use super::Int;
+        use crate::Int;
 
         // BEGIN USED by power.rs
         pub const RB_AUTOBOOT: Int = 0;

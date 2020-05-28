@@ -8,7 +8,7 @@ use crate::{GidT, Int, UidT};
 #[derive(Debug, Clone)]
 pub struct Sockcred {
     #[cfg(target_os = "netbsd")]
-    pub pid: super::super::PidT,
+    pub pid: crate::PidT,
     pub ruid: UidT,
     pub euid: UidT,
     pub rgid: GidT,
@@ -115,7 +115,7 @@ mod tests {
 
     use std::os::unix::net::UnixStream;
 
-    use super::super::super::process;
+    use crate::process;
 
     #[test]
     fn test_recv_sockcred() {

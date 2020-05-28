@@ -8,10 +8,10 @@ use serde::de::Deserialize;
 use serde::ser::SerializeSeq;
 use strum::IntoEnumIterator;
 
-use super::constants;
-use super::error;
+use crate::constants;
+use crate::error;
 
-use super::{Int, Ulong};
+use crate::{Int, Ulong};
 
 #[derive(
     Copy,
@@ -509,7 +509,7 @@ pub mod ambient {
 
     use strum::IntoEnumIterator;
 
-    use super::super::Ulong;
+    use crate::Ulong;
     use super::{Cap, CapSet};
 
     #[inline]
@@ -583,7 +583,7 @@ pub mod bounding {
 
     use strum::IntoEnumIterator;
 
-    use super::super::Ulong;
+    use crate::Ulong;
     use super::{Cap, CapSet};
 
     #[inline]
@@ -620,8 +620,8 @@ pub mod secbits {
 
     use bitflags::bitflags;
 
-    use super::super::constants;
-    use super::super::Ulong;
+    use crate::constants;
+    use crate::Ulong;
 
     bitflags! {
         pub struct SecFlags: Ulong {
@@ -653,7 +653,7 @@ pub mod secbits {
 
 #[cfg(test)]
 mod tests {
-    use super::super::constants;
+    use crate::constants;
     use super::*;
 
     use serde_test::{assert_de_tokens, assert_tokens, Token};

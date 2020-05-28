@@ -1,6 +1,6 @@
 cfg_if::cfg_if! {
     if #[cfg(target_os = "dragonfly")] {
-        use super::{Uint, UidT, Short, GidT};
+        use crate::{Uint, UidT, Short, GidT};
 
         #[repr(C)]
         #[derive(Clone, Copy)]
@@ -12,7 +12,7 @@ cfg_if::cfg_if! {
             _cr_unused1: *mut libc::c_void,
         }
     } else if #[cfg(target_os = "freebsd")] {
-        use super::{Uint, UidT, Short, GidT, PidT};
+        use crate::{Uint, UidT, Short, GidT, PidT};
 
         #[repr(C)]
         #[derive(Clone, Copy)]
