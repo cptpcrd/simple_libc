@@ -4,7 +4,7 @@ use bitflags::bitflags;
 
 use crate::{Int, PidT};
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
 pub enum ProcStatus {
     Exited(Int),
     Signaled(Int),
@@ -36,7 +36,7 @@ pub fn wait() -> io::Result<(PidT, ProcStatus)> {
         .map(|pid| (pid, ProcStatus::from_raw_status(status)))
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
 pub enum WaitpidSpec {
     Pid(PidT),
     Pgid(PidT),

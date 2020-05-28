@@ -7,7 +7,7 @@ use lazy_static::lazy_static;
 
 use crate::{Char, GidT, Int};
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Group {
     pub name: ffi::OsString,
     pub passwd: ffi::OsString,

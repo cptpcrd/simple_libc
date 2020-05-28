@@ -18,6 +18,7 @@ use crate::{Int, Ulong};
     Clone,
     Debug,
     Eq,
+    Hash,
     PartialEq,
     strum_macros::Display,
     strum_macros::EnumString,
@@ -138,7 +139,7 @@ impl<'d> serde::Deserialize<'d> for Cap {
     }
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Debug)]
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
 #[repr(transparent)]
 pub struct CapSet {
     pub bits: u64,
@@ -405,7 +406,7 @@ extern "C" {
     fn capset(hdrp: &mut c_cap_user_header, datap: &c_cap_data_struct) -> libc::c_int;
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
 pub struct CapState {
     pub effective: CapSet,
     pub permitted: CapSet,

@@ -5,7 +5,7 @@ use std::os::unix::io::AsRawFd;
 use crate::error;
 use crate::{GidT, Int, UidT};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, Hash, PartialEq)]
 pub struct Sockcred {
     #[cfg(target_os = "netbsd")]
     pub pid: crate::PidT,

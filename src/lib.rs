@@ -172,7 +172,7 @@ pub fn close_fd(fd: Int) -> io::Result<()> {
     error::convert_nzero(unsafe { libc::close(fd) }, ())
 }
 
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
 pub enum KillSpec {
     /// Kill by process ID (must be > 0)
     Pid(PidT),

@@ -63,7 +63,7 @@ pub fn sig_from_name(name: &str) -> Option<Int> {
     SIGNALS_BY_NAME.get(name).copied()
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Eq, Hash, PartialEq)]
 #[repr(transparent)]
 pub struct Sigset {
     set: libc::sigset_t,

@@ -7,7 +7,7 @@ use lazy_static::lazy_static;
 
 use crate::{Char, GidT, Int, UidT};
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Passwd {
     pub name: ffi::OsString,
     pub passwd: ffi::OsString,

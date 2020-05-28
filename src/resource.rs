@@ -21,6 +21,7 @@ type RawResourceType = Int;
     Clone,
     Debug,
     Eq,
+    Hash,
     PartialEq,
     strum_macros::Display,
     strum_macros::EnumString,

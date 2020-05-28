@@ -8,6 +8,7 @@ use super::{Events, Flags, Poller, Ppoller};
 use crate::select::{build_fdset_opt, pselect_raw, FdSet};
 use crate::signal::Sigset;
 
+#[derive(Debug)]
 pub struct SelectPoller {
     files: HashMap<RawFd, Events>,
 }

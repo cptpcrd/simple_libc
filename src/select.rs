@@ -6,7 +6,7 @@ use std::time::Duration;
 use crate::signal::Sigset;
 use crate::{Int, Long};
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
 pub struct FdSet {
     raw: libc::fd_set,
 }

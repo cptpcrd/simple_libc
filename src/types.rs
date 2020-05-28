@@ -3,7 +3,7 @@ cfg_if::cfg_if! {
         use crate::{Uint, UidT, Short, GidT};
 
         #[repr(C)]
-        #[derive(Clone, Copy)]
+        #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
         pub struct xucred {
             pub cr_version: Uint,
             pub cr_uid: UidT,

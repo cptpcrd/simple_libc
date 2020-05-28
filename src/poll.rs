@@ -21,7 +21,7 @@ bitflags! {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
 #[repr(C)]
 pub struct PollFd {
     pub fd: Int,

@@ -1,6 +1,6 @@
 use bitflags::bitflags;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Action {
     /// Reboot the system
     ForceReboot,

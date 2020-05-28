@@ -57,7 +57,7 @@ impl Drop for SignalFd {
     }
 }
 
-#[derive(Default, Debug, Copy, Clone)]
+#[derive(Copy, Clone, Debug, Default, Eq, Hash, PartialEq)]
 #[repr(C)]
 pub struct Siginfo {
     pub sig: u32,

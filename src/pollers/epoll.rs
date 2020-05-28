@@ -6,6 +6,7 @@ use super::{Events, Flags, Poller, Ppoller};
 use crate::epoll::{Epoll, EpollFlags, Event as EpollEvent, Events as EpollEvents};
 use crate::signal::Sigset;
 
+#[derive(Debug)]
 pub struct EpollPoller {
     epoll: Epoll,
 }

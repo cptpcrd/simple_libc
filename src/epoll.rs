@@ -29,7 +29,7 @@ bitflags! {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Event {
     pub events: Events,
     pub data: u64,
@@ -52,6 +52,7 @@ bitflags! {
     }
 }
 
+#[derive(Debug)]
 pub struct Epoll {
     fd: Int,
 }

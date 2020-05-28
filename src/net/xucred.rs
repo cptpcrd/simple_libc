@@ -4,7 +4,7 @@ use std::os::unix::io::AsRawFd;
 
 use crate::{GidT, Int, SocklenT, UidT};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, Hash, PartialEq)]
 pub struct Xucred {
     #[cfg(target_os = "freebsd")]
     pub pid: crate::PidT,

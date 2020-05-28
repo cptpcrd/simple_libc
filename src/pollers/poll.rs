@@ -15,6 +15,7 @@ use crate::poll::{poll, Events as PollEvents, PollFd};
 ))]
 use crate::poll::ppoll;
 
+#[derive(Debug)]
 pub struct PollPoller {
     pollfds: Vec<PollFd>,
     fdset: HashSet<RawFd>,
