@@ -4,9 +4,9 @@ use std::os::unix::io::AsRawFd;
 
 use crate::{GidT, Int, UidT};
 
-#[cfg(any(target_os = "linux"))]
+#[cfg(target_os = "linux")]
 mod abstract_unix;
-#[cfg(any(target_os = "linux"))]
+#[cfg(target_os = "linux")]
 pub use abstract_unix::{unix_stream_abstract_bind, unix_stream_abstract_connect};
 
 #[cfg(any(target_os = "linux", target_os = "openbsd", target_os = "netbsd"))]
@@ -48,15 +48,14 @@ pub fn getpeereid(sock: &unix::net::UnixStream) -> io::Result<(UidT, GidT)> {
     getpeereid_raw(sock.as_raw_fd())
 }
 
-#[inline]
+#[cfg(target_os = "linux")]
 pub fn get_peer_ids_raw(sockfd: Int) -> io::Result<(UidT, GidT)> {
-    cfg_if::cfg_if! {
-        if #[cfg(any(target_os = "linux"))] {
-            ucred::get_ucred_raw(sockfd).map(|ucred| (ucred.uid, ucred.gid))
-        } else {
-            getpeereid_raw(sockfd)
-        }
-    }
+    ucred::get_ucred_raw(sockfd).map(|ucred| (ucred.uid, ucred.gid))
+}
+
+#[cfg(not(target_os = "linux"))]
+pub fn get_peer_ids_raw(sockfd: Int) -> io::Result<(UidT, GidT)> {
+    getpeereid_raw(sockfd)
 }
 
 pub fn get_peer_ids(sock: &unix::net::UnixStream) -> io::Result<(UidT, GidT)> {
