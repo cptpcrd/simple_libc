@@ -73,6 +73,7 @@ pub type PidT = libc::pid_t;
 pub type UidT = libc::uid_t;
 pub type GidT = libc::gid_t;
 pub type OffT = libc::off_t;
+pub type SocklenT = libc::socklen_t;
 
 /// Flush filesystem write caches.
 ///
