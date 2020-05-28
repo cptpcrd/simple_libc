@@ -26,7 +26,7 @@ pub fn get_xucred_raw(sockfd: Int) -> io::Result<Xucred> {
 
     let mut len = std::mem::size_of::<RawXucred>() as u32;
 
-    error::convert(
+    error::convert_nzero(
         unsafe {
             libc::getsockopt(
                 sockfd,
@@ -36,9 +36,9 @@ pub fn get_xucred_raw(sockfd: Int) -> io::Result<Xucred> {
                 &mut len,
             )
         },
-        &raw_xucred,
+        (),
     )
-    .and_then(|raw_xucred| {
+    .and_then(|()| {
         #[cfg(not(target_os = "openbsd"))]
         if raw_xucred.cr_version != libc::XUCRED_VERSION {
             return Err(io::Error::from_raw_os_error(libc::EINVAL));
