@@ -203,9 +203,7 @@ pub fn killpg(pgid: PidT, sig: Int) -> io::Result<()> {
 
 #[cfg(target_os = "linux")]
 pub fn tgkill(tgid: Int, tid: Int, sig: Int) -> io::Result<()> {
-    error::convert_nzero_ret(
-        unsafe { libc::syscall(libc::SYS_tgkill, tgid, tid, sig) },
-    )
+    error::convert_nzero_ret(unsafe { libc::syscall(libc::SYS_tgkill, tgid, tid, sig) })
 }
 
 #[cfg(any(target_os = "linux", target_os = "openbsd", target_os = "netbsd"))]
@@ -224,9 +222,9 @@ type SetHostnameSize = Int;
 ))]
 pub fn sethostname(name: &ffi::OsString) -> io::Result<()> {
     let name_vec: Vec<Char> = name.clone().into_vec().iter().map(|&x| x as Char).collect();
-    error::convert_nzero_ret(
-        unsafe { libc::sethostname(name_vec.as_ptr(), name_vec.len() as SetHostnameSize) },
-    )
+    error::convert_nzero_ret(unsafe {
+        libc::sethostname(name_vec.as_ptr(), name_vec.len() as SetHostnameSize)
+    })
 }
 
 /// Attempts to read the current system hostname into the given slice.
@@ -234,9 +232,7 @@ pub fn sethostname(name: &ffi::OsString) -> io::Result<()> {
 /// The result is null-terminated. Behavior in the case that the vector
 /// is not long enough is system-dependent.
 pub fn gethostname_raw(name_vec: &mut [Char]) -> io::Result<()> {
-    error::convert_nzero_ret(
-        unsafe { libc::gethostname(name_vec.as_mut_ptr(), name_vec.len()) },
-    )
+    error::convert_nzero_ret(unsafe { libc::gethostname(name_vec.as_mut_ptr(), name_vec.len()) })
 }
 
 /// Attempts to determine the current system hostname.
@@ -282,16 +278,12 @@ pub fn gethostname() -> io::Result<ffi::OsString> {
 #[cfg(target_os = "linux")]
 pub fn setdomainname(name: &ffi::OsString) -> io::Result<()> {
     let name_vec: Vec<Char> = name.clone().into_vec().iter().map(|&x| x as Char).collect();
-    error::convert_nzero_ret(
-        unsafe { libc::setdomainname(name_vec.as_ptr(), name_vec.len()) },
-    )
+    error::convert_nzero_ret(unsafe { libc::setdomainname(name_vec.as_ptr(), name_vec.len()) })
 }
 
 #[cfg(target_os = "linux")]
 pub fn getdomainname_raw(name_vec: &mut Vec<Char>) -> io::Result<()> {
-    error::convert_nzero_ret(
-        unsafe { libc::getdomainname(name_vec.as_mut_ptr(), name_vec.len()) },
-    )
+    error::convert_nzero_ret(unsafe { libc::getdomainname(name_vec.as_mut_ptr(), name_vec.len()) })
 }
 
 #[cfg(target_os = "linux")]

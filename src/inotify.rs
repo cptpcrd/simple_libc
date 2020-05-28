@@ -141,9 +141,9 @@ impl Inotify {
     pub fn read_nowait(&mut self) -> io::Result<Vec<Event>> {
         // See how much data is ready for reading
         let mut nbytes: i32 = 0;
-        crate::error::convert_nzero_ret(
-            unsafe { libc::ioctl(self.fd, libc::FIONREAD, &mut nbytes) },
-        )?;
+        crate::error::convert_nzero_ret(unsafe {
+            libc::ioctl(self.fd, libc::FIONREAD, &mut nbytes)
+        })?;
 
         // No data? Return an empty vector.
         if nbytes == 0 {

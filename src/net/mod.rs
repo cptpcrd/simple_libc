@@ -87,15 +87,13 @@ pub unsafe fn getsockopt_raw<T: Sized>(
 ) -> io::Result<SocklenT> {
     let mut len = (data.len() * std::mem::size_of::<T>()) as SocklenT;
 
-    crate::error::convert_nzero_ret(
-        libc::getsockopt(
-            sockfd,
-            level,
-            optname,
-            data.as_mut_ptr() as *mut libc::c_void,
-            &mut len,
-        ),
-    )?;
+    crate::error::convert_nzero_ret(libc::getsockopt(
+        sockfd,
+        level,
+        optname,
+        data.as_mut_ptr() as *mut libc::c_void,
+        &mut len,
+    ))?;
 
     Ok(len)
 }
@@ -116,15 +114,13 @@ pub unsafe fn setsockopt_raw<T: Sized>(
     optname: Int,
     data: &[T],
 ) -> io::Result<()> {
-    crate::error::convert_nzero_ret(
-        libc::setsockopt(
-            sockfd,
-            level,
-            optname,
-            data.as_ptr() as *mut libc::c_void,
-            (data.len() * std::mem::size_of::<T>()) as SocklenT,
-        ),
-    )
+    crate::error::convert_nzero_ret(libc::setsockopt(
+        sockfd,
+        level,
+        optname,
+        data.as_ptr() as *mut libc::c_void,
+        (data.len() * std::mem::size_of::<T>()) as SocklenT,
+    ))
 }
 
 #[cfg(test)]

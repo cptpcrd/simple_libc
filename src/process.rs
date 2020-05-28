@@ -281,9 +281,9 @@ type SetGroupsSize = crate::SizeT;
 type SetGroupsSize = Int;
 
 pub fn setgroups(groups: &[GidT]) -> io::Result<()> {
-    crate::error::convert_nzero_ret(
-        unsafe { libc::setgroups(groups.len() as SetGroupsSize, groups.as_ptr()) },
-    )
+    crate::error::convert_nzero_ret(unsafe {
+        libc::setgroups(groups.len() as SetGroupsSize, groups.as_ptr())
+    })
 }
 
 pub fn build_grouplist(gid: GidT, groups: &[GidT]) -> Vec<GidT> {

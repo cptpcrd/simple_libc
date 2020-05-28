@@ -38,15 +38,13 @@ pub fn unix_stream_abstract_bind(name: &OsString) -> io::Result<UnixListener> {
 
     let (addr, addrlen) = build_abstract_addr(name)?;
 
-    crate::error::convert_nzero_ret(
-        unsafe {
-            libc::bind(
-                fd,
-                &addr as *const libc::sockaddr_un as *const libc::sockaddr,
-                addrlen,
-            )
-        },
-    )?;
+    crate::error::convert_nzero_ret(unsafe {
+        libc::bind(
+            fd,
+            &addr as *const libc::sockaddr_un as *const libc::sockaddr,
+            addrlen,
+        )
+    })?;
 
     crate::error::convert_nzero_ret(unsafe { libc::listen(fd, 128) })?;
 
@@ -60,15 +58,13 @@ pub fn unix_stream_abstract_connect(name: &OsString) -> io::Result<UnixStream> {
 
     let (addr, addrlen) = build_abstract_addr(name)?;
 
-    crate::error::convert_nzero_ret(
-        unsafe {
-            libc::connect(
-                fd,
-                &addr as *const libc::sockaddr_un as *const libc::sockaddr,
-                addrlen,
-            )
-        },
-    )?;
+    crate::error::convert_nzero_ret(unsafe {
+        libc::connect(
+            fd,
+            &addr as *const libc::sockaddr_un as *const libc::sockaddr,
+            addrlen,
+        )
+    })?;
 
     Ok(unsafe { UnixStream::from_raw_fd(fd) })
 }
