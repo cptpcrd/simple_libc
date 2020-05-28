@@ -94,6 +94,7 @@ mod tests {
         groups.sort();
 
         let mut acred = get_xucred(&a).unwrap();
+        println!("{:?}", acred);
         assert_eq!(acred.uid, process::geteuid());
         assert_eq!(acred.gid, process::getegid());
 
@@ -104,6 +105,7 @@ mod tests {
         assert_eq!(acred.pid, process::getpid());
 
         let mut bcred = get_xucred(&b).unwrap();
+        println!("{:?}", acred);
         assert_eq!(bcred.uid, process::geteuid());
         assert_eq!(bcred.gid, process::getegid());
 
