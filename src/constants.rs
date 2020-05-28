@@ -88,6 +88,9 @@ cfg_if! {
     else if #[cfg(target_os = "netbsd")] {
         use super::Int;
 
+        // USED by net/ucred.rs
+        pub const LOCAL_PEEREID: Int = 3;
+
         // BEGIN USED by process/resource.rs
         pub const RLIMIT_SBSIZE: Int = 9;
         pub const RLIMIT_AS: Int = 10;
