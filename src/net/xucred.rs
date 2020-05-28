@@ -7,14 +7,20 @@ use crate::{GidT, Int, UidT};
 
 #[derive(Debug, Clone)]
 pub struct Xucred {
+    #[cfg(target_os = "freebsd")]
+    pub pid: super::super::PidT,
     pub uid: UidT,
     pub gid: GidT,
     pub groups: Vec<GidT>,
 }
 
-#[cfg(target_os = "dragonfly")]
+// The libc crate doesn't define the xucred struct for DragonflyBSD.
+//
+// FreeBSD passes the PID in a private union field. However, libc makes that
+// field private, so we use a custom struct to get access to it.
+#[cfg(any(target_os = "dragonfly", target_os = "freebsd"))]
 type RawXucred = super::super::types::xucred;
-#[cfg(not(target_os = "dragonfly"))]
+#[cfg(not(any(target_os = "dragonfly", target_os = "freebsd")))]
 type RawXucred = libc::xucred;
 
 pub fn get_xucred_raw(sockfd: Int) -> io::Result<Xucred> {
@@ -47,6 +53,8 @@ pub fn get_xucred_raw(sockfd: Int) -> io::Result<Xucred> {
         }
 
         Ok(Xucred {
+            #[cfg(target_os = "freebsd")]
+            pid: unsafe { raw_xucred.cr_pid() },
             uid: raw_xucred.cr_uid,
             // OpenBSD has a separate field for the GID.
             #[cfg(target_os = "openbsd")]
@@ -92,11 +100,17 @@ mod tests {
         acred.groups.sort();
         assert_eq!(acred.groups, groups);
 
+        #[cfg(target_os = "freebsd")]
+        assert_eq!(acred.pid, process::getpid());
+
         let mut bcred = get_xucred(&b).unwrap();
         assert_eq!(bcred.uid, process::geteuid());
         assert_eq!(bcred.gid, process::getegid());
 
         bcred.groups.sort();
         assert_eq!(bcred.groups, groups);
+
+        #[cfg(target_os = "freebsd")]
+        assert_eq!(acred.pid, process::getpid());
     }
 }
