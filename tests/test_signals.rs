@@ -1,9 +1,9 @@
-use std::io;
-
 use cfg_if::cfg_if;
 
 cfg_if! {
     if #[cfg(target_os = "linux")] {
+        use std::io;
+
         use simple_libc::sigmask;
         use simple_libc::signalfd;
         use simple_libc::process::{getpid, gettid, getuid};
