@@ -369,7 +369,7 @@ fn bytes_to_osstring<'a, T: IntoIterator<Item = &'a Char>>(bytes: T) -> ffi::OsS
     ffi::OsString::from_vec(
         bytes
             .into_iter()
-            .take_while(|x| **x > 0)
+            .take_while(|x| **x != 0)
             .map(|x| *x as u8)
             .collect(),
     )
