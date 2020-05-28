@@ -1,3 +1,4 @@
+use std::convert::TryFrom;
 use std::ffi;
 use std::io;
 use std::os::unix::ffi::OsStrExt;
@@ -119,24 +120,66 @@ pub fn getgroups_raw(groups: &mut [GidT]) -> io::Result<Int> {
     })
 }
 
-/// Returns a vector containing the current supplementary
-/// group IDs.
+/// Returns a vector containing the current supplementary group IDs.
 ///
-/// This is a higher-level wrapper that calls `getgroups_raw()` twice,
-/// first to determine the number of groups and then again to actually
-/// fill the list.
+/// This is a higher-level wrapper that makes multiple calls to
+/// `getgroups_raw()`, first to determine the number of groups and
+/// then to actually fill the list. (Note that in most cases this
+/// function will make two calls to `getgroups_raw()`, but it may
+/// make more.)
 pub fn getgroups() -> io::Result<Vec<GidT>> {
     let mut groups: Vec<GidT> = Vec::new();
 
-    let ngroups = getgroups_raw(&mut groups)?;
+    // Call it with the empty vector to determine the number of groups.
+    let init_ngroups = getgroups_raw(&mut groups)?;
 
-    groups.resize(ngroups as usize, 0);
-
-    if getgroups_raw(&mut groups)? != ngroups {
-        return Err(io::Error::last_os_error());
+    if init_ngroups == 0 {
+        // Rare, but no point in calling getgroups_raw() again
+        return Ok(groups);
     }
 
-    Ok(groups)
+    // Expand the vector to fit
+    groups.resize(init_ngroups as usize, 0);
+
+    loop {
+        match getgroups_raw(&mut groups) {
+            Ok(ngroups) => {
+                if ngroups as usize <= groups.len() {
+                    // We got a value, and it's smaller than the length of the vector,
+                    // so it makes sense.
+                    // Shrink the vector to fit and return.
+
+                    groups.resize(ngroups as usize, 0);
+                    groups.shrink_to_fit();
+                    return Ok(groups);
+                }
+            }
+            Err(e) => {
+                if crate::error::is_einval(&e) {
+                    // If the value we passed was at least NGROUPS_MAX, then presumably
+                    // future calls will fail too. Let's propagate the error back up.
+
+                    if groups.len()
+                        >= crate::sysconf(libc::_SC_NGROUPS_MAX)
+                            .and_then(|n| usize::try_from(n).ok())
+                            .unwrap_or(65536)
+                    {
+                        return Err(e);
+                    }
+                } else {
+                    // Propagate everything else up.
+
+                    return Err(e);
+                }
+            }
+        }
+
+        // For some reason, the vector wasn't large enough.
+        // Let's resize and try again.
+        // Make sure we make it at least 64 elements long so that if the initial value
+        // was very small we don't build up too slowly.
+        groups.resize(std::cmp::max(groups.len() * 2, 64), 0);
+    }
 }
 
 /// Returns a vector containing the real group ID, the effective group

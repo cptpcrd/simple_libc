@@ -48,6 +48,12 @@ pub fn get_xucred_raw(sockfd: Int) -> io::Result<Xucred> {
             if raw_xucred.cr_version != libc::XUCRED_VERSION {
                 return Err(io::Error::from_raw_os_error(libc::EINVAL));
             }
+
+            // On FreeBSD, DragonflyBSD, and macOS, we need a GID to pull
+            // out as the primary GID.
+            if raw_xucred.cr_ngroups < 1 {
+                return Err(io::Error::from_raw_os_error(libc::EINVAL));
+            }
         }
 
         Ok(Xucred {
