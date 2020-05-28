@@ -109,39 +109,17 @@ impl Ppoller for EpollPoller {
 mod tests {
     use super::*;
 
-    use std::fs;
     use std::io::Write;
     use std::os::unix::io::AsRawFd;
 
-    #[cfg(any(
-        target_os = "linux",
-        target_os = "freebsd",
-        target_os = "openbsd",
-        target_os = "netbsd",
-        target_os = "dragonfly",
-    ))]
-    fn pipe_cloexec() -> io::Result<(fs::File, fs::File)> {
-        use crate::pipe2;
-        pipe2(libc::O_CLOEXEC)
-    }
-
-    #[cfg(target_os = "macos")]
-    fn pipe_cloexec() -> io::Result<(fs::File, fs::File)> {
-        use crate::fcntl;
-        use crate::pipe;
-
-        let (r, w) = pipe()?;
-        fcntl::set_inheritable(r.as_raw_fd(), false).unwrap();
-        fcntl::set_inheritable(w.as_raw_fd(), false).unwrap();
-        Ok((r, w))
-    }
+    use super::super::super::pipe2;
 
     #[test]
     fn test_epoll_poller() {
         let timeout_0 = Some(Duration::from_secs(0));
 
-        let (r1, mut w1) = pipe_cloexec().unwrap();
-        let (r2, mut w2) = pipe_cloexec().unwrap();
+        let (r1, mut w1) = pipe2(libc::O_CLOEXEC).unwrap();
+        let (r2, mut w2) = pipe2(libc::O_CLOEXEC).unwrap();
 
         let mut poller = EpollPoller::new(Flags::CLOEXEC).unwrap();
 
