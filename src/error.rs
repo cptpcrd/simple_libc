@@ -3,23 +3,23 @@ use std::io;
 use crate::Int;
 
 #[cfg(target_os = "linux")]
-pub fn set_errno_success() {
-    unsafe {
-        *libc::__errno_location() = 0;
-    }
+unsafe fn errno_mut_ptr() -> *mut Int {
+    libc::__errno_location()
 }
 
 #[cfg(any(target_os = "freebsd", target_os = "dragonfly", target_os = "macos"))]
-pub fn set_errno_success() {
-    unsafe {
-        *libc::__error() = 0;
-    }
+unsafe fn errno_mut_ptr() -> *mut Int {
+    libc::__error()
 }
 
 #[cfg(any(target_os = "netbsd", target_os = "openbsd"))]
+unsafe fn errno_mut_ptr() -> *mut Int {
+    libc::__errno()
+}
+
 pub fn set_errno_success() {
     unsafe {
-        *libc::__errno() = 0;
+        *errno_mut_ptr() = 0;
     }
 }
 
