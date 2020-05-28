@@ -151,8 +151,8 @@ mod tests {
         use crate::pipe;
 
         let (r, w) = pipe()?;
-        fcntl::set_inheritable(r.as_raw_fd(), false);
-        fcntl::set_inheritable(w.as_raw_fd(), false);
+        fcntl::set_inheritable(r.as_raw_fd(), false).unwrap();
+        fcntl::set_inheritable(w.as_raw_fd(), false).unwrap();
         Ok((r, w))
     }
 

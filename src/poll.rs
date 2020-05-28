@@ -123,8 +123,8 @@ mod tests {
     #[cfg(target_os = "macos")]
     fn pipe_cloexec() -> io::Result<(fs::File, fs::File)> {
         let (r, w) = super::super::pipe()?;
-        super::super::fcntl::set_inheritable(r.as_raw_fd(), false);
-        super::super::fcntl::set_inheritable(w.as_raw_fd(), false);
+        super::super::fcntl::set_inheritable(r.as_raw_fd(), false).unwrap();
+        super::super::fcntl::set_inheritable(w.as_raw_fd(), false).unwrap();
         Ok((r, w))
     }
 
