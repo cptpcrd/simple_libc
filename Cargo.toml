@@ -10,7 +10,7 @@ categories = ["api-bindings", "os::unix-apis"]
 repository = "https://github.com/cptpcrd/simple_libc"
 
 [dependencies]
-libc = "0.2"
+libc = { version = "0.2", features = ["extra_traits"] }
 bitflags = "1.2"
 strum = "0.18"
 strum_macros = "0.18"
