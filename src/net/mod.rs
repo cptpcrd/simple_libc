@@ -64,8 +64,8 @@ pub fn get_peer_ids(sock: &unix::net::UnixStream) -> io::Result<(UidT, GidT)> {
 
 /// Obtain the value of the given socket option.
 ///
-/// This function is a simple wrapper around `libc::getsockopt()` that allows
-/// reads the value of the socket option into a generic slice. It returns the
+/// This function is a simple wrapper around `libc::getsockopt()` that reads
+/// the value of the socket option into a generic slice. It returns the
 /// number of bytes read.
 ///
 /// # Safety
