@@ -71,11 +71,6 @@ pub fn get_xucred(sock: &unix::net::UnixStream) -> io::Result<Xucred> {
     get_xucred_raw(sock.as_raw_fd())
 }
 
-#[inline]
-pub fn get_xucred_dgram(sock: &unix::net::UnixDatagram) -> io::Result<Xucred> {
-    get_xucred_raw(sock.as_raw_fd())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
