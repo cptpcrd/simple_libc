@@ -393,7 +393,9 @@ mod tests {
 
     #[test]
     fn test_getgroups() {
-        getgroups().unwrap();
+        let groups = getgroups().unwrap();
+        assert_eq!(groups.len(), getgroups_raw(&mut []).unwrap() as usize);
+
         getallgroups().unwrap();
     }
 
