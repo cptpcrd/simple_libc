@@ -2,7 +2,7 @@ use std::io;
 use std::os::unix;
 use std::os::unix::io::AsRawFd;
 
-use crate::{GidT, Int, UidT};
+use crate::{GidT, Int, SocklenT, UidT};
 
 #[cfg(target_os = "linux")]
 mod abstract_unix;
@@ -60,6 +60,27 @@ pub fn get_peer_ids_raw(sockfd: Int) -> io::Result<(UidT, GidT)> {
 
 pub fn get_peer_ids(sock: &unix::net::UnixStream) -> io::Result<(UidT, GidT)> {
     get_peer_ids_raw(sock.as_raw_fd())
+}
+
+pub unsafe fn getsockopt_raw<T: Sized>(
+    sockfd: Int,
+    level: Int,
+    optname: Int,
+    data: &mut [T],
+) -> io::Result<SocklenT> {
+    let mut len = (data.len() * std::mem::size_of::<T>()) as SocklenT;
+
+    super::error::convert_nzero(
+        libc::getsockopt(
+            sockfd,
+            level,
+            optname,
+            data.as_mut_ptr() as *mut libc::c_void,
+            &mut len,
+        ),
+        (),
+    )
+    .map(|()| len)
 }
 
 #[cfg(test)]

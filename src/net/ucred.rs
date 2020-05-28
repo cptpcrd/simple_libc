@@ -2,7 +2,7 @@ use std::io;
 use std::os::unix;
 use std::os::unix::io::AsRawFd;
 
-use super::super::{GidT, Int, UidT};
+use super::super::{GidT, Int, SocklenT, UidT};
 
 // Linux, NetBSD, and OpenBSD use almost exactly the same interface.
 // The only difference is the order of the fields in the
@@ -38,26 +38,20 @@ pub const SO_PEERCRED: Int = libc::SO_PEERCRED;
 /// On Linux, this can also be used with `SOCK_DGRAM` sockets created using
 /// `socketpair()`.
 pub fn get_ucred_raw(sockfd: Int) -> io::Result<Ucred> {
-    let mut ucred = Ucred {
+    let mut ucred_arr = [Ucred {
         pid: 0,
         uid: 0,
         gid: 0,
-    };
+    }];
 
-    let mut len = std::mem::size_of::<Ucred>() as libc::socklen_t;
-
-    super::super::error::convert(
-        unsafe {
-            libc::getsockopt(
-                sockfd,
-                libc::SOL_SOCKET,
-                SO_PEERCRED,
-                (&mut ucred as *mut Ucred) as *mut libc::c_void,
-                &mut len,
-            )
-        },
-        ucred,
-    )
+    unsafe { super::getsockopt_raw(sockfd, libc::SOL_SOCKET, SO_PEERCRED, &mut ucred_arr) }
+        .and_then(|len| {
+            if len == std::mem::size_of::<Ucred>() as SocklenT {
+                Ok(ucred_arr[0])
+            } else {
+                Err(io::Error::from_raw_os_error(libc::EINVAL))
+            }
+        })
 }
 
 /// Attempts to read credentials from the given Unix stream socket.
