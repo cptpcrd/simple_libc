@@ -41,7 +41,7 @@ jobs:
 
 install:
   - rustup target install "$TARGET"
-  - if [[ "$TRAVIS_RUST_VERSION" == stable ]] && [[ "$TARGET" == x86_64-unknown-linux-gnu ]]; then COVERAGE=true; fi
+  - if [[ "$TRAVIS_RUST_VERSION" == stable ]]; then COVERAGE=true; fi
   - if [[ "$COVERAGE" == true ]]; then cargo install cargo-tarpaulin; fi
 
 script:
