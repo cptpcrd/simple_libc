@@ -33,7 +33,7 @@ pub fn get_xucred_raw(sockfd: Int) -> io::Result<Xucred> {
     unsafe {
         super::getsockopt_raw(
             sockfd,
-            libc::SOL_SOCKET,
+            0,
             libc::LOCAL_PEERCRED,
             std::slice::from_mut(&mut raw_xucred),
         )
