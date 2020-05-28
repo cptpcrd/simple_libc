@@ -246,9 +246,9 @@ pub fn setgroups(groups: &[GidT]) -> io::Result<()> {
 
 pub fn build_grouplist(gid: GidT, groups: &[GidT]) -> Vec<GidT> {
     if groups.is_empty() {
-        return vec![gid];
+        vec![gid]
     } else if groups[0] == gid {
-        return groups.into();
+        groups.into()
     } else {
         let mut res = Vec::with_capacity(groups.len() + 1);
 
