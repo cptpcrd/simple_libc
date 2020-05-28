@@ -36,7 +36,7 @@ pub fn get_xucred_raw(sockfd: Int) -> io::Result<Xucred> {
                 &mut len,
             )
         },
-        raw_xucred,
+        &raw_xucred,
     )
     .and_then(|raw_xucred| {
         #[cfg(not(target_os = "openbsd"))]
