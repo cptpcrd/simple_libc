@@ -29,9 +29,9 @@ pub struct Ucred {
 }
 
 #[cfg(target_os = "netbsd")]
-pub const SO_PEERCRED: Int = crate::constants::LOCAL_PEEREID;
+const SO_PEERCRED: Int = crate::constants::LOCAL_PEEREID;
 #[cfg(not(target_os = "netbsd"))]
-pub const SO_PEERCRED: Int = libc::SO_PEERCRED;
+const SO_PEERCRED: Int = libc::SO_PEERCRED;
 
 /// Reads credentials for a `SOCK_STREAM` socket.
 ///
