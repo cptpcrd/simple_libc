@@ -509,8 +509,8 @@ pub mod ambient {
 
     use strum::IntoEnumIterator;
 
-    use crate::Ulong;
     use super::{Cap, CapSet};
+    use crate::Ulong;
 
     #[inline]
     pub fn raise(cap: Cap) -> io::Result<()> {
@@ -583,8 +583,8 @@ pub mod bounding {
 
     use strum::IntoEnumIterator;
 
-    use crate::Ulong;
     use super::{Cap, CapSet};
+    use crate::Ulong;
 
     #[inline]
     pub fn drop(cap: Cap) -> io::Result<()> {
@@ -653,8 +653,8 @@ pub mod secbits {
 
 #[cfg(test)]
 mod tests {
-    use crate::constants;
     use super::*;
+    use crate::constants;
 
     use serde_test::{assert_de_tokens, assert_tokens, Token};
 
