@@ -85,14 +85,14 @@ mod tests {
 
         let mut acred = get_xucred(&a).unwrap();
         assert_eq!(acred.uid, process::geteuid());
-        assert_eq!(acred.groups[0], process::getegid());
+        assert_eq!(acred.gid, process::getegid());
 
         acred.groups.sort();
         assert_eq!(acred.groups, groups);
 
         let mut bcred = get_xucred(&b).unwrap();
         assert_eq!(bcred.uid, process::geteuid());
-        assert_eq!(bcred.groups[0], process::getegid());
+        assert_eq!(bcred.gid, process::getegid());
 
         bcred.groups.sort();
         assert_eq!(bcred.groups, groups);
