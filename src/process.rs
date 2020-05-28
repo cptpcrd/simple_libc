@@ -244,6 +244,34 @@ pub fn setgroups(groups: &[GidT]) -> io::Result<()> {
     )
 }
 
+pub fn build_grouplist(gid: GidT, groups: &[GidT]) -> Vec<GidT> {
+    if groups.is_empty() {
+        return vec![gid];
+    } else if groups[0] == gid {
+        return groups.into();
+    } else {
+        let mut res = Vec::with_capacity(groups.len() + 1);
+
+        res.push(gid);
+        res.extend(groups.iter().filter(|g| **g != gid).copied());
+        res.shrink_to_fit();
+
+        res
+    }
+}
+
+pub fn build_grouplist_inplace(gid: GidT, groups: &mut Vec<GidT>) {
+    if groups.is_empty() {
+        groups.push(gid);
+    } else if let Some(index) = groups.iter().position(|g| *g == gid) {
+        groups.swap(0, index);
+    } else {
+        groups.push(gid);
+        let index = groups.len() - 1;
+        groups.swap(0, index);
+    }
+}
+
 cfg_if::cfg_if! {
     if #[cfg(any(target_os = "linux", target_os = "freebsd", target_os = "openbsd", target_os = "dragonfly"))] {
         pub fn getresuid() -> (UidT, UidT, UidT) {
@@ -402,5 +430,54 @@ mod tests {
     #[test]
     fn test_chdir() {
         chdir("/").unwrap();
+    }
+
+    #[test]
+    fn test_build_grouplist() {
+        assert_eq!(build_grouplist(0, &[]), vec![0]);
+        assert_eq!(build_grouplist(0, &[0]), vec![0]);
+        assert_eq!(build_grouplist(0, &[0, 0]), vec![0, 0]);
+
+        assert_eq!(build_grouplist(0, &[0, 1, 2]), vec![0, 1, 2]);
+        assert_eq!(build_grouplist(0, &[0, 1, 2, 0]), vec![0, 1, 2, 0]);
+        assert_eq!(build_grouplist(0, &[1, 2, 0]), vec![0, 1, 2]);
+        assert_eq!(build_grouplist(0, &[1, 2, 0, 0]), vec![0, 1, 2]);
+    }
+
+    #[test]
+    fn test_build_grouplist_inplace() {
+        let mut groups;
+
+        groups = vec![];
+        build_grouplist_inplace(0, &mut groups);
+        assert_eq!(groups, vec![0]);
+
+        groups = vec![0];
+        build_grouplist_inplace(0, &mut groups);
+        assert_eq!(groups, vec![0]);
+
+        groups = vec![0, 0];
+        build_grouplist_inplace(0, &mut groups);
+        assert_eq!(groups, vec![0, 0]);
+
+        groups = vec![0, 1, 2];
+        build_grouplist_inplace(0, &mut groups);
+        assert_eq!(groups, vec![0, 1, 2]);
+
+        groups = vec![0, 1, 2, 0];
+        build_grouplist_inplace(0, &mut groups);
+        assert_eq!(groups, vec![0, 1, 2, 0]);
+
+        groups = vec![1, 2];
+        build_grouplist_inplace(0, &mut groups);
+        assert_eq!(groups, vec![0, 2, 1]);
+
+        groups = vec![1, 2, 0];
+        build_grouplist_inplace(0, &mut groups);
+        assert_eq!(groups, vec![0, 2, 1]);
+
+        groups = vec![1, 2, 0, 0];
+        build_grouplist_inplace(0, &mut groups);
+        assert_eq!(groups, vec![0, 2, 1, 0]);
     }
 }
