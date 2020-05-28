@@ -113,7 +113,7 @@ pub fn getegid() -> GidT {
 ///    returned.
 ///
 /// In most cases, the `getgroups()` wrapper should be preferred.
-pub fn getgroups_raw(groups: &mut Vec<GidT>) -> io::Result<Int> {
+pub fn getgroups_raw(groups: &mut [GidT]) -> io::Result<Int> {
     super::error::convert_neg_ret(unsafe {
         libc::getgroups(groups.len() as Int, groups.as_mut_ptr())
     })
