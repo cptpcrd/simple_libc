@@ -62,6 +62,23 @@ pub fn get_peer_ids(sock: &unix::net::UnixStream) -> io::Result<(UidT, GidT)> {
     get_peer_ids_raw(sock.as_raw_fd())
 }
 
+/// Obtain the value of the given socket option.
+///
+/// This function is a simple wrapper around `libc::getsockopt()` that allows
+/// reads the value of the socket option into a generic slice. It returns the
+/// number of bytes read.
+///
+/// # Safety
+///
+/// 1. This function has no way to verify that the slice into which the data
+///    is being read is the correct format for representing the given socket
+///    option.
+/// 2. No checking is performed for partial reads that could lead to partially
+///    filled out data in the slice.
+///
+/// If it can be verified that neither of these is the case (the data structure
+/// is correct for the given option AND the amount of data read is correct for
+/// the given structure), then this function should be safe to use.
 pub unsafe fn getsockopt_raw<T: Sized>(
     sockfd: Int,
     level: Int,
