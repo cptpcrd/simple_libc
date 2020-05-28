@@ -3,6 +3,7 @@ cfg_if::cfg_if! {
         use super::{Uint, UidT, Short, GidT};
 
         #[repr(C)]
+        #[derive(Clone, Copy)]
         pub struct xucred {
             pub cr_version: Uint,
             pub cr_uid: UidT,
@@ -14,12 +15,14 @@ cfg_if::cfg_if! {
         use super::{Uint, UidT, Short, GidT, PidT};
 
         #[repr(C)]
+        #[derive(Clone, Copy)]
         union xucred_cr {
             pid: PidT,
             _cr_unused1: *const libc::c_void,
         }
 
         #[repr(C)]
+        #[derive(Clone, Copy)]
         pub struct xucred {
             pub cr_version: Uint,
             pub cr_uid: UidT,
