@@ -254,7 +254,9 @@ impl Iterator for GroupIter {
             if let Some(grp) = unsafe { grp.as_ref() } {
                 Some(unsafe { Group::parse(grp) })
             } else {
-                let errno = io::Error::last_os_error().raw_os_error().unwrap_or(libc::EINVAL);
+                let errno = io::Error::last_os_error()
+                    .raw_os_error()
+                    .unwrap_or(libc::EINVAL);
 
                 if errno == 0 {
                     self.errno = libc::ENOENT;

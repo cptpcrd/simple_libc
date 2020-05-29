@@ -276,7 +276,9 @@ impl Iterator for PasswdIter {
         #[cfg(not(any(target_os = "openbsd", target_os = "macos", target_env = "musl")))]
         {
             let result = Passwd::lookup(
-                |pwd: *mut libc::passwd, buf: &mut [libc::c_char], result: *mut *mut libc::passwd| unsafe {
+                |pwd: *mut libc::passwd,
+                 buf: &mut [libc::c_char],
+                 result: *mut *mut libc::passwd| unsafe {
                     libc::getpwent_r(pwd, buf.as_mut_ptr(), buf.len() as libc::size_t, result)
                 },
             );
@@ -300,7 +302,9 @@ impl Iterator for PasswdIter {
             if let Some(pwd) = unsafe { pwd.as_ref() } {
                 Some(Passwd::parse(pwd))
             } else {
-                let errno = io::Error::last_os_error().raw_os_error().unwrap_or(libc::EINVAL);
+                let errno = io::Error::last_os_error()
+                    .raw_os_error()
+                    .unwrap_or(libc::EINVAL);
 
                 if errno == 0 {
                     self.errno = libc::ENOENT;
