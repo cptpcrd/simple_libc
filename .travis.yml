@@ -11,6 +11,9 @@ addons:
     packages:
       - libssl-dev
 
+os: linux
+dist: bionic
+
 env:
   - TARGET=x86_64-unknown-linux-gnu
   - TARGET=x86_64-unknown-linux-musl
