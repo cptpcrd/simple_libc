@@ -42,8 +42,8 @@ jobs:
 install:
   - rustup target install "$TARGET"
   - case "$TRAVIS_OS_NAME-$TARGET" in linux-x86_64-unknown-linux-*|osx-x86_64-apple-darwin) TEST=true;; esac
-  - if [[ "$TRAVIS_RUST_VERSION-$TARGET" == stable-x86_64-unknown-linux-* ]] && [[ "$TEST" == true ]]; then COVERAGE=true; COVERAGE_TARPAULIN=true; fi; fi
-  - if [[ "$TRAVIS_RUST_VERSION-$TARGET" == nightly-x86_64-apple-darwin-* ]] && [[ "$TEST" == true ]]; then COVERAGE=true; COVERAGE_GRCOV=true; fi; fi
+  - if [[ "$TRAVIS_RUST_VERSION-$TARGET" == stable-x86_64-unknown-linux-* ]] && [[ "$TEST" == true ]]; then COVERAGE=true; COVERAGE_TARPAULIN=true; fi
+  - if [[ "$TRAVIS_RUST_VERSION-$TARGET" == nightly-x86_64-apple-darwin-* ]] && [[ "$TEST" == true ]]; then COVERAGE=true; COVERAGE_GRCOV=true; fi
   - if [[ "$COVERAGE_TARPAULIN" == true ]]; then cargo install cargo-tarpaulin; fi
   - |
     if [[ "$COVERAGE_GRCOV" == true ]]; then
