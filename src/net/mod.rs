@@ -1,8 +1,12 @@
-use std::ffi::OsString;
 use std::io;
 use std::os::unix;
-use std::os::unix::ffi::OsStringExt;
 use std::os::unix::io::AsRawFd;
+
+#[cfg(target_os = "linux")]
+use std::ffi::OsString;
+#[cfg(target_os = "linux")]
+use std::os::unix::ffi::OsStringExt;
+#[cfg(target_os = "linux")]
 use std::os::unix::net::{UnixListener, UnixStream};
 
 use crate::{GidT, Int, SocklenT, UidT};
@@ -127,6 +131,7 @@ pub unsafe fn setsockopt_raw<T: Sized>(
     ))
 }
 
+#[cfg(target_os = "linux")]
 fn get_unix_raw_sockname(sockfd: Int) -> io::Result<OsString> {
     let mut addr = libc::sockaddr_un {
         sun_family: libc::AF_UNIX as libc::sa_family_t,
@@ -150,6 +155,7 @@ fn get_unix_raw_sockname(sockfd: Int) -> io::Result<OsString> {
     ))
 }
 
+#[cfg(target_os = "linux")]
 fn get_unix_raw_peername(sockfd: Int) -> io::Result<OsString> {
     let mut addr = libc::sockaddr_un {
         sun_family: libc::AF_UNIX as libc::sa_family_t,
@@ -173,14 +179,17 @@ fn get_unix_raw_peername(sockfd: Int) -> io::Result<OsString> {
     ))
 }
 
+#[cfg(target_os = "linux")]
 pub fn get_unix_stream_raw_sockname(sock: &UnixStream) -> io::Result<OsString> {
     get_unix_raw_sockname(sock.as_raw_fd())
 }
 
+#[cfg(target_os = "linux")]
 pub fn get_unix_listener_raw_sockname(sock: &UnixListener) -> io::Result<OsString> {
     get_unix_raw_sockname(sock.as_raw_fd())
 }
 
+#[cfg(target_os = "linux")]
 pub fn get_unix_stream_raw_peername(sock: &UnixStream) -> io::Result<OsString> {
     get_unix_raw_peername(sock.as_raw_fd())
 }
