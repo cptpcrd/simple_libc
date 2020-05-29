@@ -156,14 +156,16 @@ pub fn getgroups() -> io::Result<Vec<GidT>> {
             }
             Err(e) => {
                 if crate::error::is_einval(&e) {
-                    // If the value we passed was at least NGROUPS_MAX, then presumably
+                    // If the value we passed was greater than NGROUPS_MAX, then presumably
                     // future calls will fail too. Let's propagate the error back up.
+                    // We check for "> NGROUPS_MAX" instead of ">= NGROUPS_MAX" because the
+                    // list returned by getgroups() can be up to NGROUPS_MAX + 1 if it
+                    // includes the effective GID.
 
                     if groups.len()
-                        >= crate::sysconf(libc::_SC_NGROUPS_MAX)
+                        > crate::sysconf(libc::_SC_NGROUPS_MAX)
                             .and_then(|n| usize::try_from(n).ok())
                             .unwrap_or(65536)
-                            + 1
                     {
                         return Err(e);
                     }
