@@ -69,3 +69,86 @@ pub fn unix_stream_abstract_connect(name: &OsStr) -> io::Result<UnixStream> {
 
     Ok(unsafe { UnixStream::from_raw_fd(fd) })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use super::super::{
+        get_unix_listener_raw_sockname, get_unix_stream_raw_peername, get_unix_stream_raw_sockname,
+    };
+
+    use std::io::{Read, Write};
+
+    use getrandom::getrandom;
+
+    #[test]
+    fn test_build_abstract_addr() {
+        build_abstract_addr(&OsString::from_vec([1].repeat(106))).unwrap();
+
+        let err = build_abstract_addr(&OsString::from_vec([1].repeat(107))).unwrap_err();
+        assert_eq!(err.kind(), io::ErrorKind::InvalidInput);
+    }
+
+    #[test]
+    fn test_abstract_unix_stream() {
+        // Generate a name by taking "SIMPLE_LIBC" and adding some random bytes
+        let mut name_vec = OsString::from("SIMPLE_LIBC").into_vec();
+        let old_len = name_vec.len();
+        name_vec.resize(old_len + 10, 0);
+
+        getrandom(&mut name_vec[old_len..]).unwrap();
+
+        // Replace any NULL bytes
+        #[allow(clippy::needless_range_loop)]
+        for i in 1..(name_vec.len()) {
+            if name_vec[i] == 0 {
+                name_vec[i] = 1;
+            }
+        }
+
+        let name = OsString::from_vec(name_vec);
+
+        let listener = unix_stream_abstract_bind(&name).unwrap();
+
+        let mut remote = unix_stream_abstract_connect(&name).unwrap();
+        let (mut client, _addr) = listener.accept().unwrap();
+
+        let mut prefixed_name = OsString::from("\0");
+        prefixed_name.push(name);
+
+        assert_eq!(
+            get_unix_listener_raw_sockname(&listener).unwrap(),
+            prefixed_name,
+        );
+
+        assert_eq!(
+            get_unix_stream_raw_sockname(&remote).unwrap(),
+            OsString::new(),
+        );
+        assert_eq!(
+            get_unix_stream_raw_peername(&remote).unwrap(),
+            prefixed_name,
+        );
+
+        assert_eq!(
+            get_unix_stream_raw_sockname(&client).unwrap(),
+            prefixed_name,
+        );
+        assert_eq!(
+            get_unix_stream_raw_peername(&client).unwrap(),
+            OsString::new(),
+        );
+
+        let mut data = Vec::new();
+        data.resize(10, 0);
+
+        client.write_all(&[0, 1, 2, 3]).unwrap();
+        assert_eq!(remote.read(&mut data).unwrap(), 4);
+        assert_eq!(data[..4], [0, 1, 2, 3]);
+
+        remote.write_all(&[0, 1, 2, 3]).unwrap();
+        assert_eq!(client.read(&mut data).unwrap(), 4);
+        assert_eq!(data[..4], [0, 1, 2, 3]);
+    }
+}
