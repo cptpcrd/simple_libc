@@ -199,6 +199,10 @@ impl Passwd {
         )
     }
 
+    /// List all of the given user's supplementary groups.
+    ///
+    /// This function calls `grp::Group::list()` to get the initial group list;
+    /// refer to that function for details regarding why this is deprecated.
     #[deprecated(
         since = "0.5.0",
         note = "Use list_groups_single_thread() and lock manually instead"
@@ -220,6 +224,12 @@ impl Passwd {
         Ok(groups)
     }
 
+    /// List all of the given user's supplementary groups.
+    ///
+    /// # Safety
+    ///
+    /// This function calls `grp::Group::list_single_thread()` to get the
+    /// initial group list; refer to that function for details.
     pub unsafe fn list_groups_single_thread(&self) -> io::Result<Vec<crate::grp::Group>> {
         let mut groups = crate::grp::Group::list_single_thread()?;
 
