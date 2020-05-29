@@ -163,6 +163,7 @@ pub fn getgroups() -> io::Result<Vec<GidT>> {
                         >= crate::sysconf(libc::_SC_NGROUPS_MAX)
                             .and_then(|n| usize::try_from(n).ok())
                             .unwrap_or(65536)
+                            + 1
                     {
                         return Err(e);
                     }
@@ -471,7 +472,10 @@ mod tests {
 
         // Now get the list the other way -- with a vector of size NGROUPS_MAX.
         let mut groups2 = Vec::new();
-        groups2.resize(crate::sysconf(libc::_SC_NGROUPS_MAX).unwrap() as usize, 0);
+        groups2.resize(
+            crate::sysconf(libc::_SC_NGROUPS_MAX).unwrap() as usize + 1,
+            0,
+        );
         let ngroups2 = getgroups_raw(&mut groups2).unwrap();
         groups2.resize(ngroups2 as usize, 0);
 
