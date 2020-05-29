@@ -167,9 +167,16 @@ mod tests {
 
     #[test]
     fn test_lookup_current_uid() {
-        let passwd = Passwd::lookup_uid(crate::process::getuid()).unwrap().unwrap();
+        let passwd = Passwd::lookup_uid(crate::process::getuid())
+            .unwrap()
+            .unwrap();
 
-        assert_eq!(passwd, Passwd::lookup_name(&passwd.name.to_string_lossy()).unwrap().unwrap());
+        assert_eq!(
+            passwd,
+            Passwd::lookup_name(&passwd.name.to_string_lossy())
+                .unwrap()
+                .unwrap()
+        );
 
         passwd.list_groups().unwrap();
 
