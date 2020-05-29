@@ -140,7 +140,6 @@ impl<'d> serde::Deserialize<'d> for Cap {
 }
 
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
-#[repr(transparent)]
 pub struct CapSet {
     pub bits: u64,
 }

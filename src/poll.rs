@@ -7,6 +7,7 @@ use bitflags::bitflags;
 use crate::{Int, Short};
 
 bitflags! {
+    #[repr(transparent)]
     pub struct Events: Short {
         const IN = libc::POLLIN;
         const RDNORM = libc::POLLRDNORM;

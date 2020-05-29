@@ -64,7 +64,6 @@ pub fn sig_from_name(name: &str) -> Option<Int> {
 }
 
 #[derive(Copy, Clone, Eq, Hash, PartialEq)]
-#[repr(transparent)]
 pub struct Sigset {
     set: libc::sigset_t,
 }
