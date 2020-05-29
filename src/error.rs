@@ -3,16 +3,19 @@ use std::io;
 use crate::Int;
 
 #[cfg(target_os = "linux")]
+#[inline]
 unsafe fn errno_mut_ptr() -> *mut Int {
     libc::__errno_location()
 }
 
 #[cfg(any(target_os = "freebsd", target_os = "dragonfly", target_os = "macos"))]
+#[inline]
 unsafe fn errno_mut_ptr() -> *mut Int {
     libc::__error()
 }
 
 #[cfg(any(target_os = "netbsd", target_os = "openbsd"))]
+#[inline]
 unsafe fn errno_mut_ptr() -> *mut Int {
     libc::__errno()
 }
