@@ -237,10 +237,97 @@ mod tests {
             convert_nzero_ret(-2).unwrap_err().raw_os_error(),
             io::Error::last_os_error().raw_os_error()
         );
-        assert_eq!(convert_nzero_ret(0).unwrap(), ());
+        convert_nzero_ret(0).unwrap();
         assert_eq!(
             convert_nzero_ret(1).unwrap_err().raw_os_error(),
             io::Error::last_os_error().raw_os_error()
+        );
+    }
+
+    #[test]
+    fn test_convert_if_errno() {
+        set_errno_success();
+
+        assert_eq!(convert_if_errno_ret(-1).unwrap(), -1);
+        convert_if_errno(-1, ()).unwrap();
+
+        unsafe {
+            *errno_mut_ptr() = libc::EINVAL;
+        }
+
+        assert_eq!(
+            convert_if_errno_ret(-1).unwrap_err().raw_os_error(),
+            Some(libc::EINVAL),
+        );
+        assert_eq!(
+            convert_if_errno(-1, ()).unwrap_err().raw_os_error(),
+            Some(libc::EINVAL),
+        );
+
+        set_errno_success();
+    }
+
+    #[test]
+    fn test_is_e() {
+        assert!(!is_erange(&io::Error::from_raw_os_error(0)));
+        assert!(!is_erange(&io::Error::from_raw_os_error(libc::EINVAL)));
+        assert!(is_erange(&io::Error::from_raw_os_error(libc::ERANGE)));
+
+        assert!(!is_einval(&io::Error::from_raw_os_error(0)));
+        assert!(!is_einval(&io::Error::from_raw_os_error(libc::ERANGE)));
+        assert!(is_einval(&io::Error::from_raw_os_error(libc::EINVAL)));
+
+        assert!(!is_eagain(&io::Error::from_raw_os_error(0)));
+        assert!(!is_eagain(&io::Error::from_raw_os_error(libc::ERANGE)));
+        assert!(is_eagain(&io::Error::from_raw_os_error(libc::EAGAIN)));
+
+        assert!(!is_ewouldblock(&io::Error::from_raw_os_error(0)));
+        assert!(!is_ewouldblock(&io::Error::from_raw_os_error(libc::ERANGE)));
+        assert!(is_ewouldblock(&io::Error::from_raw_os_error(
+            libc::EWOULDBLOCK
+        )));
+
+        assert!(!is_eintr(&io::Error::from_raw_os_error(0)));
+        assert!(!is_eintr(&io::Error::from_raw_os_error(libc::ERANGE)));
+        assert!(is_eintr(&io::Error::from_raw_os_error(libc::EINTR)));
+    }
+
+    #[test]
+    fn test_while_erange() {
+        while_erange(
+            |i| match i {
+                0 => Err(io::Error::from_raw_os_error(libc::ERANGE)),
+                1 => Ok(()),
+                _ => panic!(),
+            },
+            10,
+        )
+        .unwrap();
+
+        while_erange(
+            |i| match i {
+                0 => Err(io::Error::from_raw_os_error(libc::ERANGE)),
+                1 => Ok(()),
+                _ => panic!(),
+            },
+            10,
+        )
+        .unwrap();
+
+        assert_eq!(
+            while_erange(
+                |i| -> io::Result<()> {
+                    match i {
+                        0 => Err(io::Error::from_raw_os_error(libc::ERANGE)),
+                        1 => Err(io::Error::from_raw_os_error(libc::ERANGE)),
+                        _ => panic!(),
+                    }
+                },
+                1
+            )
+            .unwrap_err()
+            .raw_os_error(),
+            Some(libc::ERANGE),
         );
     }
 
