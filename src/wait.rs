@@ -45,6 +45,7 @@ pub enum WaitpidSpec {
 }
 
 bitflags! {
+    #[derive(Default)]
     pub struct WaitpidOptions: Int {
         const CONTINUED = libc::WCONTINUED;
         const NOHANG = libc::WNOHANG;
