@@ -141,3 +141,17 @@ impl Group {
         )
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_lookup_current_gid() {
+        let group = Group::lookup_gid(crate::process::getgid()).unwrap().unwrap();
+
+        assert_eq!(group, Group::lookup_name(&group.name.to_string_lossy()).unwrap().unwrap());
+
+        Group::list().unwrap();
+    }
+}
