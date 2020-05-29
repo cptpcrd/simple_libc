@@ -325,7 +325,7 @@ pub fn getdomainname() -> io::Result<ffi::OsString> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Utsname {
     pub sysname: ffi::OsString,
     pub nodename: ffi::OsString,
