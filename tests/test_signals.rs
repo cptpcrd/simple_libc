@@ -67,7 +67,10 @@ cfg_if! {
             assert_eq!(sigs[1].uid as UidT, getuid());
 
             // Restore our signal mask
+            sigmask::unblock(&new_mask).unwrap();
+            assert_eq!(sigmask::getmask().unwrap(), orig_mask);
             sigmask::setmask(&orig_mask).unwrap();
+            assert_eq!(sigmask::getmask().unwrap(), orig_mask);
         }
     }
 }
