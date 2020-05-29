@@ -1,6 +1,9 @@
+use std::ffi::OsString;
 use std::io;
 use std::os::unix;
+use std::os::unix::ffi::OsStringExt;
 use std::os::unix::io::AsRawFd;
+use std::os::unix::net::{UnixListener, UnixStream};
 
 use crate::{GidT, Int, SocklenT, UidT};
 
@@ -121,6 +124,64 @@ pub unsafe fn setsockopt_raw<T: Sized>(
         data.as_ptr() as *mut libc::c_void,
         (data.len() * std::mem::size_of::<T>()) as SocklenT,
     ))
+}
+
+fn get_unix_raw_sockname(sockfd: Int) -> io::Result<OsString> {
+    let mut addr = libc::sockaddr_un {
+        sun_family: libc::AF_UNIX as libc::sa_family_t,
+        sun_path: unsafe { std::mem::zeroed() },
+    };
+
+    let mut addrlen = std::mem::size_of::<libc::sockaddr_un>() as SocklenT;
+
+    crate::error::convert_nzero_ret(unsafe {
+        libc::getsockname(
+            sockfd,
+            &mut addr as *mut libc::sockaddr_un as *mut libc::sockaddr,
+            &mut addrlen,
+        )
+    })?;
+
+    let len = addrlen as usize - std::mem::size_of::<libc::sa_family_t>();
+
+    Ok(OsString::from_vec(
+        addr.sun_path[..len].iter().map(|c| *c as u8).collect(),
+    ))
+}
+
+fn get_unix_raw_peername(sockfd: Int) -> io::Result<OsString> {
+    let mut addr = libc::sockaddr_un {
+        sun_family: libc::AF_UNIX as libc::sa_family_t,
+        sun_path: unsafe { std::mem::zeroed() },
+    };
+
+    let mut addrlen = std::mem::size_of::<libc::sockaddr_un>() as SocklenT;
+
+    crate::error::convert_nzero_ret(unsafe {
+        libc::getpeername(
+            sockfd,
+            &mut addr as *mut libc::sockaddr_un as *mut libc::sockaddr,
+            &mut addrlen,
+        )
+    })?;
+
+    let len = addrlen as usize - std::mem::size_of::<libc::sa_family_t>();
+
+    Ok(OsString::from_vec(
+        addr.sun_path[..len].iter().map(|c| *c as u8).collect(),
+    ))
+}
+
+pub fn get_unix_stream_raw_sockname(sock: &UnixStream) -> io::Result<OsString> {
+    get_unix_raw_sockname(sock.as_raw_fd())
+}
+
+pub fn get_unix_listener_raw_sockname(sock: &UnixListener) -> io::Result<OsString> {
+    get_unix_raw_sockname(sock.as_raw_fd())
+}
+
+pub fn get_unix_stream_raw_peername(sock: &UnixStream) -> io::Result<OsString> {
+    get_unix_raw_peername(sock.as_raw_fd())
 }
 
 #[cfg(test)]
