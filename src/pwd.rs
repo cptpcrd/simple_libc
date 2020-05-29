@@ -1,7 +1,6 @@
 use std::ffi;
 use std::io;
 use std::os::unix::ffi::OsStringExt;
-use std::sync;
 
 use lazy_static::lazy_static;
 
@@ -19,7 +18,7 @@ pub struct Passwd {
 }
 
 lazy_static! {
-    static ref PASSWD_LIST_MUTEX: sync::Mutex<i8> = sync::Mutex::new(0);
+    static ref PASSWD_LIST_MUTEX: std::sync::Mutex<i8> = std::sync::Mutex::new(0);
 }
 
 impl Passwd {
