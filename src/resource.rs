@@ -220,7 +220,9 @@ pub fn nice_thresh_to_rlimit(nice_thresh: Int) -> Limit {
 mod tests {
     use super::*;
 
-    use serde_test::{assert_de_tokens, assert_ser_tokens, assert_tokens, Token};
+    use serde_test::{
+        assert_de_tokens, assert_de_tokens_error, assert_ser_tokens, assert_tokens, Token,
+    };
     use strum::IntoEnumIterator;
 
     #[test]
@@ -245,9 +247,15 @@ mod tests {
     fn test_resource_serde() {
         assert_ser_tokens(&Resource::NOFILE, &[Token::String("nofile")]);
 
+        assert_de_tokens_error::<Resource>(&[Token::String("")], "Matching variant not found");
+        assert_de_tokens_error::<Resource>(
+            &[Token::String("no_file")],
+            "Matching variant not found",
+        );
+
         // Deserializing is case-insensitive
         assert_de_tokens(&Resource::NOFILE, &[Token::String("nofile")]);
-        assert_de_tokens(&Resource::NOFILE, &[Token::String("nofile")]);
+        assert_de_tokens(&Resource::NOFILE, &[Token::String("NoFile")]);
         assert_de_tokens(&Resource::NOFILE, &[Token::String("NOFILE")]);
     }
 
