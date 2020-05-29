@@ -274,16 +274,41 @@ impl Iterator for PasswdIter {
             return None;
         }
 
-        let result = Passwd::lookup(
-            |pwd: *mut libc::passwd, buf: &mut [libc::c_char], result: *mut *mut libc::passwd| unsafe {
-                libc::getpwent_r(pwd, buf.as_mut_ptr(), buf.len() as libc::size_t, result)
-            },
-        );
+        #[cfg(not(any(target_os = "openbsd", target_os = "macos")))]
+        {
+            let result = Passwd::lookup(
+                |pwd: *mut libc::passwd, buf: &mut [libc::c_char], result: *mut *mut libc::passwd| unsafe {
+                    libc::getpwent_r(pwd, buf.as_mut_ptr(), buf.len() as libc::size_t, result)
+                },
+            );
 
-        match result {
-            Ok(pwd) => pwd,
-            Err(err) => {
-                self.errno = err.raw_os_error().unwrap_or(libc::EINVAL);
+            match result {
+                Ok(pwd) => pwd,
+                Err(err) => {
+                    self.errno = err.raw_os_error().unwrap_or(libc::EINVAL);
+                    None
+                }
+            }
+        }
+
+        // OpenBSD and macOS don't have getpwent_r()
+        #[cfg(any(target_os = "openbsd", target_os = "macos"))]
+        {
+            crate::error::set_errno_success();
+
+            let pwd = unsafe { libc::getpwent() };
+
+            if let Some(pwd) = unsafe { pwd.as_ref() } {
+                Some(Passwd::parse(pwd))
+            } else {
+                let errno = io::Error::last_os_error().raw_os_error().unwrap_or(libc::EINVAL);
+
+                if errno == 0 {
+                    self.errno = libc::ENOENT;
+                } else {
+                    self.errno = errno;
+                }
+
                 None
             }
         }
