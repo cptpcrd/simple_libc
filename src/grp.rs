@@ -5,7 +5,7 @@ use std::sync;
 
 use lazy_static::lazy_static;
 
-use crate::{Char, GidT, Int};
+use crate::{GidT, Int};
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Group {
@@ -20,29 +20,45 @@ lazy_static! {
 }
 
 impl Group {
+    /// List all the system group entries.
+    ///
+    /// This function simply locks a global lock and calls `list_single_thread()`. It
+    /// is deprecated because it is impossible to confirm that this lock guarantees no
+    /// conflicting function calls (for example, another library could make a call to
+    /// a C function that calls `setgrent()`, or to `setgrent()` itself).
+    #[deprecated(since = "0.5.0", note = "Use list_single_thread() and lock manually instead")]
     pub fn list() -> io::Result<Vec<Self>> {
         let _lock = GROUP_LIST_MUTEX.lock();
 
         unsafe {
-            libc::setgrent();
+            Self::list_single_thread()
         }
+    }
 
-        let mut groups: Vec<Self> = Vec::new();
+    /// List all the system group entries.
+    ///
+    /// This calls `iter_single_thread()` and collects the yielded values.
+    ///
+    /// # Safety
+    ///
+    /// This function is safe if it can be proven that no other thread (or
+    /// code such as a signal handler) is:
+    ///
+    /// 1. Also calling this function.
+    /// 2. Interacting with the value returned by a call to `iter_single_thread()`
+    ///    (see the "Safety" section in `iter_single_thread()`'s documentation).
+    /// 3. Making calls to any of the following C functions: `setgrent()`,
+    ///    `getgrent()`, `getgrent_r()`, `endgrent()` (or C functions that call
+    ///    them).
+    pub unsafe fn list_single_thread() -> io::Result<Vec<Self>> {
+        let groups;
+        let err;
 
-        loop {
-            crate::error::set_errno_success();
-            let group: *mut libc::group = unsafe { libc::getgrent() };
-            if group.is_null() {
-                break;
-            }
-
-            groups.push(unsafe { Self::parse(*group) });
-        }
-
-        let err = crate::error::result_or_os_error(()).err();
-
-        unsafe {
-            libc::endgrent();
+        // Only hold onto the reference for as long as we have to
+        {
+            let mut group_iter = Self::iter_single_thread_dangerous();
+            groups = group_iter.by_ref().collect();
+            err = group_iter.get_error();
         }
 
         match err {
@@ -51,44 +67,89 @@ impl Group {
         }
     }
 
-    fn lookup<T, F>(t: &T, getgrfunc: F) -> io::Result<Option<Self>>
-    where
-        T: Sized,
-        F: Fn(&T, *mut libc::group, *mut libc::c_char, libc::size_t, *mut *mut libc::group) -> Int,
-    {
-        let mut group: libc::group = unsafe { std::mem::zeroed() };
+    /// Create an iterator over the system group entries.
+    ///
+    /// **WARNING: The return value of this function is difficult to use properly.
+    /// For most cases, you should call `list_single_thread()`, which collects
+    /// the results and returns an `std::io::Result<Vec<Group>>`.**
+    ///
+    /// # Safety
+    ///
+    /// This function is ONLY safe if, from the time this function is called to
+    /// the time that the returned value is dropped, NONE of the following actions
+    /// are performed, either by another thread or by ordinary code:
+    ///
+    /// 1. Calling `list_single_thread()`.
+    /// 2. Calling this function. (In other words, it is only safe to have ONE
+    ///    `GroupIter` in existence at any given time.)
+    /// 3. Making calls to any of the following C functions: `setgrent()`,
+    ///    `getgrent()`, `getgrent_r()`, `endgrent()` (or C functions that call
+    ///    them).
+    ///
+    /// Note: To help ensure safety, the value MUST be dropped as soon as it is
+    /// no longer used! Exhausting the iterator is NOT enough (`endgrent()`
+    /// only called in `drop()`).
+    ///
+    /// Here is an example of recommended usage:
+    ///
+    /// ```
+    /// use simple_libc::grp::Group;
+    ///
+    /// let err;
+    /// unsafe {
+    ///     let mut group_iter = Group::iter_single_thread_dangerous();
+    ///     for group in &mut group_iter {
+    ///         // Process group
+    ///     }
+    ///
+    ///     // Extract the error
+    ///     err = group_iter.get_error();
+    /// }
+    ///
+    /// // *After* dropping the GroupIter, check the value of err
+    /// assert!(err.is_none());
+    /// ```
+    #[inline]
+    pub unsafe fn iter_single_thread_dangerous() -> GroupIter {
+        GroupIter::new()
+    }
 
+    fn lookup<F>(getgrfunc: F) -> io::Result<Option<Self>>
+    where
+        F: Fn(*mut libc::group, &mut [libc::c_char], *mut *mut libc::group) -> Int,
+    {
+        // Initial buffer size
         let init_size = crate::constrain(
-            crate::sysconf(libc::_SC_GETPW_R_SIZE_MAX).unwrap_or(1024),
+            crate::sysconf(libc::_SC_GETGR_R_SIZE_MAX).unwrap_or(1024),
             256,
             4096,
         ) as usize;
+        // Maximum buffer size
+        let max_size = 32768;
 
-        let mut buffer: Vec<Char> = Vec::new();
+        let mut buffer = Vec::new();
+        buffer.resize(init_size, 0);
 
-        let mut result: *mut libc::group = std::ptr::null_mut();
+        let mut group: libc::group = unsafe { std::mem::zeroed() };
+        let mut result = std::ptr::null_mut();
 
-        crate::error::while_erange(
-            |i| {
-                let buflen: usize = (i as usize + 1) * init_size;
+        loop {
+            let errno = getgrfunc(&mut group, &mut buffer, &mut result);
 
-                buffer.resize(buflen, 0);
-
-                let ret = getgrfunc(&t, &mut group, buffer.as_mut_ptr(), buflen, &mut result);
-
-                crate::error::convert_nzero_ret(ret).and_then(|()| {
-                    if result.is_null() {
-                        return Ok(None);
-                    }
-
-                    Ok(Some(unsafe { Self::parse(group) }))
-                })
-            },
-            5,
-        )
+            if errno == libc::ERANGE && buffer.len() < max_size {
+                // The buffer's too small and we're under the limit; let's enlarge it.
+                buffer.resize(buffer.len() * 2, 0);
+            } else if errno != 0 {
+                return Err(io::Error::from_raw_os_error(errno));
+            } else if result.is_null() {
+                return Ok(None);
+            } else {
+                return Ok(Some(unsafe { Self::parse(&group) }));
+            }
+        }
     }
 
-    unsafe fn parse(group: libc::group) -> Self {
+    unsafe fn parse(group: &libc::group) -> Self {
         let mut parsed_members: Vec<ffi::OsString> = Vec::new();
 
         for i in 0.. {
@@ -114,15 +175,12 @@ impl Group {
 
     pub fn lookup_name(name: &str) -> io::Result<Option<Self>> {
         Self::lookup(
-            &name,
-            |name: &&str,
-             grp: *mut libc::group,
-             buf: *mut libc::c_char,
-             buflen: libc::size_t,
+            |grp: *mut libc::group,
+             buf: &mut [libc::c_char],
              result: *mut *mut libc::group| {
                 unsafe {
-                    let c_name = ffi::CString::from_vec_unchecked(Vec::from(*name));
-                    libc::getgrnam_r(c_name.as_ptr(), grp, buf, buflen, result)
+                    let c_name = ffi::CString::from_vec_unchecked(Vec::from(name));
+                    libc::getgrnam_r(c_name.as_ptr(), grp, buf.as_mut_ptr(), buf.len(), result)
                 }
             },
         )
@@ -130,21 +188,83 @@ impl Group {
 
     pub fn lookup_gid(gid: GidT) -> io::Result<Option<Self>> {
         Self::lookup(
-            &gid,
-            |gid: &GidT,
-             grp: *mut libc::group,
-             buf: *mut libc::c_char,
-             buflen: libc::size_t,
+            |grp: *mut libc::group,
+             buf: &mut [libc::c_char],
              result: *mut *mut libc::group| {
-                unsafe { libc::getgrgid_r(*gid, grp, buf, buflen, result) }
+                unsafe { libc::getgrgid_r(gid, grp, buf.as_mut_ptr(), buf.len(), result) }
             },
         )
     }
 }
 
+/// An iterator over the system group entries.
+///
+/// The interface is inspired by the
+/// `GroupIter` struct from the `pwd` crate.
+pub struct GroupIter {
+    errno: Int,
+}
+
+impl GroupIter {
+    unsafe fn new() -> Self {
+        libc::setgrent();
+
+        Self { errno: 0 }
+    }
+
+    /// Returns the error, if any, that occurred while iterating over the system
+    /// group entries.
+    ///
+    /// This is only valid if the iterator has been exhausted.
+    pub fn get_error(&self) -> Option<io::Error> {
+        if self.errno == 0 || self.errno == libc::ENOENT {
+            None
+        } else {
+            Some(io::Error::from_raw_os_error(self.errno))
+        }
+    }
+}
+
+impl Iterator for GroupIter {
+    type Item = Group;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.errno != 0 {
+            return None;
+        }
+
+        let result = Group::lookup(
+            |pwd: *mut libc::group,
+             buf: &mut [libc::c_char],
+             result: *mut *mut libc::group| {
+                 unsafe {
+                     libc::getgrent_r(pwd, buf.as_mut_ptr(), buf.len() as libc::size_t, result)
+                 }
+            },
+        );
+
+        match result {
+            Ok(pwd) => pwd,
+            Err(err) => {
+                self.errno = err.raw_os_error().unwrap_or(libc::EINVAL);
+                None
+            }
+        }
+    }
+}
+
+impl Drop for GroupIter {
+    fn drop(&mut self) {
+        unsafe { libc::endgrent(); }
+    }
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    
+    use crate::pwd::Passwd;
 
     #[test]
     fn test_lookup_current_gid() {
@@ -158,7 +278,45 @@ mod tests {
                 .unwrap()
                 .unwrap()
         );
+    }
 
-        Group::list().unwrap();
+    #[test]
+    fn test_list_iter() {
+        // Since these are not thread-safe, they all need to be called
+        // in the same test
+
+        let groups = unsafe { Group::list_single_thread() }.unwrap();
+        assert_ne!(groups, vec![]);
+
+        #[allow(deprecated)]
+        let groups2 = Group::list().unwrap();
+        assert_eq!(groups, groups2);
+
+        let err;
+        unsafe {
+            let mut group_iter = Group::iter_single_thread_dangerous();
+            for (pwd_a, pwd_b) in (&mut group_iter).zip(groups) {
+                assert_eq!(pwd_a, pwd_b);
+            }
+
+            // Make sure that repeated calls to `next()` return `None`
+            assert_eq!(group_iter.next(), None);
+
+            err = group_iter.get_error();
+        }
+
+        assert!(err.is_none());
+
+        // Now test listing the current user's groups
+        let passwd = Passwd::lookup_uid(crate::process::getuid())
+            .unwrap()
+            .unwrap();
+
+        let user_groups = unsafe { passwd.list_groups_single_thread() }.unwrap();
+
+        #[allow(deprecated)]
+        let user_groups2 = passwd.list_groups().unwrap();
+
+        assert_eq!(user_groups, user_groups2);
     }
 }
