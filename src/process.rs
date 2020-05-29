@@ -44,7 +44,7 @@ pub mod namespace {
     pub use crate::namespace::*;
 }
 #[deprecated(since = "0.4.0", note = "Moved out of the 'process' module")]
-#[cfg(target_os = "linux")]
+#[cfg(all(target_os = "linux", feature = "prctl"))]
 pub mod prctl {
     pub use crate::prctl::*;
 }

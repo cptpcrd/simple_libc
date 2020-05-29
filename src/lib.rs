@@ -45,9 +45,10 @@ pub mod inotify;
 #[cfg(target_os = "linux")]
 pub mod namespace;
 #[cfg(target_os = "linux")]
-pub mod prctl;
-#[cfg(target_os = "linux")]
 pub mod signalfd;
+
+#[cfg(all(target_os = "linux", feature = "prctl"))]
+pub mod prctl;
 
 pub type Short = libc::c_short;
 pub type Ushort = libc::c_ushort;

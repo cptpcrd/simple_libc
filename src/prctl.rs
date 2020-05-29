@@ -266,6 +266,7 @@ impl CapSet {
         }
     }
 
+    #[cfg(feature = "serde")]
     fn from_bits_checked(bits: u64) -> Option<Self> {
         if bits & (!CAP_BITMASK) == 0 {
             Some(Self { bits })

@@ -10,18 +10,22 @@ categories = ["api-bindings", "os::unix-apis"]
 repository = "https://github.com/cptpcrd/simple_libc"
 
 [features]
-default = ["serde"]
+default = ["serde", "strum", "strum_macros", "prctl"]
+
+prctl = ["strum", "strum_macros"]
 
 [dependencies]
 libc = { version = "0.2", features = ["extra_traits"] }
 bitflags = "1.2"
-strum = "0.18"
-strum_macros = "0.18"
 lazy_static = "1.4"
 cfg-if = "0.1"
 
+strum = { version = "0.18", optional = true }
+strum_macros = { version = "0.18", optional = true }
 serde = { version = "1.0", features = ["derive"], optional = true }
 
 [dev-dependencies]
 serde_test = "1.0"
-getrandom = { version = "0.1", features = [] }
+getrandom = "0.1"
+strum = "0.18"
+strum_macros = "0.18"

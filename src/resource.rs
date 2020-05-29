@@ -19,17 +19,15 @@ type RawResourceType = libc::__rlimit_resource_t;
 #[cfg(not(all(target_os = "linux", any(target_env = "", target_env = "gnu"))))]
 type RawResourceType = Int;
 
-#[derive(
-    Copy,
-    Clone,
-    Debug,
-    Eq,
-    Hash,
-    PartialEq,
-    strum_macros::Display,
-    strum_macros::EnumString,
-    strum_macros::EnumIter,
+#[cfg_attr(
+    any(feature = "strum_macros", test),
+    derive(
+        strum_macros::Display,
+        strum_macros::EnumString,
+        strum_macros::EnumIter,
+    )
 )]
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
 #[repr(isize)]
 pub enum Resource {
     // OpenBSD and macOS are missing this for some reason
