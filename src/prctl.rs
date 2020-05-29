@@ -265,6 +265,14 @@ impl CapSet {
             bits: bitfield & CAP_BITMASK,
         }
     }
+
+    fn from_bits_checked(bits: u64) -> Option<Self> {
+        if bits & (!CAP_BITMASK) == 0 {
+            Some(Self { bits })
+        } else {
+            None
+        }
+    }
 }
 
 impl Not for CapSet {
@@ -312,9 +320,8 @@ pub fn serialize_capset_raw<S: serde::Serializer>(
 pub fn deserialize_capset_raw<'d, D: serde::Deserializer<'d>>(
     deserializer: D,
 ) -> Result<CapSet, D::Error> {
-    Ok(CapSet {
-        bits: u64::deserialize(deserializer)?,
-    })
+    CapSet::from_bits_checked(u64::deserialize(deserializer)?)
+        .ok_or_else(|| serde::de::Error::custom("Invalid bits"))
 }
 
 #[allow(clippy::trivially_copy_pass_by_ref)]
@@ -671,7 +678,7 @@ mod tests {
     use crate::constants;
 
     #[cfg(feature = "serde")]
-    use serde_test::{assert_de_tokens, assert_tokens, Token};
+    use serde_test::{assert_de_tokens, assert_de_tokens_error, assert_tokens, Token};
 
     #[test]
     fn test_cap_iter() {
@@ -993,6 +1000,19 @@ mod tests {
                 Token::U64(CAP_BITMASK),
                 Token::StructEnd,
             ],
+        );
+
+        assert_de_tokens_error::<SerSet>(
+            &[
+                Token::Struct {
+                    name: "SerSet",
+                    len: 1,
+                },
+                Token::Str("set"),
+                Token::U64(CAP_BITMASK + 1),
+                Token::StructEnd,
+            ],
+            "Invalid bits",
         );
     }
 
