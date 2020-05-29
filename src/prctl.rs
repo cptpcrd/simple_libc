@@ -1,12 +1,15 @@
 use std::io;
 use std::iter::FromIterator;
 use std::ops::Not;
+
+#[cfg(feature = "serde")]
 use std::str::FromStr;
 
 use lazy_static::lazy_static;
-use serde::de::Deserialize;
-use serde::ser::SerializeSeq;
 use strum::IntoEnumIterator;
+
+#[cfg(feature = "serde")]
+use serde::{de::Deserialize, ser::SerializeSeq};
 
 use crate::constants;
 use crate::error;
@@ -127,12 +130,14 @@ impl Cap {
     }
 }
 
+#[cfg(feature = "serde")]
 impl serde::Serialize for Cap {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         serializer.serialize_str(&self.to_string())
     }
 }
 
+#[cfg(feature = "serde")]
 impl<'d> serde::Deserialize<'d> for Cap {
     fn deserialize<D: serde::Deserializer<'d>>(deserializer: D) -> Result<Self, D::Error> {
         Self::from_str(&String::deserialize(deserializer)?).map_err(serde::de::Error::custom)
@@ -290,6 +295,7 @@ impl IntoIterator for CapSet {
 }
 
 #[allow(clippy::trivially_copy_pass_by_ref)]
+#[cfg(feature = "serde")]
 pub fn serialize_capset_raw<S: serde::Serializer>(
     set: &CapSet,
     serializer: S,
@@ -297,6 +303,7 @@ pub fn serialize_capset_raw<S: serde::Serializer>(
     serializer.serialize_u64(set.bits)
 }
 
+#[cfg(feature = "serde")]
 pub fn deserialize_capset_raw<'d, D: serde::Deserializer<'d>>(
     deserializer: D,
 ) -> Result<CapSet, D::Error> {
@@ -306,6 +313,7 @@ pub fn deserialize_capset_raw<'d, D: serde::Deserializer<'d>>(
 }
 
 #[allow(clippy::trivially_copy_pass_by_ref)]
+#[cfg(feature = "serde")]
 pub fn serialize_capset_seq<S: serde::Serializer>(
     set: &CapSet,
     serializer: S,
@@ -325,6 +333,7 @@ pub fn serialize_capset_seq<S: serde::Serializer>(
     seq.end()
 }
 
+#[cfg(feature = "serde")]
 pub fn deserialize_capset_seq<'d, D: serde::Deserializer<'d>>(
     deserializer: D,
 ) -> Result<CapSet, D::Error> {
@@ -656,6 +665,7 @@ mod tests {
     use super::*;
     use crate::constants;
 
+    #[cfg(feature = "serde")]
     use serde_test::{assert_de_tokens, assert_tokens, Token};
 
     #[test]
@@ -684,6 +694,7 @@ mod tests {
         assert_eq!(mask, CAP_BITMASK);
     }
 
+    #[cfg(feature = "serde")]
     #[test]
     fn test_cap_serde() {
         assert_tokens(&Cap::Chown, &[Token::Str("CAP_CHOWN")]);
@@ -824,6 +835,7 @@ mod tests {
         assert_eq!(!a, b);
     }
 
+    #[cfg(feature = "serde")]
     #[test]
     fn test_capset_serde_seq() {
         // A quick struct so we can use our custom serializer and deserializer
@@ -920,6 +932,7 @@ mod tests {
         );
     }
 
+    #[cfg(feature = "serde")]
     #[test]
     fn test_capset_serde_raw() {
         #[derive(Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]

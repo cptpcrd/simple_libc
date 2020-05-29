@@ -1,6 +1,9 @@
 use std::io;
+
+#[cfg(feature = "serde")]
 use std::str::FromStr;
 
+#[cfg(feature = "serde")]
 use serde::Deserialize;
 
 use crate::error;
@@ -107,12 +110,14 @@ pub enum Resource {
     SIGPENDING = libc::RLIMIT_SIGPENDING as isize,
 }
 
+#[cfg(feature = "serde")]
 impl serde::Serialize for Resource {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         serializer.serialize_str(&self.to_string().to_lowercase())
     }
 }
 
+#[cfg(feature = "serde")]
 impl<'d> serde::Deserialize<'d> for Resource {
     fn deserialize<D: serde::Deserializer<'d>>(deserializer: D) -> Result<Self, D::Error> {
         Self::from_str(&String::deserialize(deserializer)?.to_uppercase())
@@ -121,6 +126,7 @@ impl<'d> serde::Deserialize<'d> for Resource {
 }
 
 #[allow(clippy::trivially_copy_pass_by_ref)]
+#[cfg(feature = "serde")]
 pub fn serialize_limit<S: serde::Serializer>(
     limit: &Limit,
     serializer: S,
@@ -131,6 +137,7 @@ pub fn serialize_limit<S: serde::Serializer>(
     }
 }
 
+#[cfg(feature = "serde")]
 pub fn deserialize_limit<'a, D: serde::Deserializer<'a>>(
     deserializer: D,
 ) -> Result<Limit, D::Error> {
@@ -220,6 +227,7 @@ pub fn nice_thresh_to_rlimit(nice_thresh: Int) -> Limit {
 mod tests {
     use super::*;
 
+    #[cfg(feature = "serde")]
     use serde_test::{
         assert_de_tokens, assert_de_tokens_error, assert_ser_tokens, assert_tokens, Token,
     };
@@ -243,6 +251,7 @@ mod tests {
         }
     }
 
+    #[cfg(feature = "serde")]
     #[test]
     fn test_resource_serde() {
         assert_ser_tokens(&Resource::NOFILE, &[Token::String("nofile")]);
@@ -259,6 +268,7 @@ mod tests {
         assert_de_tokens(&Resource::NOFILE, &[Token::String("NOFILE")]);
     }
 
+    #[cfg(feature = "serde")]
     #[test]
     fn test_limit_serde() {
         // A quick struct so we can use our custom serializer and deserializer
