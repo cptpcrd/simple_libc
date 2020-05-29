@@ -4,7 +4,9 @@ use std::os::unix::ffi::OsStringExt;
 use std::os::unix::io::FromRawFd;
 use std::os::unix::net::{UnixListener, UnixStream};
 
-fn build_abstract_addr(name: &OsStr) -> io::Result<(libc::sockaddr_un, libc::socklen_t)> {
+use crate::SocklenT;
+
+fn build_abstract_addr(name: &OsStr) -> io::Result<(libc::sockaddr_un, SocklenT)> {
     let mut addr = libc::sockaddr_un {
         sun_family: libc::AF_UNIX as libc::sa_family_t,
         sun_path: unsafe { std::mem::zeroed() },
@@ -25,8 +27,7 @@ fn build_abstract_addr(name: &OsStr) -> io::Result<(libc::sockaddr_un, libc::soc
         i += 1;
     }
 
-    let addrlen =
-        (std::mem::size_of::<libc::sa_family_t>() + name_vec.len() + 1) as libc::socklen_t;
+    let addrlen = (std::mem::size_of::<libc::sa_family_t>() + name_vec.len() + 1) as SocklenT;
 
     Ok((addr, addrlen))
 }
