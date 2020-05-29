@@ -41,10 +41,21 @@ jobs:
 
 install:
   - rustup target install "$TARGET"
-  - if [[ "$TRAVIS_RUST_VERSION" == stable ]]; then COVERAGE=true; fi
-  - if [[ "$COVERAGE" == true ]]; then cargo install cargo-tarpaulin; fi
+  - if [[ "$TRAVIS_RUST_VERSION" == stable ]]; then COVERAGE=true; if [[ "$TARGET" == x86_64-unknown-linux-gnu ]]; then COVERAGE_TARPAULIN=true; else COVERAGE_GRCOV=true; fi; fi
+  - if [[ "$COVERAGE_TARPAULIN" == true ]]; then cargo install cargo-tarpaulin; fi
+  - |
+    if [[ "$COVERAGE_GRCOV" == true ]]; then
+      # Based off of https://github.com/mozilla/grcov#grcov-with-travis
+      export CARGO_INCREMENTAL=0
+      export RUSTFLAGS="-Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests -Cpanic=abort"
+      export RUSTDOCFLAGS="-Cpanic=abort"
+      curl -L "https://github.com/mozilla/grcov/releases/latest/download/grcov-$TRAVIS_OS_NAME-x86_64.tar.bz2" | tar jxf -
+    fi
 
 script:
   - cargo build --verbose --target="$TARGET"
   - case "$TRAVIS_OS_NAME-$TARGET" in linux-x86_64-unknown-linux-*|osx-x86_64-apple-darwin) cargo test --verbose --target="$TARGET";; esac
-  - if [[ "$COVERAGE" == true ]]; then cargo tarpaulin --out Xml && bash <(curl -s https://codecov.io/bash); fi
+  - if [[ "$COVERAGE_TARPAULIN" == true ]]; then cargo tarpaulin --out Xml; fi
+  # Based off of https://github.com/mozilla/grcov#grcov-with-travis
+  - if [[ "$COVERAGE_GRCOV" == true ]]; then zip -0 ccov.zip `find . \( -name "simple_libc*.gc*" \) -print`; ./grcov ccov.zip -s . -t lcov --llvm --branch --ignore-not-existing --ignore "/*" -o lcov.info; fi
+  - if [[ "$COVERAGE" == true ]]; then bash <(curl -s https://codecov.io/bash); fi
