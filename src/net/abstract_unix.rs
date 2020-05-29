@@ -1,10 +1,10 @@
-use std::ffi::OsString;
+use std::ffi::{OsStr, OsString};
 use std::io;
 use std::os::unix::ffi::OsStringExt;
 use std::os::unix::io::FromRawFd;
 use std::os::unix::net::{UnixListener, UnixStream};
 
-fn build_abstract_addr(name: &OsString) -> io::Result<(libc::sockaddr_un, libc::socklen_t)> {
+fn build_abstract_addr(name: &OsStr) -> io::Result<(libc::sockaddr_un, libc::socklen_t)> {
     let mut addr = libc::sockaddr_un {
         sun_family: libc::AF_UNIX as libc::sa_family_t,
         sun_path: unsafe { std::mem::zeroed() },
@@ -17,7 +17,7 @@ fn build_abstract_addr(name: &OsString) -> io::Result<(libc::sockaddr_un, libc::
         ));
     }
 
-    let name_vec = name.clone().into_vec();
+    let name_vec = OsString::from(name).into_vec();
 
     let mut i = 0;
     while i < name_vec.len() {
@@ -31,7 +31,7 @@ fn build_abstract_addr(name: &OsString) -> io::Result<(libc::sockaddr_un, libc::
     Ok((addr, addrlen))
 }
 
-pub fn unix_stream_abstract_bind(name: &OsString) -> io::Result<UnixListener> {
+pub fn unix_stream_abstract_bind(name: &OsStr) -> io::Result<UnixListener> {
     let fd = crate::error::convert_neg_ret(unsafe {
         libc::socket(libc::AF_UNIX, libc::SOCK_STREAM | libc::SOCK_CLOEXEC, 0)
     })?;
@@ -51,7 +51,7 @@ pub fn unix_stream_abstract_bind(name: &OsString) -> io::Result<UnixListener> {
     Ok(unsafe { UnixListener::from_raw_fd(fd) })
 }
 
-pub fn unix_stream_abstract_connect(name: &OsString) -> io::Result<UnixStream> {
+pub fn unix_stream_abstract_connect(name: &OsStr) -> io::Result<UnixStream> {
     let fd = crate::error::convert_neg_ret(unsafe {
         libc::socket(libc::AF_UNIX, libc::SOCK_STREAM | libc::SOCK_CLOEXEC, 0)
     })?;
