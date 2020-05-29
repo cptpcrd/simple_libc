@@ -26,13 +26,14 @@ impl Group {
     /// is deprecated because it is impossible to confirm that this lock guarantees no
     /// conflicting function calls (for example, another library could make a call to
     /// a C function that calls `setgrent()`, or to `setgrent()` itself).
-    #[deprecated(since = "0.5.0", note = "Use list_single_thread() and lock manually instead")]
+    #[deprecated(
+        since = "0.5.0",
+        note = "Use list_single_thread() and lock manually instead"
+    )]
     pub fn list() -> io::Result<Vec<Self>> {
         let _lock = GROUP_LIST_MUTEX.lock();
 
-        unsafe {
-            Self::list_single_thread()
-        }
+        unsafe { Self::list_single_thread() }
     }
 
     /// List all the system group entries.
@@ -175,23 +176,17 @@ impl Group {
 
     pub fn lookup_name(name: &str) -> io::Result<Option<Self>> {
         Self::lookup(
-            |grp: *mut libc::group,
-             buf: &mut [libc::c_char],
-             result: *mut *mut libc::group| {
-                unsafe {
-                    let c_name = ffi::CString::from_vec_unchecked(Vec::from(name));
-                    libc::getgrnam_r(c_name.as_ptr(), grp, buf.as_mut_ptr(), buf.len(), result)
-                }
+            |grp: *mut libc::group, buf: &mut [libc::c_char], result: *mut *mut libc::group| unsafe {
+                let c_name = ffi::CString::from_vec_unchecked(Vec::from(name));
+                libc::getgrnam_r(c_name.as_ptr(), grp, buf.as_mut_ptr(), buf.len(), result)
             },
         )
     }
 
     pub fn lookup_gid(gid: GidT) -> io::Result<Option<Self>> {
         Self::lookup(
-            |grp: *mut libc::group,
-             buf: &mut [libc::c_char],
-             result: *mut *mut libc::group| {
-                unsafe { libc::getgrgid_r(gid, grp, buf.as_mut_ptr(), buf.len(), result) }
+            |grp: *mut libc::group, buf: &mut [libc::c_char], result: *mut *mut libc::group| unsafe {
+                libc::getgrgid_r(gid, grp, buf.as_mut_ptr(), buf.len(), result)
             },
         )
     }
@@ -234,12 +229,8 @@ impl Iterator for GroupIter {
         }
 
         let result = Group::lookup(
-            |pwd: *mut libc::group,
-             buf: &mut [libc::c_char],
-             result: *mut *mut libc::group| {
-                 unsafe {
-                     libc::getgrent_r(pwd, buf.as_mut_ptr(), buf.len() as libc::size_t, result)
-                 }
+            |pwd: *mut libc::group, buf: &mut [libc::c_char], result: *mut *mut libc::group| unsafe {
+                libc::getgrent_r(pwd, buf.as_mut_ptr(), buf.len() as libc::size_t, result)
             },
         );
 
@@ -255,15 +246,16 @@ impl Iterator for GroupIter {
 
 impl Drop for GroupIter {
     fn drop(&mut self) {
-        unsafe { libc::endgrent(); }
+        unsafe {
+            libc::endgrent();
+        }
     }
 }
-
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     use crate::pwd::Passwd;
 
     #[test]

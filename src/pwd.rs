@@ -29,13 +29,14 @@ impl Passwd {
     /// is deprecated because it is impossible to confirm that this lock guarantees no
     /// conflicting function calls (for example, another library could make a call to
     /// a C function that calls `setpwent()`, or to `setpwent()` itself).
-    #[deprecated(since = "0.5.0", note = "Use list_single_thread() and lock manually instead")]
+    #[deprecated(
+        since = "0.5.0",
+        note = "Use list_single_thread() and lock manually instead"
+    )]
     pub fn list() -> io::Result<Vec<Self>> {
         let _lock = PASSWD_LIST_MUTEX.lock();
 
-        unsafe {
-            Self::list_single_thread()
-        }
+        unsafe { Self::list_single_thread() }
     }
 
     /// List all the system password entries.
@@ -90,7 +91,7 @@ impl Passwd {
     ///    them).
     ///
     /// Note: To help ensure safety, the value MUST be dropped as soon as it is
-    /// no longer used! Exhausting the iterator is NOT enough (`endpwent()` 
+    /// no longer used! Exhausting the iterator is NOT enough (`endpwent()`
     /// only called in `drop()`).
     ///
     /// Here is an example of recommended usage:
@@ -118,11 +119,9 @@ impl Passwd {
     }
 
     fn lookup<F>(getpwfunc: F) -> io::Result<Option<Self>>
-        where F: Fn(
-            *mut libc::passwd,
-            &mut [libc::c_char],
-            *mut *mut libc::passwd,
-        ) -> Int {
+    where
+        F: Fn(*mut libc::passwd, &mut [libc::c_char], *mut *mut libc::passwd) -> Int,
+    {
         // Initial buffer size
         let init_size = crate::constrain(
             crate::sysconf(libc::_SC_GETPW_R_SIZE_MAX).unwrap_or(1024),
@@ -174,28 +173,37 @@ impl Passwd {
 
     pub fn lookup_name(name: &str) -> io::Result<Option<Self>> {
         Self::lookup(
-            |pwd: *mut libc::passwd,
-             buf: &mut [libc::c_char],
-             result: *mut *mut libc::passwd| {
-                 unsafe {
-                     let c_name = ffi::CString::from_vec_unchecked(Vec::from(name));
-                     libc::getpwnam_r(c_name.as_ptr(), pwd, buf.as_mut_ptr(), buf.len() as libc::size_t, result)
-                 }
+            |pwd: *mut libc::passwd, buf: &mut [libc::c_char], result: *mut *mut libc::passwd| unsafe {
+                let c_name = ffi::CString::from_vec_unchecked(Vec::from(name));
+                libc::getpwnam_r(
+                    c_name.as_ptr(),
+                    pwd,
+                    buf.as_mut_ptr(),
+                    buf.len() as libc::size_t,
+                    result,
+                )
             },
         )
     }
 
     pub fn lookup_uid(uid: UidT) -> io::Result<Option<Self>> {
         Self::lookup(
-            |pwd: *mut libc::passwd,
-             buf: &mut [libc::c_char],
-             result: *mut *mut libc::passwd| {
-                unsafe { libc::getpwuid_r(uid, pwd, buf.as_mut_ptr(), buf.len() as libc::size_t, result) }
+            |pwd: *mut libc::passwd, buf: &mut [libc::c_char], result: *mut *mut libc::passwd| unsafe {
+                libc::getpwuid_r(
+                    uid,
+                    pwd,
+                    buf.as_mut_ptr(),
+                    buf.len() as libc::size_t,
+                    result,
+                )
             },
         )
     }
 
-    #[deprecated(since = "0.5.0", note = "Use list_groups_single_thread() and lock manually instead")]
+    #[deprecated(
+        since = "0.5.0",
+        note = "Use list_groups_single_thread() and lock manually instead"
+    )]
     pub fn list_groups(&self) -> io::Result<Vec<crate::grp::Group>> {
         #[allow(deprecated)]
         let mut groups = crate::grp::Group::list()?;
@@ -267,12 +275,8 @@ impl Iterator for PasswdIter {
         }
 
         let result = Passwd::lookup(
-            |pwd: *mut libc::passwd,
-             buf: &mut [libc::c_char],
-             result: *mut *mut libc::passwd| {
-                 unsafe {
-                     libc::getpwent_r(pwd, buf.as_mut_ptr(), buf.len() as libc::size_t, result)
-                 }
+            |pwd: *mut libc::passwd, buf: &mut [libc::c_char], result: *mut *mut libc::passwd| unsafe {
+                libc::getpwent_r(pwd, buf.as_mut_ptr(), buf.len() as libc::size_t, result)
             },
         );
 
@@ -288,7 +292,9 @@ impl Iterator for PasswdIter {
 
 impl Drop for PasswdIter {
     fn drop(&mut self) {
-        unsafe { libc::endpwent(); }
+        unsafe {
+            libc::endpwent();
+        }
     }
 }
 
