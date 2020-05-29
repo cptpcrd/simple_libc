@@ -146,7 +146,7 @@ impl<'d> serde::Deserialize<'d> for Cap {
 
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
 pub struct CapSet {
-    pub bits: u64,
+    bits: u64,
 }
 
 impl CapSet {
@@ -252,6 +252,11 @@ impl CapSet {
         }
 
         Self { bits }
+    }
+
+    #[inline]
+    pub const fn bits(self) -> u64 {
+        self.bits
     }
 
     #[inline]
@@ -744,6 +749,8 @@ mod tests {
         assert_eq!(set.bits, CAP_BITMASK);
         assert!(set.is_full());
         assert!(!set.is_empty());
+
+        assert_eq!(set.bits, set.bits());
 
         assert!(Cap::iter().all(|c| set.has(c)));
     }
