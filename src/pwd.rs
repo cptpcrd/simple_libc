@@ -274,7 +274,7 @@ impl Iterator for PasswdIter {
             return None;
         }
 
-        #[cfg(not(any(target_os = "openbsd", target_os = "macos")))]
+        #[cfg(not(any(target_os = "openbsd", target_os = "macos", target_env = "musl")))]
         {
             let result = Passwd::lookup(
                 |pwd: *mut libc::passwd, buf: &mut [libc::c_char], result: *mut *mut libc::passwd| unsafe {
@@ -291,8 +291,8 @@ impl Iterator for PasswdIter {
             }
         }
 
-        // OpenBSD and macOS don't have getpwent_r()
-        #[cfg(any(target_os = "openbsd", target_os = "macos"))]
+        // OpenBSD, macOS, and musl libc don't have getpwent_r()
+        #[cfg(any(target_os = "openbsd", target_os = "macos", target_env = "musl"))]
         {
             crate::error::set_errno_success();
 

@@ -228,7 +228,7 @@ impl Iterator for GroupIter {
             return None;
         }
 
-        #[cfg(not(any(target_os = "openbsd", target_os = "macos")))]
+        #[cfg(not(any(target_os = "openbsd", target_os = "macos", target_env = "musl")))]
         {
             let result = Group::lookup(
                 |grp: *mut libc::group, buf: &mut [libc::c_char], result: *mut *mut libc::group| unsafe {
@@ -245,8 +245,8 @@ impl Iterator for GroupIter {
             }
         }
 
-        // OpenBSD and macOS don't have getgrent_r()
-        #[cfg(any(target_os = "openbsd", target_os = "macos"))]
+        // OpenBSD, macOS, and musl libc don't have getgrent_r()
+        #[cfg(any(target_os = "openbsd", target_os = "macos", target_env = "musl"))]
         {
             crate::error::set_errno_success();
 
