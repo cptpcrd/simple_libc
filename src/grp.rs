@@ -228,16 +228,41 @@ impl Iterator for GroupIter {
             return None;
         }
 
-        let result = Group::lookup(
-            |pwd: *mut libc::group, buf: &mut [libc::c_char], result: *mut *mut libc::group| unsafe {
-                libc::getgrent_r(pwd, buf.as_mut_ptr(), buf.len() as libc::size_t, result)
-            },
-        );
+        #[cfg(not(any(target_os = "openbsd", target_os = "macos")))]
+        {
+            let result = Group::lookup(
+                |grp: *mut libc::group, buf: &mut [libc::c_char], result: *mut *mut libc::group| unsafe {
+                    libc::getgrent_r(grp, buf.as_mut_ptr(), buf.len() as libc::size_t, result)
+                },
+            );
 
-        match result {
-            Ok(pwd) => pwd,
-            Err(err) => {
-                self.errno = err.raw_os_error().unwrap_or(libc::EINVAL);
+            match result {
+                Ok(grp) => grp,
+                Err(err) => {
+                    self.errno = err.raw_os_error().unwrap_or(libc::EINVAL);
+                    None
+                }
+            }
+        }
+
+        // OpenBSD and macOS don't have getgrent_r()
+        #[cfg(any(target_os = "openbsd", target_os = "macos"))]
+        {
+            crate::error::set_errno_success();
+
+            let grp = unsafe { libc::getgrent() };
+
+            if let Some(grp) = unsafe { grp.as_ref() } {
+                Some(unsafe { Group::parse(grp) })
+            } else {
+                let errno = io::Error::last_os_error().raw_os_error().unwrap_or(libc::EINVAL);
+
+                if errno == 0 {
+                    self.errno = libc::ENOENT;
+                } else {
+                    self.errno = errno;
+                }
+
                 None
             }
         }
