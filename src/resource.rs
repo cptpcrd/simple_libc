@@ -1,6 +1,9 @@
 use std::io;
 
-#[cfg(feature = "serde")]
+#[cfg(all(
+    feature = "serde",
+    any(all(feature = "strum", feature = "strum_macros"), test)
+))]
 use std::str::FromStr;
 
 #[cfg(feature = "serde")]
@@ -20,7 +23,7 @@ type RawResourceType = libc::__rlimit_resource_t;
 type RawResourceType = Int;
 
 #[cfg_attr(
-    any(feature = "strum_macros", test),
+    any(all(feature = "strum", feature = "strum_macros"), test),
     derive(
         strum_macros::Display,
         strum_macros::EnumString,
@@ -108,14 +111,20 @@ pub enum Resource {
     SIGPENDING = libc::RLIMIT_SIGPENDING as isize,
 }
 
-#[cfg(feature = "serde")]
+#[cfg(all(
+    feature = "serde",
+    any(all(feature = "strum", feature = "strum_macros"), test)
+))]
 impl serde::Serialize for Resource {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         serializer.serialize_str(&self.to_string().to_lowercase())
     }
 }
 
-#[cfg(feature = "serde")]
+#[cfg(all(
+    feature = "serde",
+    any(all(feature = "strum", feature = "strum_macros"), test)
+))]
 impl<'d> serde::Deserialize<'d> for Resource {
     fn deserialize<D: serde::Deserializer<'d>>(deserializer: D) -> Result<Self, D::Error> {
         Self::from_str(&String::deserialize(deserializer)?.to_uppercase())
