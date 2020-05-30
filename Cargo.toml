@@ -12,7 +12,7 @@ repository = "https://github.com/cptpcrd/simple_libc"
 [features]
 default = ["serde", "strum", "strum_macros", "prctl"]
 
-prctl = ["strum", "strum_macros"]
+prctl = []
 
 [dependencies]
 libc = { version = "0.2", features = ["extra_traits"] }

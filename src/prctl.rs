@@ -2,123 +2,257 @@ use std::io;
 use std::iter::FromIterator;
 use std::ops::Not;
 
-#[cfg(feature = "serde")]
+#[cfg(all(
+    feature = "serde",
+    any(all(feature = "strum", feature = "strum_macros"), test)
+))]
 use std::str::FromStr;
 
-use lazy_static::lazy_static;
-use strum::IntoEnumIterator;
-
 #[cfg(feature = "serde")]
-use serde::{de::Deserialize, ser::SerializeSeq};
+use serde::de::Deserialize;
+#[cfg(all(
+    feature = "serde",
+    any(all(feature = "strum", feature = "strum_macros"), test)
+))]
+use serde::ser::SerializeSeq;
 
 use crate::constants;
 use crate::error;
 
 use crate::{Int, Ulong};
 
-#[derive(
-    Copy,
-    Clone,
-    Debug,
-    Eq,
-    Hash,
-    PartialEq,
-    strum_macros::Display,
-    strum_macros::EnumString,
-    strum_macros::EnumIter,
+#[cfg_attr(
+    any(all(feature = "strum", feature = "strum_macros"), test),
+    derive(strum_macros::Display, strum_macros::EnumString)
 )]
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
+#[repr(isize)]
 pub enum Cap {
     // POSIX
-    #[strum(serialize = "CAP_CHOWN")]
+    #[cfg_attr(
+        any(all(feature = "strum", feature = "strum_macros"), test),
+        strum(serialize = "CAP_CHOWN")
+    )]
     Chown = constants::CAP_CHOWN,
-    #[strum(serialize = "CAP_DAC_OVERRIDE")]
+    #[cfg_attr(
+        any(all(feature = "strum", feature = "strum_macros"), test),
+        strum(serialize = "CAP_DAC_OVERRIDE")
+    )]
     DacOverride = constants::CAP_DAC_OVERRIDE,
-    #[strum(serialize = "CAP_DAC_READ_SEARCH")]
+    #[cfg_attr(
+        any(all(feature = "strum", feature = "strum_macros"), test),
+        strum(serialize = "CAP_DAC_READ_SEARCH")
+    )]
     DacReadSearch = constants::CAP_DAC_READ_SEARCH,
-    #[strum(serialize = "CAP_FOWNER")]
+    #[cfg_attr(
+        any(all(feature = "strum", feature = "strum_macros"), test),
+        strum(serialize = "CAP_FOWNER")
+    )]
     Fowner = constants::CAP_FOWNER,
-    #[strum(serialize = "CAP_FSETID")]
+    #[cfg_attr(
+        any(all(feature = "strum", feature = "strum_macros"), test),
+        strum(serialize = "CAP_FSETID")
+    )]
     Fsetid = constants::CAP_FSETID,
-    #[strum(serialize = "CAP_KILL")]
+    #[cfg_attr(
+        any(all(feature = "strum", feature = "strum_macros"), test),
+        strum(serialize = "CAP_KILL")
+    )]
     Kill = constants::CAP_KILL,
-    #[strum(serialize = "CAP_SETGID")]
+    #[cfg_attr(
+        any(all(feature = "strum", feature = "strum_macros"), test),
+        strum(serialize = "CAP_SETGID")
+    )]
     Setgid = constants::CAP_SETGID,
-    #[strum(serialize = "CAP_SETUID")]
+    #[cfg_attr(
+        any(all(feature = "strum", feature = "strum_macros"), test),
+        strum(serialize = "CAP_SETUID")
+    )]
     Setuid = constants::CAP_SETUID,
 
     // Linux
-    #[strum(serialize = "CAP_SETPCAP")]
+    #[cfg_attr(
+        any(all(feature = "strum", feature = "strum_macros"), test),
+        strum(serialize = "CAP_SETPCAP")
+    )]
     Setpcap = constants::CAP_SETPCAP,
-    #[strum(serialize = "CAP_LINUX_IMMUTABLE")]
+    #[cfg_attr(
+        any(all(feature = "strum", feature = "strum_macros"), test),
+        strum(serialize = "CAP_LINUX_IMMUTABLE")
+    )]
     LinuxImmutable = constants::CAP_LINUX_IMMUTABLE,
 
-    #[strum(serialize = "CAP_NET_BIND_SERVICE")]
+    #[cfg_attr(
+        any(all(feature = "strum", feature = "strum_macros"), test),
+        strum(serialize = "CAP_NET_BIND_SERVICE")
+    )]
     NetBindService = constants::CAP_NET_BIND_SERVICE,
-    #[strum(serialize = "CAP_NET_BROADCAST")]
+    #[cfg_attr(
+        any(all(feature = "strum", feature = "strum_macros"), test),
+        strum(serialize = "CAP_NET_BROADCAST")
+    )]
     NetBroadcast = constants::CAP_NET_BROADCAST,
-    #[strum(serialize = "CAP_NET_ADMIN")]
+    #[cfg_attr(
+        any(all(feature = "strum", feature = "strum_macros"), test),
+        strum(serialize = "CAP_NET_ADMIN")
+    )]
     NetAdmin = constants::CAP_NET_ADMIN,
-    #[strum(serialize = "CAP_NET_RAW")]
+    #[cfg_attr(
+        any(all(feature = "strum", feature = "strum_macros"), test),
+        strum(serialize = "CAP_NET_RAW")
+    )]
     NetRaw = constants::CAP_NET_RAW,
 
-    #[strum(serialize = "CAP_IPC_LOCK")]
+    #[cfg_attr(
+        any(all(feature = "strum", feature = "strum_macros"), test),
+        strum(serialize = "CAP_IPC_LOCK")
+    )]
     IpcLock = constants::CAP_IPC_LOCK,
-    #[strum(serialize = "CAP_IPC_OWNER")]
+    #[cfg_attr(
+        any(all(feature = "strum", feature = "strum_macros"), test),
+        strum(serialize = "CAP_IPC_OWNER")
+    )]
     IpcOwner = constants::CAP_IPC_OWNER,
 
-    #[strum(serialize = "CAP_SYS_MODULE")]
+    #[cfg_attr(
+        any(all(feature = "strum", feature = "strum_macros"), test),
+        strum(serialize = "CAP_SYS_MODULE")
+    )]
     SysModule = constants::CAP_SYS_MODULE,
-    #[strum(serialize = "CAP_SYS_RAWIO")]
+    #[cfg_attr(
+        any(all(feature = "strum", feature = "strum_macros"), test),
+        strum(serialize = "CAP_SYS_RAWIO")
+    )]
     SysRawio = constants::CAP_SYS_RAWIO,
-    #[strum(serialize = "CAP_SYS_CHROOT")]
+    #[cfg_attr(
+        any(all(feature = "strum", feature = "strum_macros"), test),
+        strum(serialize = "CAP_SYS_CHROOT")
+    )]
     SysChroot = constants::CAP_SYS_CHROOT,
-    #[strum(serialize = "CAP_SYS_PTRACE")]
+    #[cfg_attr(
+        any(all(feature = "strum", feature = "strum_macros"), test),
+        strum(serialize = "CAP_SYS_PTRACE")
+    )]
     SysPtrace = constants::CAP_SYS_PTRACE,
-    #[strum(serialize = "CAP_SYS_PACCT")]
+    #[cfg_attr(
+        any(all(feature = "strum", feature = "strum_macros"), test),
+        strum(serialize = "CAP_SYS_PACCT")
+    )]
     SysPacct = constants::CAP_SYS_PACCT,
-    #[strum(serialize = "CAP_SYS_ADMIN")]
+    #[cfg_attr(
+        any(all(feature = "strum", feature = "strum_macros"), test),
+        strum(serialize = "CAP_SYS_ADMIN")
+    )]
     SysAdmin = constants::CAP_SYS_ADMIN,
-    #[strum(serialize = "CAP_SYS_BOOT")]
+    #[cfg_attr(
+        any(all(feature = "strum", feature = "strum_macros"), test),
+        strum(serialize = "CAP_SYS_BOOT")
+    )]
     SysBoot = constants::CAP_SYS_BOOT,
-    #[strum(serialize = "CAP_SYS_NICE")]
+    #[cfg_attr(
+        any(all(feature = "strum", feature = "strum_macros"), test),
+        strum(serialize = "CAP_SYS_NICE")
+    )]
     SysNice = constants::CAP_SYS_NICE,
-    #[strum(serialize = "CAP_SYS_RESOURCE")]
+    #[cfg_attr(
+        any(all(feature = "strum", feature = "strum_macros"), test),
+        strum(serialize = "CAP_SYS_RESOURCE")
+    )]
     SysResource = constants::CAP_SYS_RESOURCE,
-    #[strum(serialize = "CAP_SYS_TIME")]
+    #[cfg_attr(
+        any(all(feature = "strum", feature = "strum_macros"), test),
+        strum(serialize = "CAP_SYS_TIME")
+    )]
     SysTime = constants::CAP_SYS_TIME,
-    #[strum(serialize = "CAP_SYS_TTY_CONFIG")]
+    #[cfg_attr(
+        any(all(feature = "strum", feature = "strum_macros"), test),
+        strum(serialize = "CAP_SYS_TTY_CONFIG")
+    )]
     SysTtyConfig = constants::CAP_SYS_TTY_CONFIG,
 
-    #[strum(serialize = "CAP_MKNOD")]
+    #[cfg_attr(
+        any(all(feature = "strum", feature = "strum_macros"), test),
+        strum(serialize = "CAP_MKNOD")
+    )]
     Mknod = constants::CAP_MKNOD,
-    #[strum(serialize = "CAP_LEASE")]
+    #[cfg_attr(
+        any(all(feature = "strum", feature = "strum_macros"), test),
+        strum(serialize = "CAP_LEASE")
+    )]
     Lease = constants::CAP_LEASE,
-    #[strum(serialize = "CAP_AUDIT_WRITE")]
+    #[cfg_attr(
+        any(all(feature = "strum", feature = "strum_macros"), test),
+        strum(serialize = "CAP_AUDIT_WRITE")
+    )]
     AuditWrite = constants::CAP_AUDIT_WRITE,
-    #[strum(serialize = "CAP_AUDIT_CONTROL")]
+    #[cfg_attr(
+        any(all(feature = "strum", feature = "strum_macros"), test),
+        strum(serialize = "CAP_AUDIT_CONTROL")
+    )]
     AuditControl = constants::CAP_AUDIT_CONTROL,
-    #[strum(serialize = "CAP_SETFCAP")]
+    #[cfg_attr(
+        any(all(feature = "strum", feature = "strum_macros"), test),
+        strum(serialize = "CAP_SETFCAP")
+    )]
     Setfcap = constants::CAP_SETFCAP,
-    #[strum(serialize = "CAP_MAC_OVERRIDE")]
+    #[cfg_attr(
+        any(all(feature = "strum", feature = "strum_macros"), test),
+        strum(serialize = "CAP_MAC_OVERRIDE")
+    )]
     MacOverride = constants::CAP_MAC_OVERRIDE,
-    #[strum(serialize = "CAP_MAC_ADMIN")]
+    #[cfg_attr(
+        any(all(feature = "strum", feature = "strum_macros"), test),
+        strum(serialize = "CAP_MAC_ADMIN")
+    )]
     MacAdmin = constants::CAP_MAC_ADMIN,
-    #[strum(serialize = "CAP_SYSLOG")]
+    #[cfg_attr(
+        any(all(feature = "strum", feature = "strum_macros"), test),
+        strum(serialize = "CAP_SYSLOG")
+    )]
     Syslog = constants::CAP_SYSLOG,
-    #[strum(serialize = "CAP_WAKE_ALARM")]
+    #[cfg_attr(
+        any(all(feature = "strum", feature = "strum_macros"), test),
+        strum(serialize = "CAP_WAKE_ALARM")
+    )]
     WakeAlarm = constants::CAP_WAKE_ALARM,
-    #[strum(serialize = "CAP_BLOCK_SUSPEND")]
+    #[cfg_attr(
+        any(all(feature = "strum", feature = "strum_macros"), test),
+        strum(serialize = "CAP_BLOCK_SUSPEND")
+    )]
     BlockSuspend = constants::CAP_BLOCK_SUSPEND,
-    #[strum(serialize = "CAP_AUDIT_READ")]
+    #[cfg_attr(
+        any(all(feature = "strum", feature = "strum_macros"), test),
+        strum(serialize = "CAP_AUDIT_READ")
+    )]
     AuditRead = constants::CAP_AUDIT_READ,
+}
+
+impl Cap {
+    pub fn iter() -> CapIter {
+        CapIter { i: 0 }
+    }
+}
+
+pub struct CapIter {
+    i: isize,
+}
+
+impl Iterator for CapIter {
+    type Item = Cap;
+
+    fn next(&mut self) -> Option<Cap> {
+        if self.i <= constants::CAP_MAX {
+            let cap = unsafe { std::mem::transmute(self.i) };
+            self.i += 1;
+            Some(cap)
+        } else {
+            None
+        }
+    }
 }
 
 // Shift to the left, then subtract one to get the lower bits filled with ones.
 const CAP_BITMASK: u64 = ((1 as u64) << (constants::CAP_MAX as u64 + 1)) - 1;
-
-lazy_static! {
-    pub static ref ALL_CAPS: Vec<Cap> = Cap::iter().collect();
-}
 
 impl Cap {
     fn to_single_bitfield(self) -> u64 {
@@ -130,14 +264,20 @@ impl Cap {
     }
 }
 
-#[cfg(feature = "serde")]
+#[cfg(all(
+    feature = "serde",
+    any(all(feature = "strum", feature = "strum_macros"), test)
+))]
 impl serde::Serialize for Cap {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         serializer.serialize_str(&self.to_string())
     }
 }
 
-#[cfg(feature = "serde")]
+#[cfg(all(
+    feature = "serde",
+    any(all(feature = "strum", feature = "strum_macros"), test)
+))]
 impl<'d> serde::Deserialize<'d> for Cap {
     fn deserialize<D: serde::Deserializer<'d>>(deserializer: D) -> Result<Self, D::Error> {
         Self::from_str(&String::deserialize(deserializer)?).map_err(serde::de::Error::custom)
@@ -326,7 +466,10 @@ pub fn deserialize_capset_raw<'d, D: serde::Deserializer<'d>>(
 }
 
 #[allow(clippy::trivially_copy_pass_by_ref)]
-#[cfg(feature = "serde")]
+#[cfg(all(
+    feature = "serde",
+    any(all(feature = "strum", feature = "strum_macros"), test)
+))]
 pub fn serialize_capset_seq<S: serde::Serializer>(
     set: &CapSet,
     serializer: S,
@@ -346,7 +489,10 @@ pub fn serialize_capset_seq<S: serde::Serializer>(
     seq.end()
 }
 
-#[cfg(feature = "serde")]
+#[cfg(all(
+    feature = "serde",
+    any(all(feature = "strum", feature = "strum_macros"), test)
+))]
 pub fn deserialize_capset_seq<'d, D: serde::Deserializer<'d>>(
     deserializer: D,
 ) -> Result<CapSet, D::Error> {
@@ -387,15 +533,15 @@ pub fn deserialize_capset_seq<'d, D: serde::Deserializer<'d>>(
 
 pub struct CapSetIterator {
     bits: u64,
-    i: usize,
+    i: isize,
 }
 
 impl Iterator for CapSetIterator {
     type Item = Cap;
 
     fn next(&mut self) -> Option<Cap> {
-        while self.i < ALL_CAPS.len() {
-            let cap = ALL_CAPS[self.i];
+        while self.i <= constants::CAP_MAX {
+            let cap: Cap = unsafe { std::mem::transmute(self.i) };
             self.i += 1;
 
             if self.bits & cap.to_single_bitfield() != 0 {
@@ -529,8 +675,6 @@ pub fn set_keepcaps(keep: bool) -> io::Result<()> {
 pub mod ambient {
     use std::io;
 
-    use strum::IntoEnumIterator;
-
     use super::{Cap, CapSet};
     use crate::Ulong;
 
@@ -602,8 +746,6 @@ pub mod ambient {
 
 pub mod bounding {
     use std::io;
-
-    use strum::IntoEnumIterator;
 
     use super::{Cap, CapSet};
     use crate::Ulong;
