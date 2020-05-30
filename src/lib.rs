@@ -7,6 +7,7 @@ use std::os::unix::io::FromRawFd;
 
 mod constants;
 mod externs;
+mod internal;
 mod types;
 
 pub mod error;
