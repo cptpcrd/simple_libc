@@ -4,7 +4,7 @@ use cfg_if::cfg_if;
 // libc and must instead be hardcoded.
 
 cfg_if! {
-    if #[cfg(all(target_os = "linux", feature = "prctl"))] {
+    if #[cfg(target_os = "linux")] {
         use crate::Ulong;
 
         // BEGIN USED BY process/capabilities.rs
@@ -67,11 +67,8 @@ cfg_if! {
         pub const _LINUX_CAPABILITY_VERSION_3: u32 = 0x2008_0522;
 
         // END USED BY process/capabilities.rs
-    }
-}
 
-cfg_if! {
-    if #[cfg(target_os = "linux")] {
+
         // BEGIN USED by inotify.rs
         pub const IN_EXCL_UNLINK: u32 = 0x0400_0000;
         pub const IN_MASK_ADD: u32 = 0x2000_0000;
