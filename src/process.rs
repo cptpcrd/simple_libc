@@ -6,6 +6,7 @@ use std::os::unix::ffi::OsStringExt;
 use std::path::Path;
 
 use crate::externs;
+use crate::internal::minus_one_either;
 use crate::{Char, GidT, Int, PidT, UidT};
 
 #[deprecated(since = "0.4.0", note = "Moved out of the 'process' module")]
@@ -259,6 +260,13 @@ pub fn setreuid(ruid: UidT, euid: UidT) -> io::Result<()> {
     crate::error::convert_nzero_ret(unsafe { externs::setreuid(ruid, euid) })
 }
 
+pub fn setreuid2(ruid: Option<UidT>, euid: Option<UidT>) -> io::Result<()> {
+    setreuid(
+        ruid.unwrap_or_else(minus_one_either),
+        euid.unwrap_or_else(minus_one_either),
+    )
+}
+
 pub fn setgid(gid: GidT) -> io::Result<()> {
     crate::error::convert_nzero_ret(unsafe { libc::setgid(gid) })
 }
@@ -269,6 +277,13 @@ pub fn setegid(gid: GidT) -> io::Result<()> {
 
 pub fn setregid(rgid: GidT, egid: GidT) -> io::Result<()> {
     crate::error::convert_nzero_ret(unsafe { externs::setregid(rgid, egid) })
+}
+
+pub fn setregid2(rgid: Option<GidT>, egid: Option<GidT>) -> io::Result<()> {
+    setregid(
+        rgid.unwrap_or_else(minus_one_either),
+        egid.unwrap_or_else(minus_one_either),
+    )
 }
 
 #[cfg(target_os = "linux")]
@@ -344,10 +359,18 @@ crate::attr_group! {
         })
     }
 
+    pub fn setresuid2(ruid: Option<UidT>, euid: Option<UidT>, suid: Option<UidT>) -> io::Result<()> {
+        setresuid(ruid.unwrap_or_else(minus_one_either), euid.unwrap_or_else(minus_one_either), suid.unwrap_or_else(minus_one_either))
+    }
+
     pub fn setresgid(rgid: GidT, egid: GidT, sgid: GidT) -> io::Result<()> {
         crate::error::convert_nzero_ret(unsafe {
             externs::setresgid(rgid, egid, sgid)
         })
+    }
+
+    pub fn setresgid2(rgid: Option<GidT>, egid: Option<GidT>, sgid: Option<GidT>) -> io::Result<()> {
+        setresgid(rgid.unwrap_or_else(minus_one_either), egid.unwrap_or_else(minus_one_either), sgid.unwrap_or_else(minus_one_either))
     }
 
     fn getreuid_impl() -> (UidT, UidT) {
