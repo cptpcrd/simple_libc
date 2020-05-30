@@ -56,14 +56,12 @@ pub fn getpeereid(sock: &unix::net::UnixStream) -> io::Result<(UidT, GidT)> {
     getpeereid_raw(sock.as_raw_fd())
 }
 
-#[cfg(target_os = "linux")]
 pub fn get_peer_ids_raw(sockfd: Int) -> io::Result<(UidT, GidT)> {
-    ucred::get_ucred_raw(sockfd).map(|ucred| (ucred.uid, ucred.gid))
-}
+    #[cfg(target_os = "linux")]
+    return ucred::get_ucred_raw(sockfd).map(|ucred| (ucred.uid, ucred.gid));
 
-#[cfg(not(target_os = "linux"))]
-pub fn get_peer_ids_raw(sockfd: Int) -> io::Result<(UidT, GidT)> {
-    getpeereid_raw(sockfd)
+    #[cfg(not(target_os = "linux"))]
+    return getpeereid_raw(sockfd);
 }
 
 pub fn get_peer_ids(sock: &unix::net::UnixStream) -> io::Result<(UidT, GidT)> {
