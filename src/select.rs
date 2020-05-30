@@ -88,7 +88,7 @@ pub fn build_fdset<T: IntoIterator<Item = Int>>(fds: T) -> (FdSet, Int) {
 
 pub fn build_fdset_slice(fds: &[Int]) -> (FdSet, Int) {
     let mut fdset = FdSet::empty();
-    let mut nfds: Int = 0;
+    let mut nfds = 0;
 
     for fd in fds {
         let fd = *fd;
@@ -100,7 +100,7 @@ pub fn build_fdset_slice(fds: &[Int]) -> (FdSet, Int) {
 }
 
 pub fn build_fdset_opt<T: IntoIterator<Item = Int>>(fds: T, mut nfds: Int) -> (Option<FdSet>, Int) {
-    let mut fdset: Option<FdSet> = None;
+    let mut fdset = None;
 
     for fd in fds {
         if fdset.is_none() {
@@ -221,7 +221,7 @@ fn build_return_vec(
 
     match fdset {
         Some(s) => {
-            let mut res: Vec<Int> = Vec::with_capacity(orig_fds.len());
+            let mut res = Vec::with_capacity(orig_fds.len());
 
             for fd in orig_fds {
                 if s.contains(*fd) {
@@ -345,7 +345,7 @@ mod tests {
         let (r1, mut w1) = pipe_cloexec().unwrap();
         let (r2, mut w2) = pipe_cloexec().unwrap();
 
-        let maxfd: Int = [&r1, &w1, &r2, &w2]
+        let maxfd = [&r1, &w1, &r2, &w2]
             .iter()
             .cloned()
             .map(AsRawFd::as_raw_fd)
@@ -438,7 +438,7 @@ mod tests {
         let (r1, mut w1) = pipe_cloexec().unwrap();
         let (r2, mut w2) = pipe_cloexec().unwrap();
 
-        let maxfd: Int = [&r1, &w1, &r2, &w2]
+        let maxfd = [&r1, &w1, &r2, &w2]
             .iter()
             .cloned()
             .map(AsRawFd::as_raw_fd)

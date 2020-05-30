@@ -17,7 +17,7 @@ impl SignalFd {
     }
 
     pub fn read_one(&self) -> io::Result<Siginfo> {
-        let mut siginfo: Siginfo = unsafe { std::mem::zeroed() };
+        let mut siginfo = unsafe { std::mem::zeroed() };
 
         error::convert_neg(
             unsafe {

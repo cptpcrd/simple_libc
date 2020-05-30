@@ -31,7 +31,7 @@ pub struct PollFd {
 }
 
 pub fn poll(fds: &mut [PollFd], timeout: Option<Duration>) -> io::Result<usize> {
-    let raw_timeout: Int = match timeout {
+    let raw_timeout = match timeout {
         Some(t) => t.as_millis().try_into().unwrap_or(Int::MAX),
         None => -1,
     };

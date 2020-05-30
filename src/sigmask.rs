@@ -6,7 +6,7 @@ use crate::Int;
 fn sigmask(how: Int, set: Option<&Sigset>) -> io::Result<Sigset> {
     let oldset = Sigset::empty();
 
-    let raw_set: *const libc::sigset_t = match set {
+    let raw_set = match set {
         Some(s) => &s.raw_set(),
         None => std::ptr::null(),
     };

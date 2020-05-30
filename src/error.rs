@@ -153,7 +153,7 @@ pub fn while_erange<F: FnMut(i32) -> io::Result<T>, T>(
     mut callback: F,
     max_n: i32,
 ) -> io::Result<T> {
-    let mut i: i32 = 0;
+    let mut i = 0;
 
     loop {
         match callback(i) {

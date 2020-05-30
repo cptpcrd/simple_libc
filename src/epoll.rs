@@ -134,7 +134,7 @@ impl Epoll {
             None => std::ptr::null(),
         };
 
-        let mut ep_events: Vec<libc::epoll_event> = Vec::new();
+        let mut ep_events = Vec::new();
 
         ep_events.resize(maxevents, libc::epoll_event { events: 0, u64: 0 });
 

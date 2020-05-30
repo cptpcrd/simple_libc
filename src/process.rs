@@ -7,7 +7,7 @@ use std::path::Path;
 
 use crate::externs;
 use crate::internal::minus_one_either;
-use crate::{Char, GidT, Int, PidT, UidT};
+use crate::{GidT, Int, PidT, UidT};
 
 #[deprecated(since = "0.4.0", note = "Moved out of the 'process' module")]
 pub mod exec {
@@ -129,7 +129,7 @@ pub fn getgroups_raw(groups: &mut [GidT]) -> io::Result<Int> {
 /// function will make two calls to `getgroups_raw()`, but it may
 /// make more.)
 pub fn getgroups() -> io::Result<Vec<GidT>> {
-    let mut groups: Vec<GidT> = Vec::new();
+    let mut groups = Vec::new();
 
     // Call it with the empty vector to determine the number of groups.
     let init_ngroups = getgroups_raw(&mut groups)?;
@@ -226,7 +226,7 @@ pub fn getlogin() -> io::Result<ffi::OsString> {
     crate::error::while_erange(
         |i| {
             let length = init_length * (i as usize + 1);
-            let mut buf: Vec<Char> = Vec::new();
+            let mut buf = Vec::new();
 
             crate::error::convert_nzero(
                 unsafe {
@@ -336,18 +336,18 @@ crate::attr_group! {
     #![cfg(any(target_os = "linux", target_os = "freebsd", target_os = "openbsd", target_os = "dragonfly"))]
 
     pub fn getresuid() -> (UidT, UidT, UidT) {
-        let mut ruid: UidT = 0;
-        let mut euid: UidT = 0;
-        let mut suid: UidT = 0;
+        let mut ruid = 0;
+        let mut euid = 0;
+        let mut suid = 0;
 
         unsafe { externs::getresuid(&mut ruid, &mut euid, &mut suid); }
         (ruid, euid, suid)
     }
 
     pub fn getresgid() -> (GidT, GidT, GidT) {
-        let mut rgid: GidT = 0;
-        let mut egid: GidT = 0;
-        let mut sgid: GidT = 0;
+        let mut rgid = 0;
+        let mut egid = 0;
+        let mut sgid = 0;
 
         unsafe { externs::getresgid(&mut rgid, &mut egid, &mut sgid); }
         (rgid, egid, sgid)

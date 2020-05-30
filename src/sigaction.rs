@@ -108,9 +108,9 @@ impl From<libc::sigaction> for Sigaction {
 }
 
 fn sigaction(sig: Int, act: Option<Sigaction>) -> io::Result<Sigaction> {
-    let mut oldact: libc::sigaction = unsafe { std::mem::zeroed() };
+    let mut oldact = unsafe { std::mem::zeroed() };
 
-    let mut newact: *const libc::sigaction = std::ptr::null();
+    let mut newact = std::ptr::null();
     if let Some(a) = act {
         newact = &libc::sigaction::from(a);
     }

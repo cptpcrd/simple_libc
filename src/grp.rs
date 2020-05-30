@@ -130,7 +130,7 @@ impl Group {
         let mut buffer = Vec::new();
         buffer.resize(init_size, 0);
 
-        let mut group: libc::group = unsafe { std::mem::zeroed() };
+        let mut group = unsafe { std::mem::zeroed() };
         let mut result = std::ptr::null_mut();
 
         loop {
@@ -150,10 +150,10 @@ impl Group {
     }
 
     unsafe fn parse(group: &libc::group) -> Self {
-        let mut parsed_members: Vec<ffi::OsString> = Vec::new();
+        let mut parsed_members = Vec::new();
 
         for i in 0.. {
-            let member: *mut libc::c_char = *group.gr_mem.offset(i);
+            let member = *group.gr_mem.offset(i);
             if member.is_null() {
                 break;
             }

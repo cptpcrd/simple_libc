@@ -156,7 +156,7 @@ pub fn constrain<T: Ord + Eq>(val: T, min: T, max: T) -> T {
 }
 
 pub fn pipe_raw() -> io::Result<(Int, Int)> {
-    let mut fds: [Int; 2] = [0; 2];
+    let mut fds = [0; 2];
 
     error::convert(unsafe { libc::pipe(fds.as_mut_ptr()) }, fds).map(|fds| (fds[0], fds[1]))
 }
@@ -174,7 +174,7 @@ pub fn pipe() -> io::Result<(fs::File, fs::File)> {
     target_os = "dragonfly",
 ))]
 pub fn pipe2_raw(flags: Int) -> io::Result<(Int, Int)> {
-    let mut fds: [Int; 2] = [0; 2];
+    let mut fds = [0; 2];
 
     error::convert(unsafe { libc::pipe2(fds.as_mut_ptr(), flags) }, fds).map(|fds| (fds[0], fds[1]))
 }
@@ -261,7 +261,7 @@ pub fn gethostname_raw(name_vec: &mut [Char]) -> io::Result<()> {
 
 /// Attempts to determine the current system hostname.
 pub fn gethostname() -> io::Result<ffi::OsString> {
-    let mut name_vec: Vec<Char> = Vec::new();
+    let mut name_vec = Vec::new();
     let orig_size = constrain(sysconf(libc::_SC_HOST_NAME_MAX).unwrap_or(255), 10, 1024) as usize;
     name_vec.resize(orig_size, 0);
 
@@ -312,7 +312,7 @@ pub fn getdomainname_raw(name_vec: &mut Vec<Char>) -> io::Result<()> {
 
 #[cfg(target_os = "linux")]
 pub fn getdomainname() -> io::Result<ffi::OsString> {
-    let mut name_vec: Vec<Char> = Vec::new();
+    let mut name_vec = Vec::new();
     let orig_size = 128;
     name_vec.resize(orig_size, 0);
 
