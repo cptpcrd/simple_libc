@@ -1,3 +1,4 @@
+use std::ops::{BitAnd, BitOr, BitXor, Sub};
 use std::io;
 use std::iter::FromIterator;
 use std::ops::Not;
@@ -426,6 +427,40 @@ impl Not for CapSet {
         Self {
             bits: (!self.bits) & CAP_BITMASK,
         }
+    }
+}
+
+impl BitAnd for CapSet {
+    type Output = Self;
+
+    #[inline]
+    fn bitand(self, rhs: Self) -> Self::Output {
+        self.intersection_with(rhs)
+    }
+}
+
+impl BitOr for CapSet {
+    type Output = Self;
+
+    #[inline]
+    fn bitor(self, rhs: Self) -> Self::Output {
+        self.union_with(rhs)
+    }
+}
+
+impl BitXor for CapSet {
+    type Output = Self;
+
+    fn bitxor(self, rhs: Self) -> Self::Output {
+        Self { bits: self.bits ^ rhs.bits }
+    }
+}
+
+impl Sub for CapSet {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self { bits: self.bits & (!rhs.bits) }
     }
 }
 
@@ -972,6 +1007,38 @@ mod tests {
         a.add(Cap::Chown);
         b.drop(Cap::Chown);
         assert_eq!(!a, b);
+    }
+
+    #[test]
+    fn test_capset_bitor() {
+        let a = CapSet::from_iter(vec![Cap::Chown, Cap::Fowner]);
+        let b = CapSet::from_iter(vec![Cap::Fowner, Cap::Kill]);
+        let c = CapSet::from_iter(vec![Cap::Chown, Cap::Fowner, Cap::Kill]);
+        assert_eq!(a | b , c);
+    }
+
+    #[test]
+    fn test_capset_bitand() {
+        let a = CapSet::from_iter(vec![Cap::Chown, Cap::Fowner]);
+        let b = CapSet::from_iter(vec![Cap::Fowner, Cap::Kill]);
+        let c = CapSet::from_iter(vec![Cap::Fowner]);
+        assert_eq!(a & b, c);
+    }
+
+    #[test]
+    fn test_capset_bitxor() {
+        let a = CapSet::from_iter(vec![Cap::Chown, Cap::Fowner]);
+        let b = CapSet::from_iter(vec![Cap::Fowner, Cap::Kill]);
+        let c = CapSet::from_iter(vec![Cap::Chown, Cap::Kill]);
+        assert_eq!(a ^ b, c);
+    }
+
+    #[test]
+    fn test_capset_sub() {
+        let a = CapSet::from_iter(vec![Cap::Chown, Cap::Fowner]);
+        let b = CapSet::from_iter(vec![Cap::Fowner, Cap::Kill]);
+        let c = CapSet::from_iter(vec![Cap::Chown]);
+        assert_eq!(a - b, c);
     }
 
     #[cfg(feature = "serde")]
