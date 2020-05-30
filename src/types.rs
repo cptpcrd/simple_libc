@@ -1,4 +1,22 @@
 crate::attr_group! {
+    #![cfg(target_os = "linux")]
+
+    #[repr(C)]
+    pub struct c_cap_user_header {
+        pub version: u32,
+        pub pid: libc::c_int,
+    }
+
+    #[derive(Copy, Clone)]
+    #[repr(C)]
+    pub struct c_cap_data_struct {
+        pub effective: u32,
+        pub permitted: u32,
+        pub inheritable: u32,
+    }
+}
+
+crate::attr_group! {
     #![cfg(target_os = "dragonfly")]
 
     use crate::{Uint, UidT, Short, GidT};

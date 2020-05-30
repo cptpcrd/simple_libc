@@ -18,6 +18,8 @@ use serde::ser::SerializeSeq;
 
 use crate::constants;
 use crate::error;
+use crate::externs;
+use crate::types;
 
 use crate::{Int, Ulong};
 
@@ -553,26 +555,6 @@ impl Iterator for CapSetIterator {
     }
 }
 
-#[repr(C)]
-struct c_cap_user_header {
-    version: u32,
-    pid: libc::c_int,
-}
-
-#[derive(Copy, Clone)]
-#[repr(C)]
-struct c_cap_data_struct {
-    effective: u32,
-    permitted: u32,
-    inheritable: u32,
-}
-
-extern "C" {
-    fn capget(hdrp: &mut c_cap_user_header, datap: &mut c_cap_data_struct) -> libc::c_int;
-
-    fn capset(hdrp: &mut c_cap_user_header, datap: &c_cap_data_struct) -> libc::c_int;
-}
-
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
 pub struct CapState {
     pub effective: CapSet,
@@ -587,18 +569,18 @@ impl CapState {
     }
 
     pub fn get_for_pid(pid: Int) -> io::Result<Self> {
-        let mut header = c_cap_user_header {
+        let mut header = types::c_cap_user_header {
             version: constants::_LINUX_CAPABILITY_VERSION_3,
             pid,
         };
 
-        let mut raw_dat = [c_cap_data_struct {
+        let mut raw_dat = [types::c_cap_data_struct {
             effective: 0,
             permitted: 0,
             inheritable: 0,
         }; 2];
 
-        error::convert_nzero(unsafe { capget(&mut header, &mut raw_dat[0]) }, raw_dat).map(
+        error::convert_nzero(unsafe { externs::capget(&mut header, &mut raw_dat[0]) }, raw_dat).map(
             |raw_dat| Self {
                 effective: CapSet::from_bits_safe(Self::combine_raw(
                     raw_dat[0].effective,
@@ -622,7 +604,7 @@ impl CapState {
     }
 
     pub fn set_current(&self) -> io::Result<()> {
-        let mut header = c_cap_user_header {
+        let mut header = types::c_cap_user_header {
             version: constants::_LINUX_CAPABILITY_VERSION_3,
             pid: 0,
         };
@@ -632,19 +614,19 @@ impl CapState {
         let inheritable = self.inheritable.bits;
 
         let raw_dat = [
-            c_cap_data_struct {
+            types::c_cap_data_struct {
                 effective: effective as u32,
                 permitted: permitted as u32,
                 inheritable: inheritable as u32,
             },
-            c_cap_data_struct {
+            types::c_cap_data_struct {
                 effective: (effective >> 32) as u32,
                 permitted: (permitted >> 32) as u32,
                 inheritable: (inheritable >> 32) as u32,
             },
         ];
 
-        error::convert_nzero_ret(unsafe { capset(&mut header, &raw_dat[0]) })
+        error::convert_nzero_ret(unsafe { externs::capset(&mut header, &raw_dat[0]) })
     }
 }
 

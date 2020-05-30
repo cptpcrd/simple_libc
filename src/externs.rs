@@ -44,3 +44,16 @@ extern "C" {
     ) -> libc::c_int;
     pub fn setresgid(rgid: libc::gid_t, egid: libc::gid_t, sgid: libc::gid_t) -> libc::c_int;
 }
+
+#[cfg(target_os = "linux")]
+extern "C" {
+    pub fn capget(
+        hdrp: &mut crate::types::c_cap_user_header,
+        datap: &mut crate::types::c_cap_data_struct,
+    ) -> libc::c_int;
+
+    pub fn capset(
+        hdrp: &mut crate::types::c_cap_user_header,
+        datap: &crate::types::c_cap_data_struct,
+    ) -> libc::c_int;
+}
