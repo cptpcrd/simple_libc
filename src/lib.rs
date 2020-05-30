@@ -59,17 +59,6 @@ attr_group! {
     pub mod signalfd;
 }
 
-/*#[cfg(target_os = "linux")]
-pub mod epoll;
-#[cfg(target_os = "linux")]
-pub mod inotify;
-#[cfg(target_os = "linux")]
-pub mod namespace;
-#[cfg(target_os = "linux")]
-pub mod prctl;
-#[cfg(target_os = "linux")]
-pub mod signalfd;*/
-
 pub type Short = libc::c_short;
 pub type Ushort = libc::c_ushort;
 pub type Int = libc::c_int;
