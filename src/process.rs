@@ -317,56 +317,59 @@ pub fn build_grouplist_inplace(gid: GidT, groups: &mut Vec<GidT>) {
     }
 }
 
-cfg_if::cfg_if! {
-    if #[cfg(any(target_os = "linux", target_os = "freebsd", target_os = "openbsd", target_os = "dragonfly"))] {
-        pub fn getresuid() -> (UidT, UidT, UidT) {
-            let mut ruid: UidT = 0;
-            let mut euid: UidT = 0;
-            let mut suid: UidT = 0;
+crate::attr_group! {
+    #![cfg(any(target_os = "linux", target_os = "freebsd", target_os = "openbsd", target_os = "dragonfly"))]
 
-            unsafe { externs::getresuid(&mut ruid, &mut euid, &mut suid); }
-            (ruid, euid, suid)
-        }
+    pub fn getresuid() -> (UidT, UidT, UidT) {
+        let mut ruid: UidT = 0;
+        let mut euid: UidT = 0;
+        let mut suid: UidT = 0;
 
-        pub fn getresgid() -> (GidT, GidT, GidT) {
-            let mut rgid: GidT = 0;
-            let mut egid: GidT = 0;
-            let mut sgid: GidT = 0;
-
-            unsafe { externs::getresgid(&mut rgid, &mut egid, &mut sgid); }
-            (rgid, egid, sgid)
-        }
-
-        pub fn setresuid(ruid: UidT, euid: UidT, suid: UidT) -> io::Result<()> {
-            crate::error::convert_nzero_ret(unsafe {
-                externs::setresuid(ruid, euid, suid)
-            })
-        }
-
-        pub fn setresgid(rgid: GidT, egid: GidT, sgid: GidT) -> io::Result<()> {
-            crate::error::convert_nzero_ret(unsafe {
-                externs::setresgid(rgid, egid, sgid)
-            })
-        }
-
-        fn getreuid_impl() -> (UidT, UidT) {
-            let (ruid, euid, _) = getresuid();
-            (ruid, euid)
-        }
-
-        fn getregid_impl() -> (GidT, GidT) {
-            let (rgid, egid, _) = getresgid();
-            (rgid, egid)
-        }
+        unsafe { externs::getresuid(&mut ruid, &mut euid, &mut suid); }
+        (ruid, euid, suid)
     }
-    else {
-        fn getreuid_impl() -> (UidT, UidT) {
-            (getuid(), geteuid())
-        }
 
-        fn getregid_impl() -> (GidT, GidT) {
-            (getgid(), getegid())
-        }
+    pub fn getresgid() -> (GidT, GidT, GidT) {
+        let mut rgid: GidT = 0;
+        let mut egid: GidT = 0;
+        let mut sgid: GidT = 0;
+
+        unsafe { externs::getresgid(&mut rgid, &mut egid, &mut sgid); }
+        (rgid, egid, sgid)
+    }
+
+    pub fn setresuid(ruid: UidT, euid: UidT, suid: UidT) -> io::Result<()> {
+        crate::error::convert_nzero_ret(unsafe {
+            externs::setresuid(ruid, euid, suid)
+        })
+    }
+
+    pub fn setresgid(rgid: GidT, egid: GidT, sgid: GidT) -> io::Result<()> {
+        crate::error::convert_nzero_ret(unsafe {
+            externs::setresgid(rgid, egid, sgid)
+        })
+    }
+
+    fn getreuid_impl() -> (UidT, UidT) {
+        let (ruid, euid, _) = getresuid();
+        (ruid, euid)
+    }
+
+    fn getregid_impl() -> (GidT, GidT) {
+        let (rgid, egid, _) = getresgid();
+        (rgid, egid)
+    }
+}
+
+crate::attr_group! {
+    #![cfg(not(any(target_os = "linux", target_os = "freebsd", target_os = "openbsd", target_os = "dragonfly")))]
+
+    fn getreuid_impl() -> (UidT, UidT) {
+        (getuid(), geteuid())
+    }
+
+    fn getregid_impl() -> (GidT, GidT) {
+        (getgid(), getegid())
     }
 }
 

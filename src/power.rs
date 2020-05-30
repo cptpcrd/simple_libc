@@ -24,66 +24,69 @@ bitflags! {
     }
 }
 
-cfg_if::cfg_if! {
-    if #[cfg(target_os = "linux")] {
-        use std::io;
+crate::attr_group! {
+    #![cfg(target_os = "linux")]
 
-        pub fn set_cad_enabled_status(enabled: bool) -> io::Result<()> {
-            let cmd = if enabled {
-                libc::LINUX_REBOOT_CMD_CAD_ON
-            } else {
-                libc::LINUX_REBOOT_CMD_CAD_OFF
-            };
+    use std::io;
 
-            crate::error::convert(unsafe { libc::reboot(cmd) }, ())
-        }
+    pub fn set_cad_enabled_status(enabled: bool) -> io::Result<()> {
+        let cmd = if enabled {
+            libc::LINUX_REBOOT_CMD_CAD_ON
+        } else {
+            libc::LINUX_REBOOT_CMD_CAD_OFF
+        };
 
-        pub fn perform_action(action: Action, flags: ActionFlags) -> io::Result<()> {
-            let reboot_flags = match action {
-                Action::ForceReboot => libc::LINUX_REBOOT_CMD_RESTART,
-                Action::ForceHalt => libc::LINUX_REBOOT_CMD_HALT,
-                Action::ForcePowerOff => libc::LINUX_REBOOT_CMD_POWER_OFF,
-            };
-
-            // Linux does not sync() by default, so we need to do it manually
-            if !flags.contains(ActionFlags::NOSYNC) {
-                crate::sync();
-            }
-
-            unsafe { libc::reboot(reboot_flags); }
-
-            Err(io::Error::last_os_error())
-        }
+        crate::error::convert(unsafe { libc::reboot(cmd) }, ())
     }
-    else if #[cfg(any(target_os = "freebsd", target_os = "openbsd", target_os = "dragonfly", target_os = "netbsd"))] {
-        use std::io;
 
-        use crate::externs;
-        use crate::constants;
+    pub fn perform_action(action: Action, flags: ActionFlags) -> io::Result<()> {
+        let reboot_flags = match action {
+            Action::ForceReboot => libc::LINUX_REBOOT_CMD_RESTART,
+            Action::ForceHalt => libc::LINUX_REBOOT_CMD_HALT,
+            Action::ForcePowerOff => libc::LINUX_REBOOT_CMD_POWER_OFF,
+        };
 
-        pub fn perform_action(action: Action, flags: ActionFlags) -> io::Result<()> {
-            let mut reboot_flags = match action {
-                Action::ForceReboot => constants::RB_AUTOBOOT,
-                Action::ForceHalt => constants::RB_HALT,
-                Action::ForcePowerOff => constants::RB_HALT | constants::RB_POWERDOWN,
-            };
-
-            if flags.contains(ActionFlags::NOSYNC) {
-                reboot_flags |= constants::RB_NOSYNC;
-            }
-
-            #[cfg(any(target_os = "freebsd", target_os = "openbsd", target_os = "dragonfly"))]
-            unsafe { externs::reboot(reboot_flags); }
-
-            #[cfg(target_os = "netbsd")]
-            unsafe {
-                use std::ffi;
-                let empty_str = ffi::CString::new("").unwrap().into_raw();
-                externs::reboot(reboot_flags, empty_str);
-                ffi::CString::from_raw(empty_str);
-            }
-
-            Err(io::Error::last_os_error())
+        // Linux does not sync() by default, so we need to do it manually
+        if !flags.contains(ActionFlags::NOSYNC) {
+            crate::sync();
         }
+
+        unsafe { libc::reboot(reboot_flags); }
+
+        Err(io::Error::last_os_error())
+    }
+}
+
+crate::attr_group! {
+    #![cfg(any(target_os = "freebsd", target_os = "openbsd", target_os = "dragonfly", target_os = "netbsd"))]
+
+    use std::io;
+
+    use crate::externs;
+    use crate::constants;
+
+    pub fn perform_action(action: Action, flags: ActionFlags) -> io::Result<()> {
+        let mut reboot_flags = match action {
+            Action::ForceReboot => constants::RB_AUTOBOOT,
+            Action::ForceHalt => constants::RB_HALT,
+            Action::ForcePowerOff => constants::RB_HALT | constants::RB_POWERDOWN,
+        };
+
+        if flags.contains(ActionFlags::NOSYNC) {
+            reboot_flags |= constants::RB_NOSYNC;
+        }
+
+        #[cfg(any(target_os = "freebsd", target_os = "openbsd", target_os = "dragonfly"))]
+        unsafe { externs::reboot(reboot_flags); }
+
+        #[cfg(target_os = "netbsd")]
+        unsafe {
+            use std::ffi;
+            let empty_str = ffi::CString::new("").unwrap().into_raw();
+            externs::reboot(reboot_flags, empty_str);
+            ffi::CString::from_raw(empty_str);
+        }
+
+        Err(io::Error::last_os_error())
     }
 }

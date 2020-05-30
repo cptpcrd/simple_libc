@@ -38,7 +38,27 @@ pub mod wait;
 ))]
 pub mod flock;
 
-#[cfg(target_os = "linux")]
+#[macro_export]
+macro_rules! attr_group {
+    (#![$attr:meta] $($stmts:item)*) => {
+        $(
+            #[$attr]
+            $stmts
+        )*
+    }
+}
+
+attr_group! {
+    #![cfg(target_os = "linux")]
+
+    pub mod epoll;
+    pub mod inotify;
+    pub mod namespace;
+    pub mod prctl;
+    pub mod signalfd;
+}
+
+/*#[cfg(target_os = "linux")]
 pub mod epoll;
 #[cfg(target_os = "linux")]
 pub mod inotify;
@@ -47,7 +67,7 @@ pub mod namespace;
 #[cfg(target_os = "linux")]
 pub mod prctl;
 #[cfg(target_os = "linux")]
-pub mod signalfd;
+pub mod signalfd;*/
 
 pub type Short = libc::c_short;
 pub type Ushort = libc::c_ushort;
