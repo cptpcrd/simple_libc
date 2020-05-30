@@ -1,5 +1,6 @@
 use std::io;
 
+use crate::internal::{minus_one_signed, MinusOneSigned};
 use crate::Int;
 
 #[cfg(target_os = "linux")]
@@ -29,16 +30,16 @@ pub fn set_errno_success() {
 #[inline]
 pub fn convert_ret<T>(ret: T) -> io::Result<T>
 where
-    T: From<Int> + Eq + Copy,
+    T: MinusOneSigned + Eq + Copy,
 {
     convert(ret, ret)
 }
 
 pub fn convert<T, U>(ret: T, res: U) -> io::Result<U>
 where
-    T: From<Int> + Eq,
+    T: MinusOneSigned + Eq,
 {
-    if ret == T::from(-1) {
+    if ret == minus_one_signed() {
         return Err(io::Error::last_os_error());
     }
 
@@ -48,16 +49,16 @@ where
 #[inline]
 pub fn convert_if_errno_ret<T>(ret: T) -> io::Result<T>
 where
-    T: From<Int> + Eq + Copy,
+    T: MinusOneSigned + Eq + Copy,
 {
     convert_if_errno(ret, ret)
 }
 
 pub fn convert_if_errno<T, U>(ret: T, res: U) -> io::Result<U>
 where
-    T: From<Int> + Eq,
+    T: MinusOneSigned + Eq,
 {
-    if ret == T::from(-1) {
+    if ret == minus_one_signed() {
         return result_or_os_error(res);
     }
 
