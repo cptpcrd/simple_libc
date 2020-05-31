@@ -122,7 +122,7 @@ impl Epoll {
         &self,
         events: &mut [Event],
         timeout: Option<time::Duration>,
-        sigmask: Option<&crate::signal::Sigset>,
+        sigmask: Option<crate::signal::Sigset>,
     ) -> io::Result<Int> {
         let maxevents = events.len();
 
