@@ -3,7 +3,7 @@ use std::os::unix::io::RawFd;
 use std::time::Duration;
 
 use super::{Events, Flags, Poller, Ppoller};
-use crate::epoll::{Epoll, EpollFlags, Events as EpollEvents};
+use crate::epoll::{Epoll, EpollFlags, Events as EpollEvents, RawEvent as RawEpollEvent};
 use crate::signal::Sigset;
 
 #[derive(Debug)]
@@ -60,9 +60,9 @@ impl EpollPoller {
         }
     }
 
-    fn translate_epoll_event(e: &libc::epoll_event) -> Option<(RawFd, Events)> {
-        match Self::translate_events_rev(EpollEvents::from_bits_truncate(e.events)) {
-            Some(ev) => Some((e.u64 as RawFd, ev)),
+    fn translate_epoll_event(e: &RawEpollEvent) -> Option<(RawFd, Events)> {
+        match Self::translate_events_rev(e.events) {
+            Some(ev) => Some((e.data as RawFd, ev)),
             None => None,
         }
     }
@@ -92,9 +92,9 @@ impl Ppoller for EpollPoller {
         timeout: Option<Duration>,
         sigmask: Option<Sigset>,
     ) -> io::Result<Vec<(RawFd, Events)>> {
-        let mut events = [libc::epoll_event {
-            events: EpollEvents::empty().bits(),
-            u64: 0,
+        let mut events = [RawEpollEvent {
+            events: EpollEvents::empty(),
+            data: 0,
         }; 10];
 
         let n = self.epoll.pwait_raw(&mut events, timeout, sigmask)? as usize;

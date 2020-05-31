@@ -31,6 +31,14 @@ bitflags! {
 }
 
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
+#[repr(C)]
+#[repr(packed)]
+pub struct RawEvent {
+    pub events: Events,
+    pub data: u64,
+}
+
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Event {
     pub events: Events,
     pub data: u64,
@@ -127,14 +135,14 @@ impl Epoll {
         let maxevents = events.len();
 
         let mut ep_events = Vec::new();
-        ep_events.resize(maxevents, libc::epoll_event { events: 0, u64: 0 });
+        ep_events.resize(maxevents, RawEvent { events: Events::empty(), data: 0 });
 
         self.pwait_raw(&mut ep_events, timeout, sigmask)
         .map(|res| {
             for i in 0..(res as usize) {
                 events[i] = Event {
-                    events: Events::from_bits_truncate(ep_events[i].events),
-                    data: ep_events[i].u64,
+                    events: ep_events[i].events,
+                    data: ep_events[i].data,
                 };
             }
             res
@@ -143,7 +151,7 @@ impl Epoll {
 
     pub fn pwait_raw(
         &self,
-        events: &mut [libc::epoll_event],
+        events: &mut [RawEvent],
         timeout: Option<time::Duration>,
         sigmask: Option<crate::signal::Sigset>,
     ) -> io::Result<Int> {
@@ -160,7 +168,7 @@ impl Epoll {
         crate::error::convert_neg_ret(unsafe {
             libc::epoll_pwait(
                 self.fd,
-                events.as_mut_ptr(),
+                events.as_mut_ptr() as *mut libc::epoll_event,
                 events.len() as Int,
                 raw_timeout,
                 raw_sigmask,
@@ -175,7 +183,7 @@ impl Epoll {
 
 
     #[inline]
-    pub fn wait_raw(&self, events: &mut [libc::epoll_event], timeout: Option<time::Duration>) -> io::Result<Int> {
+    pub fn wait_raw(&self, events: &mut [RawEvent], timeout: Option<time::Duration>) -> io::Result<Int> {
         self.pwait_raw(events, timeout, None)
     }
 }
@@ -207,6 +215,8 @@ mod tests {
 
     #[test]
     fn test_epoll() {
+        assert_eq!(std::mem::size_of::<RawEvent>(), std::mem::size_of::<libc::epoll_event>());
+
         let mut poller = Epoll::new(EpollFlags::CLOEXEC).unwrap();
         let mut events = [Event::default(); 3];
 
