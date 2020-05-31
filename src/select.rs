@@ -100,18 +100,22 @@ pub fn build_fdset_slice(fds: &[Int]) -> (FdSet, Int) {
 }
 
 pub fn build_fdset_opt<T: IntoIterator<Item = Int>>(fds: T, mut nfds: Int) -> (Option<FdSet>, Int) {
-    let mut fdset = None;
+    let mut it = fds.into_iter();
 
-    for fd in fds {
-        if fdset.is_none() {
-            fdset = Some(FdSet::empty());
+    if let Some(fd) = it.next() {
+        let mut fdset = FdSet::empty();
+        fdset.add(fd);
+        nfds = std::cmp::max(nfds, fd + 1);
+
+        for fd in it {
+            fdset.add(fd);
+            nfds = std::cmp::max(nfds, fd + 1);
         }
 
-        fdset.as_mut().unwrap().add(fd);
-        nfds = std::cmp::max(nfds, fd + 1);
+        (Some(fdset), nfds)
+    } else {
+        (None, nfds)
     }
-
-    (fdset, nfds)
 }
 
 pub fn build_fdset_opt_slice(fds: &[Int], mut nfds: Int) -> (Option<FdSet>, Int) {
