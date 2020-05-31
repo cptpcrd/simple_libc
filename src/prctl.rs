@@ -1231,10 +1231,15 @@ mod tests {
     #[test]
     fn test_keepcaps() {
         let old_keepcaps = get_keepcaps().unwrap();
+
         set_keepcaps(true).unwrap();
         assert!(get_keepcaps().unwrap());
+        assert!(secbits::get().unwrap().contains(secbits::SecFlags::KEEP_CAPS));
+
         set_keepcaps(false).unwrap();
         assert!(!get_keepcaps().unwrap());
+        assert!(!secbits::get().unwrap().contains(secbits::SecFlags::KEEP_CAPS));
+
         set_keepcaps(old_keepcaps).unwrap();
     }
 
