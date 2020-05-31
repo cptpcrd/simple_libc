@@ -1,6 +1,7 @@
 use std::convert::TryInto;
 use std::io;
 use std::time;
+use std::os::unix::io::{AsRawFd, RawFd};
 
 use bitflags::bitflags;
 
@@ -64,9 +65,10 @@ impl Epoll {
         crate::error::convert_neg_ret(fd).map(|fd| Epoll { fd })
     }
 
+    #[deprecated(since = "0.5.0", note = "Use `as_raw_fd()` instead")]
     #[inline]
     pub fn fd(&self) -> Int {
-        self.fd
+        self.as_raw_fd()
     }
 
     fn ctl(&mut self, op: CtlOp, fd: Int, events: Events, data: u64) -> io::Result<()> {
@@ -164,6 +166,13 @@ impl Epoll {
     }
 }
 
+impl AsRawFd for Epoll {
+    #[inline]
+    fn as_raw_fd(&self) -> RawFd {
+        self.fd
+    }
+}
+
 impl Drop for Epoll {
     #[inline]
     fn drop(&mut self) {
@@ -186,6 +195,12 @@ mod tests {
     fn test_epoll() {
         let mut poller = Epoll::new(EpollFlags::CLOEXEC).unwrap();
         let mut events = [Event::default(); 3];
+
+        assert_eq!(poller.fd, poller.as_raw_fd());
+        #[allow(deprecated)]
+        {
+            assert_eq!(poller.fd(), poller.as_raw_fd());
+        }
 
         let (r1, mut w1) = pipe2(libc::O_CLOEXEC).unwrap();
         let (r2, mut w2) = pipe2(libc::O_CLOEXEC).unwrap();
