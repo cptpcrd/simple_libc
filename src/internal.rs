@@ -79,3 +79,45 @@ pub fn minus_one_signed<T: MinusOneSigned>() -> T {
 pub fn minus_one_unsigned<T: MinusOneUnsigned>() -> T {
     T::minus_one()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_minus_one_either() {
+        assert_eq!(minus_one_either::<i8>(), -1);
+        assert_eq!(minus_one_either::<i16>(), -1);
+        assert_eq!(minus_one_either::<i32>(), -1);
+        assert_eq!(minus_one_either::<i64>(), -1);
+        assert_eq!(minus_one_either::<i128>(), -1);
+        assert_eq!(minus_one_either::<isize>(), -1);
+
+        assert_eq!(minus_one_either::<u8>(), (-1i8) as u8);
+        assert_eq!(minus_one_either::<u16>(), (-1i16) as u16);
+        assert_eq!(minus_one_either::<u32>(), (-1i32) as u32);
+        assert_eq!(minus_one_either::<u64>(), (-1i64) as u64);
+        assert_eq!(minus_one_either::<u128>(), (-1i128) as u128);
+        assert_eq!(minus_one_either::<usize>(), (-1isize) as usize);
+    }
+
+    #[test]
+    fn test_minus_one_signed() {
+        assert_eq!(minus_one_signed::<i8>(), -1);
+        assert_eq!(minus_one_signed::<i16>(), -1);
+        assert_eq!(minus_one_signed::<i32>(), -1);
+        assert_eq!(minus_one_signed::<i64>(), -1);
+        assert_eq!(minus_one_signed::<i128>(), -1);
+        assert_eq!(minus_one_signed::<isize>(), -1);
+    }
+
+    #[test]
+    fn test_minus_one_unsigned() {
+        assert_eq!(minus_one_unsigned::<u8>(), (-1i8) as u8);
+        assert_eq!(minus_one_unsigned::<u16>(), (-1i16) as u16);
+        assert_eq!(minus_one_unsigned::<u32>(), (-1i32) as u32);
+        assert_eq!(minus_one_unsigned::<u64>(), (-1i64) as u64);
+        assert_eq!(minus_one_unsigned::<u128>(), (-1i128) as u128);
+        assert_eq!(minus_one_unsigned::<usize>(), (-1isize) as usize);
+    }
+}
