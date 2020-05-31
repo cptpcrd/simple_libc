@@ -1,13 +1,14 @@
-use std::ffi;
+use std::ffi::{CString, OsStr};
 use std::io;
+use std::os::unix::ffi::OsStrExt;
 
 use crate::Char;
 
-fn build_c_string_vec<U: Into<Vec<u8>> + Clone + Sized>(vals: &[U]) -> io::Result<Vec<*mut Char>> {
+fn build_c_string_vec<U: AsRef<OsStr>>(vals: &[U]) -> io::Result<Vec<*mut Char>> {
     let mut c_vals: Vec<*mut Char> = Vec::with_capacity(vals.len() + 1);
 
     for val in vals {
-        c_vals.push(ffi::CString::new(val.clone())?.into_raw())
+        c_vals.push(CString::new(val.as_ref().as_bytes())?.into_raw())
     }
 
     c_vals.push(std::ptr::null_mut());
@@ -19,7 +20,7 @@ fn cleanup_c_string_vec(c_vals: Vec<*mut libc::c_char>) {
     for val in c_vals {
         if !val.is_null() {
             unsafe {
-                let _ = ffi::CString::from_raw(val);
+                let _ = CString::from_raw(val);
             }
         }
     }
@@ -30,8 +31,8 @@ fn cleanup_c_string_vec(c_vals: Vec<*mut libc::c_char>) {
 /// a full path should be specified.
 ///
 /// If this function returns, it means an error occurred.
-pub fn execv<U: Into<Vec<u8>> + Clone + Sized>(prog: &str, argv: &[U]) -> io::Result<()> {
-    let c_prog = ffi::CString::new(prog)?;
+pub fn execv<T: AsRef<OsStr>, U: AsRef<OsStr>>(prog: T, argv: &[U]) -> io::Result<()> {
+    let c_prog = CString::new(prog.as_ref().as_bytes())?;
     let c_argv = build_c_string_vec(argv)?;
 
     unsafe {
@@ -48,12 +49,12 @@ pub fn execv<U: Into<Vec<u8>> + Clone + Sized>(prog: &str, argv: &[U]) -> io::Re
 /// perform a `PATH` lookup, so a full path should be specified.
 ///
 /// If this function returns, it means an error occurred.
-pub fn execve<U: Into<Vec<u8>> + Clone + Sized, V: Into<Vec<u8>> + Clone + Sized>(
-    prog: &str,
+pub fn execve<T: AsRef<OsStr>, U: AsRef<OsStr>, V: AsRef<OsStr>>(
+    prog: T,
     argv: &[U],
     env: &[V],
 ) -> io::Result<()> {
-    let c_prog = ffi::CString::new(prog)?;
+    let c_prog = CString::new(prog.as_ref().as_bytes())?;
     let c_argv = build_c_string_vec(argv)?;
     let c_env = build_c_string_vec(env)?;
 
@@ -80,7 +81,7 @@ pub fn execve<U: Into<Vec<u8>> + Clone + Sized, V: Into<Vec<u8>> + Clone + Sized
 ///
 /// If this function returns, it means an error occurred.
 #[cfg(target_os = "linux")]
-pub fn fexecve<U: Into<Vec<u8>> + Clone + Sized, V: Into<Vec<u8>> + Clone + Sized>(
+pub fn fexecve<U: AsRef<OsStr>, V: AsRef<OsStr>>(
     fd: crate::Int,
     argv: &[U],
     env: &[V],
@@ -107,8 +108,8 @@ pub fn fexecve<U: Into<Vec<u8>> + Clone + Sized, V: Into<Vec<u8>> + Clone + Size
 /// a full path is not necessary.
 ///
 /// If this function returns, it means an error occurred.
-pub fn execvp<U: Into<Vec<u8>> + Clone + Sized>(prog: &str, argv: &[U]) -> io::Result<()> {
-    let c_prog = ffi::CString::new(prog)?;
+pub fn execvp<T: AsRef<OsStr>, U: AsRef<OsStr>>(prog: T, argv: &[U]) -> io::Result<()> {
+    let c_prog = CString::new(prog.as_ref().as_bytes())?;
     let c_argv = build_c_string_vec(argv)?;
 
     unsafe {
