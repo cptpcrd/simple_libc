@@ -57,6 +57,7 @@ pub fn getpeereid(sock: &unix::net::UnixStream) -> io::Result<(UidT, GidT)> {
     getpeereid_raw(sock.as_raw_fd())
 }
 
+#[allow(clippy::needless_return)]
 pub fn get_peer_ids_raw(sockfd: Int) -> io::Result<(UidT, GidT)> {
     #[cfg(target_os = "linux")]
     {
