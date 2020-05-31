@@ -223,25 +223,32 @@ pub fn getlogin() -> io::Result<ffi::OsString> {
         1024,
     ) as usize;
 
-    crate::error::while_erange(
-        |i| {
-            let length = init_length * (i as usize + 1);
-            let mut buf = Vec::new();
+    let max_length = 1024;
 
-            crate::error::convert_nzero_ret(unsafe {
-                buf.resize(length, 0);
-                externs::getlogin_r(buf.as_mut_ptr(), length)
-            })?;
+    let mut buf = Vec::new();
+    buf.resize(init_length, 0);
 
-            Ok(ffi::OsString::from_vec(
-                buf.iter()
-                    .take_while(|x| **x > 0)
-                    .map(|x| *x as u8)
-                    .collect(),
-            ))
-        },
-        10,
-    )
+    loop {
+        match crate::error::convert_nzero_ret(unsafe {
+            externs::getlogin_r(buf.as_mut_ptr(), buf.len())
+        }) {
+            Ok(()) => {
+                return Ok(ffi::OsString::from_vec(
+                    buf.iter()
+                        .take_while(|x| **x > 0)
+                        .map(|x| *x as u8)
+                        .collect(),
+                ));
+            }
+            Err(e) => {
+                if !crate::error::is_erange(&e) || buf.len() >= max_length {
+                    return Err(e);
+                }
+            }
+        }
+
+        buf.resize(buf.len() * 2, 0);
+    }
 }
 
 pub fn setuid(uid: UidT) -> io::Result<()> {
