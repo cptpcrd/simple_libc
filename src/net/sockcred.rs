@@ -68,29 +68,27 @@ pub fn recv_sockcred_raw(sockfd: Int, block: bool) -> io::Result<Sockcred> {
         msg_flags: 0,
     };
 
-    error::convert_neg_ret(unsafe { libc::recvmsg(sockfd, &mut msg, flags) }).and_then(|nbytes| {
-        let nbytes = nbytes as usize;
+    let nbytes = error::convert_neg_ret(unsafe { libc::recvmsg(sockfd, &mut msg, flags) })? as usize;
 
-        if nbytes < std::mem::size_of::<libc::sockcred>() || nbytes > cmsg_dat.len() {
-            Err(io::Error::from_raw_os_error(libc::EIO))
-        } else {
-            #[allow(clippy::cast_ptr_alignment)]
-            let raw_sockcred = unsafe {
-                &*(libc::CMSG_DATA(cmsg_dat.as_ptr() as *const libc::cmsghdr)
-                    as *const libc::sockcred)
-            };
+    if nbytes < std::mem::size_of::<libc::sockcred>() || nbytes > cmsg_dat.len() {
+        Err(io::Error::from_raw_os_error(libc::EIO))
+    } else {
+        #[allow(clippy::cast_ptr_alignment)]
+        let raw_sockcred = unsafe {
+            &*(libc::CMSG_DATA(cmsg_dat.as_ptr() as *const libc::cmsghdr)
+                as *const libc::sockcred)
+        };
 
-            Ok(Sockcred {
-                #[cfg(target_os = "netbsd")]
-                pid: raw_sockcred.sc_pid,
-                ruid: raw_sockcred.sc_uid,
-                euid: raw_sockcred.sc_euid,
-                rgid: raw_sockcred.sc_gid,
-                egid: raw_sockcred.sc_egid,
-                groups: read_sockcred_groups(&raw_sockcred),
-            })
-        }
-    })
+        Ok(Sockcred {
+            #[cfg(target_os = "netbsd")]
+            pid: raw_sockcred.sc_pid,
+            ruid: raw_sockcred.sc_uid,
+            euid: raw_sockcred.sc_euid,
+            rgid: raw_sockcred.sc_gid,
+            egid: raw_sockcred.sc_egid,
+            groups: read_sockcred_groups(&raw_sockcred),
+        })
+    }
 }
 
 fn read_sockcred_groups(cred: &libc::sockcred) -> Vec<GidT> {

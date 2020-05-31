@@ -41,8 +41,9 @@ pub fn getpeereid_raw(sockfd: Int) -> io::Result<(UidT, GidT)> {
     let mut uid = 0;
     let mut gid = 0;
 
-    crate::error::convert_nzero_ret(unsafe { libc::getpeereid(sockfd, &mut uid, &mut gid) })
-        .map(|()| (uid, gid))
+    crate::error::convert_nzero_ret(unsafe { libc::getpeereid(sockfd, &mut uid, &mut gid) })?;
+
+    Ok((uid, gid))
 }
 
 #[cfg(any(

@@ -37,21 +37,20 @@ pub fn get_ucred_raw(sockfd: Int) -> io::Result<Ucred> {
         gid: 0,
     };
 
-    unsafe {
+    let len = unsafe {
         super::getsockopt_raw(
             sockfd,
             libc::SOL_SOCKET,
             SO_PEERCRED,
             std::slice::from_mut(&mut ucred),
         )
+    }?;
+
+    if len == std::mem::size_of::<Ucred>() as SocklenT {
+        Ok(ucred)
+    } else {
+        Err(io::Error::from_raw_os_error(libc::EINVAL))
     }
-    .and_then(|len| {
-        if len == std::mem::size_of::<Ucred>() as SocklenT {
-            Ok(ucred)
-        } else {
-            Err(io::Error::from_raw_os_error(libc::EINVAL))
-        }
-    })
 }
 
 /// Attempts to read credentials from the given Unix stream socket.
