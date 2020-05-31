@@ -1,6 +1,8 @@
 use std::ffi;
 use std::io;
-use std::os::unix::ffi::OsStringExt;
+use std::io::BufRead;
+use std::os::unix::ffi::{OsStrExt, OsStringExt};
+use std::str::FromStr;
 
 use lazy_static::lazy_static;
 
@@ -115,6 +117,58 @@ impl Passwd {
     #[inline]
     pub unsafe fn iter_single_thread_dangerous() -> PasswdIter {
         PasswdIter::new()
+    }
+
+    pub fn list_from_reader<R: io::Read>(reader: R) -> io::Result<Vec<Self>> {
+        let mut reader = io::BufReader::new(reader);
+        let mut line_vec = Vec::new();
+        let mut passwds = Vec::new();
+
+        loop {
+            if reader.read_until(b'\n', &mut line_vec)? == 0 {
+                return Ok(passwds);
+            }
+
+            if line_vec[line_vec.len() - 1] == b'\n' {
+                line_vec.pop();
+            }
+
+            let mut it = line_vec.split(|c| *c == b':');
+
+            let name_slice = it.next().unwrap_or(&[]);
+            let passwd_slice = it.next().unwrap_or(&[]);
+            let uid = Self::parse_str_from_bytes(it.next().unwrap_or(&[]))?;
+            let gid = Self::parse_str_from_bytes(it.next().unwrap_or(&[]))?;
+            let gecos_info_slice = it.next().unwrap_or(&[]);
+            let home_dir_slice = it.next().unwrap_or(&[]);
+            let shell_slice = it.next().unwrap_or(&[]);
+
+            if it.next() != None {
+                return Err(std::io::Error::from_raw_os_error(libc::EINVAL));
+            }
+
+            passwds.push(Self {
+                name: ffi::OsString::from_vec(name_slice.into()),
+                passwd: ffi::OsString::from_vec(passwd_slice.into()),
+                uid,
+                gid,
+                gecos_info: ffi::OsString::from_vec(gecos_info_slice.into()),
+                home_dir: ffi::OsString::from_vec(home_dir_slice.into()),
+                shell: ffi::OsString::from_vec(shell_slice.into()),
+            });
+
+            line_vec.clear();
+        }
+    }
+
+    fn parse_str_from_bytes<T: FromStr>(bytes: &[u8]) -> io::Result<T> {
+        if let Some(s) = ffi::OsStr::from_bytes(bytes).to_str() {
+            if let Ok(val) = s.parse() {
+                return Ok(val);
+            }
+        }
+
+        Err(std::io::Error::from_raw_os_error(libc::EINVAL))
     }
 
     fn lookup<F>(getpwfunc: F) -> io::Result<Option<Self>>
@@ -380,5 +434,76 @@ mod tests {
         }
 
         assert!(err.is_none());
+    }
+
+    #[test]
+    fn test_list_from_reader() {
+        assert_eq!(
+            Passwd::list_from_reader(b"user:pwd:1:2:gecos:/:/bin/sh".as_ref()).unwrap(),
+            vec![Passwd {
+                name: ffi::OsString::from("user"),
+                passwd: ffi::OsString::from("pwd"),
+                uid: 1,
+                gid: 2,
+                gecos_info: ffi::OsString::from("gecos"),
+                home_dir: ffi::OsString::from("/"),
+                shell: ffi::OsString::from("/bin/sh"),
+            }],
+        );
+
+        assert_eq!(
+            Passwd::list_from_reader(b"user:pwd:1:2:gecos:/:/bin/sh\n".as_ref()).unwrap(),
+            vec![Passwd {
+                name: ffi::OsString::from("user"),
+                passwd: ffi::OsString::from("pwd"),
+                uid: 1,
+                gid: 2,
+                gecos_info: ffi::OsString::from("gecos"),
+                home_dir: ffi::OsString::from("/"),
+                shell: ffi::OsString::from("/bin/sh"),
+            }],
+        );
+    }
+
+    #[test]
+    #[allow(clippy::float_cmp)]
+    fn test_parse_str_from_bytes() {
+        assert_eq!(
+            Passwd::parse_str_from_bytes::<i32>(b"1".as_ref()).unwrap(),
+            1,
+        );
+        assert_eq!(
+            Passwd::parse_str_from_bytes::<i32>(b"-1".as_ref()).unwrap(),
+            -1,
+        );
+        assert_eq!(
+            Passwd::parse_str_from_bytes::<f32>(b"0.0".as_ref()).unwrap(),
+            0.0,
+        );
+
+        assert_eq!(
+            Passwd::parse_str_from_bytes::<i32>(b"".as_ref())
+                .unwrap_err()
+                .raw_os_error(),
+            Some(libc::EINVAL),
+        );
+        assert_eq!(
+            Passwd::parse_str_from_bytes::<i32>(b"a".as_ref())
+                .unwrap_err()
+                .raw_os_error(),
+            Some(libc::EINVAL),
+        );
+        assert_eq!(
+            Passwd::parse_str_from_bytes::<i32>(b"1a".as_ref())
+                .unwrap_err()
+                .raw_os_error(),
+            Some(libc::EINVAL),
+        );
+        assert_eq!(
+            Passwd::parse_str_from_bytes::<i32>(b"1.".as_ref())
+                .unwrap_err()
+                .raw_os_error(),
+            Some(libc::EINVAL),
+        );
     }
 }
