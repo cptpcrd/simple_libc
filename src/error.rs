@@ -40,10 +40,10 @@ where
     T: MinusOneSigned + Eq,
 {
     if ret == minus_one_signed() {
-        return Err(io::Error::last_os_error());
+        Err(io::Error::last_os_error())
+    } else {
+        Ok(res)
     }
-
-    Ok(res)
 }
 
 #[inline]
@@ -59,10 +59,10 @@ where
     T: MinusOneSigned + Eq,
 {
     if ret == minus_one_signed() {
-        return result_or_os_error(res);
+        result_or_os_error(res)
+    } else {
+        Ok(res)
     }
-
-    Ok(res)
 }
 
 #[inline]
@@ -78,10 +78,10 @@ where
     T: Default + Ord,
 {
     if ret < T::default() {
-        return Err(io::Error::last_os_error());
+        Err(io::Error::last_os_error())
+    } else {
+        Ok(res)
     }
-
-    Ok(res)
 }
 
 #[inline]
@@ -97,10 +97,10 @@ where
     T: Default + Eq,
 {
     if ret != T::default() {
-        return Err(io::Error::last_os_error());
+        Err(io::Error::last_os_error())
+    } else {
+        Ok(res)
     }
-
-    Ok(res)
 }
 
 pub fn result_or_os_error<T>(res: T) -> io::Result<T> {
@@ -108,45 +108,30 @@ pub fn result_or_os_error<T>(res: T) -> io::Result<T> {
 
     // Success
     if let Some(0) = err.raw_os_error() {
-        return Ok(res);
+        Ok(res)
+    } else {
+        Err(err)
     }
-
-    Err(err)
 }
 
 pub fn is_erange(err: &io::Error) -> bool {
-    if let Some(libc::ERANGE) = err.raw_os_error() {
-        return true;
-    }
-    false
+    err.raw_os_error() == Some(libc::ERANGE)
 }
 
 pub fn is_eintr(err: &io::Error) -> bool {
-    if let Some(libc::EINTR) = err.raw_os_error() {
-        return true;
-    }
-    false
+    err.raw_os_error() == Some(libc::EINTR)
 }
 
 pub fn is_eagain(err: &io::Error) -> bool {
-    if let Some(libc::EAGAIN) = err.raw_os_error() {
-        return true;
-    }
-    false
+    err.raw_os_error() == Some(libc::EAGAIN)
 }
 
 pub fn is_einval(err: &io::Error) -> bool {
-    if let Some(libc::EINVAL) = err.raw_os_error() {
-        return true;
-    }
-    false
+    err.raw_os_error() == Some(libc::EINVAL)
 }
 
 pub fn is_ewouldblock(err: &io::Error) -> bool {
-    if let Some(libc::EWOULDBLOCK) = err.raw_os_error() {
-        return true;
-    }
-    false
+    err.raw_os_error() == Some(libc::EWOULDBLOCK)
 }
 
 pub fn while_erange<F: FnMut(i32) -> io::Result<T>, T>(
