@@ -68,6 +68,30 @@ pub fn get_peer_ids(sock: &unix::net::UnixStream) -> io::Result<(UidT, GidT)> {
     get_peer_ids_raw(sock.as_raw_fd())
 }
 
+#[cfg(any(
+    target_os = "linux",
+    target_os = "openbsd",
+    target_os = "netbsd",
+    target_os = "freebsd",
+))]
+pub fn get_peer_pid_ids_raw(sockfd: Int) -> io::Result<(crate::PidT, UidT, GidT)> {
+    #[cfg(any(target_os = "linux", target_os = "openbsd", target_os = "netbsd"))]
+    return ucred::get_ucred_raw(sockfd).map(|ucred| (ucred.pid, ucred.uid, ucred.gid));
+
+    #[cfg(target_os = "freebsd")]
+    return xucred::get_xucred_raw(sockfd).map(|xucred| (xucred.pid, xucred.uid, xucred.gid));
+}
+
+#[cfg(any(
+    target_os = "linux",
+    target_os = "openbsd",
+    target_os = "netbsd",
+    target_os = "freebsd",
+))]
+pub fn get_peer_pid_ids(sock: &unix::net::UnixStream) -> io::Result<(crate::PidT, UidT, GidT)> {
+    get_peer_pid_ids_raw(sock.as_raw_fd())
+}
+
 /// Obtain the value of the given socket option.
 ///
 /// This function is a simple wrapper around `libc::getsockopt()` that reads
@@ -209,6 +233,27 @@ mod tests {
         assert_eq!(agid, process::getgid());
 
         let (buid, bgid) = get_peer_ids(&b).unwrap();
+        assert_eq!(buid, process::getuid());
+        assert_eq!(bgid, process::getgid());
+    }
+
+    #[cfg(any(
+        target_os = "linux",
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "freebsd",
+    ))]
+    #[test]
+    fn test_get_peer_pid_ids() {
+        let (a, b) = UnixStream::pair().unwrap();
+
+        let (apid, auid, agid) = get_peer_pid_ids(&a).unwrap();
+        assert_eq!(apid, process::getpid());
+        assert_eq!(auid, process::getuid());
+        assert_eq!(agid, process::getgid());
+
+        let (bpid, buid, bgid) = get_peer_pid_ids(&b).unwrap();
+        assert_eq!(bpid, process::getpid());
         assert_eq!(buid, process::getuid());
         assert_eq!(bgid, process::getgid());
     }
