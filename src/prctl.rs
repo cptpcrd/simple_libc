@@ -665,28 +665,28 @@ impl CapState {
     }
 }
 
-fn prctl(option: Int, arg2: Ulong, arg3: Ulong, arg4: Ulong, arg5: Ulong) -> io::Result<Int> {
-    error::convert_neg_ret(unsafe { libc::prctl(option, arg2, arg3, arg4, arg5) })
+unsafe fn prctl(option: Int, arg2: Ulong, arg3: Ulong, arg4: Ulong, arg5: Ulong) -> io::Result<Int> {
+    error::convert_neg_ret(libc::prctl(option, arg2, arg3, arg4, arg5))
 }
 
 #[inline]
 pub fn get_no_new_privs() -> io::Result<bool> {
-    prctl(libc::PR_GET_NO_NEW_PRIVS, 0, 0, 0, 0).map(|x| x != 0)
+    unsafe { prctl(libc::PR_GET_NO_NEW_PRIVS, 0, 0, 0, 0).map(|x| x != 0) }
 }
 
 #[inline]
 pub fn set_no_new_privs() -> io::Result<()> {
-    prctl(libc::PR_GET_NO_NEW_PRIVS, 1, 0, 0, 0).and(Ok(()))
+    unsafe { prctl(libc::PR_GET_NO_NEW_PRIVS, 1, 0, 0, 0).and(Ok(())) }
 }
 
 #[inline]
 pub fn get_keepcaps() -> io::Result<bool> {
-    prctl(libc::PR_GET_KEEPCAPS, 0, 0, 0, 0).map(|x| x != 0)
+    unsafe { prctl(libc::PR_GET_KEEPCAPS, 0, 0, 0, 0).map(|x| x != 0) }
 }
 
 #[inline]
 pub fn set_keepcaps(keep: bool) -> io::Result<()> {
-    prctl(libc::PR_SET_KEEPCAPS, keep as Ulong, 0, 0, 0).and(Ok(()))
+    unsafe { prctl(libc::PR_SET_KEEPCAPS, keep as Ulong, 0, 0, 0).and(Ok(())) }
 }
 
 pub mod ambient {
@@ -697,49 +697,57 @@ pub mod ambient {
 
     #[inline]
     pub fn raise(cap: Cap) -> io::Result<()> {
-        super::prctl(
-            libc::PR_CAP_AMBIENT,
-            libc::PR_CAP_AMBIENT_RAISE as Ulong,
-            cap as Ulong,
-            0,
-            0,
-        )
+        unsafe {
+            super::prctl(
+                libc::PR_CAP_AMBIENT,
+                libc::PR_CAP_AMBIENT_RAISE as Ulong,
+                cap as Ulong,
+                0,
+                0,
+            )
+        }
         .and(Ok(()))
     }
 
     #[inline]
     pub fn lower(cap: Cap) -> io::Result<()> {
-        super::prctl(
-            libc::PR_CAP_AMBIENT,
-            libc::PR_CAP_AMBIENT_LOWER as Ulong,
-            cap as Ulong,
-            0,
-            0,
-        )
+        unsafe {
+            super::prctl(
+                libc::PR_CAP_AMBIENT,
+                libc::PR_CAP_AMBIENT_LOWER as Ulong,
+                cap as Ulong,
+                0,
+                0,
+            )
+        }
         .and(Ok(()))
     }
 
     #[inline]
     pub fn is_set(cap: Cap) -> io::Result<bool> {
-        super::prctl(
-            libc::PR_CAP_AMBIENT,
-            libc::PR_CAP_AMBIENT_IS_SET as Ulong,
-            cap as Ulong,
-            0,
-            0,
-        )
+        unsafe {
+            super::prctl(
+                libc::PR_CAP_AMBIENT,
+                libc::PR_CAP_AMBIENT_IS_SET as Ulong,
+                cap as Ulong,
+                0,
+                0,
+            )
+        }
         .map(|x| x != 0)
     }
 
     #[inline]
     pub fn clear() -> io::Result<()> {
-        super::prctl(
-            libc::PR_CAP_AMBIENT,
-            libc::PR_CAP_AMBIENT_CLEAR_ALL as Ulong,
-            0,
-            0,
-            0,
-        )
+        unsafe {
+            super::prctl(
+                libc::PR_CAP_AMBIENT,
+                libc::PR_CAP_AMBIENT_CLEAR_ALL as Ulong,
+                0,
+                0,
+                0,
+            )
+        }
         .and(Ok(()))
     }
 
@@ -769,12 +777,12 @@ pub mod bounding {
 
     #[inline]
     pub fn drop(cap: Cap) -> io::Result<()> {
-        super::prctl(libc::PR_CAPBSET_DROP, cap as Ulong, 0, 0, 0).and(Ok(()))
+        unsafe { super::prctl(libc::PR_CAPBSET_DROP, cap as Ulong, 0, 0, 0).and(Ok(())) }
     }
 
     #[inline]
     pub fn read(cap: Cap) -> io::Result<bool> {
-        super::prctl(libc::PR_CAPBSET_READ, cap as Ulong, 0, 0, 0).map(|x| x != 0)
+        unsafe { super::prctl(libc::PR_CAPBSET_READ, cap as Ulong, 0, 0, 0).map(|x| x != 0) }
     }
 
     // Slightly easier to understand than read()
@@ -822,13 +830,15 @@ pub mod secbits {
 
     #[inline]
     pub fn set(flags: SecFlags) -> io::Result<()> {
-        super::prctl(libc::PR_SET_SECUREBITS, flags.bits(), 0, 0, 0).and(Ok(()))
+        unsafe { super::prctl(libc::PR_SET_SECUREBITS, flags.bits(), 0, 0, 0).and(Ok(())) }
     }
 
     #[inline]
     pub fn get() -> io::Result<SecFlags> {
-        super::prctl(libc::PR_GET_SECUREBITS, 0, 0, 0, 0)
-            .map(|f| SecFlags::from_bits_truncate(f as Ulong))
+        unsafe {
+            super::prctl(libc::PR_GET_SECUREBITS, 0, 0, 0, 0)
+                .map(|f| SecFlags::from_bits_truncate(f as Ulong))
+        }
     }
 }
 
