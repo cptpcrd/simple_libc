@@ -68,15 +68,15 @@ pub fn recv_sockcred_raw(sockfd: Int, block: bool) -> io::Result<Sockcred> {
         msg_flags: 0,
     };
 
-    let nbytes = error::convert_neg_ret(unsafe { libc::recvmsg(sockfd, &mut msg, flags) })? as usize;
+    let nbytes =
+        error::convert_neg_ret(unsafe { libc::recvmsg(sockfd, &mut msg, flags) })? as usize;
 
     if nbytes < std::mem::size_of::<libc::sockcred>() || nbytes > cmsg_dat.len() {
         Err(io::Error::from_raw_os_error(libc::EIO))
     } else {
         #[allow(clippy::cast_ptr_alignment)]
         let raw_sockcred = unsafe {
-            &*(libc::CMSG_DATA(cmsg_dat.as_ptr() as *const libc::cmsghdr)
-                as *const libc::sockcred)
+            &*(libc::CMSG_DATA(cmsg_dat.as_ptr() as *const libc::cmsghdr) as *const libc::sockcred)
         };
 
         Ok(Sockcred {

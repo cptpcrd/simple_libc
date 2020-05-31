@@ -147,7 +147,9 @@ pub fn constrain<T: Ord + Eq>(val: T, min: T, max: T) -> T {
 pub fn pipe_raw() -> io::Result<(Int, Int)> {
     let mut fds = [0; 2];
 
-    error::convert(unsafe { libc::pipe(fds.as_mut_ptr()) }, fds).map(|fds| (fds[0], fds[1]))
+    error::convert_nzero_ret(unsafe { libc::pipe(fds.as_mut_ptr()) })?;
+
+    Ok((fds[0], fds[1]))
 }
 
 pub fn pipe() -> io::Result<(fs::File, fs::File)> {
@@ -165,7 +167,9 @@ pub fn pipe() -> io::Result<(fs::File, fs::File)> {
 pub fn pipe2_raw(flags: Int) -> io::Result<(Int, Int)> {
     let mut fds = [0; 2];
 
-    error::convert(unsafe { libc::pipe2(fds.as_mut_ptr(), flags) }, fds).map(|fds| (fds[0], fds[1]))
+    error::convert_nzero_ret(unsafe { libc::pipe2(fds.as_mut_ptr(), flags) })?;
+
+    Ok((fds[0], fds[1]))
 }
 
 #[cfg(any(

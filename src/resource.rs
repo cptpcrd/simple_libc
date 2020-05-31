@@ -160,11 +160,9 @@ pub fn getrlimit(resource: Resource) -> io::Result<(Limit, Limit)> {
         rlim_max: LIMIT_INFINITY,
     };
 
-    error::convert_nzero(
-        unsafe { libc::getrlimit(resource as RawResourceType, &mut rlim) },
-        rlim,
-    )
-    .map(|rlim| (rlim.rlim_cur, rlim.rlim_max))
+    error::convert_nzero_ret(unsafe { libc::getrlimit(resource as RawResourceType, &mut rlim) })?;
+
+    Ok((rlim.rlim_cur, rlim.rlim_max))
 }
 
 pub fn setrlimit(resource: Resource, new_limits: (Limit, Limit)) -> io::Result<()> {
@@ -173,10 +171,7 @@ pub fn setrlimit(resource: Resource, new_limits: (Limit, Limit)) -> io::Result<(
         rlim_max: new_limits.1,
     };
 
-    error::convert_nzero(
-        unsafe { libc::setrlimit(resource as RawResourceType, &rlim) },
-        (),
-    )
+    error::convert_nzero_ret(unsafe { libc::setrlimit(resource as RawResourceType, &rlim) })
 }
 
 #[cfg(target_os = "linux")]
@@ -202,18 +197,16 @@ pub fn prlimit(
         rlim_max: LIMIT_INFINITY,
     };
 
-    error::convert_nzero(
-        unsafe {
-            libc::prlimit(
-                pid,
-                resource as RawResourceType,
-                new_rlim_ptr,
-                &mut old_rlim,
-            )
-        },
-        old_rlim,
-    )
-    .map(|old_rlim| (old_rlim.rlim_cur, old_rlim.rlim_max))
+    error::convert_nzero_ret(unsafe {
+        libc::prlimit(
+            pid,
+            resource as RawResourceType,
+            new_rlim_ptr,
+            &mut old_rlim,
+        )
+    })?;
+
+    Ok((old_rlim.rlim_cur, old_rlim.rlim_max))
 }
 
 #[cfg(target_os = "linux")]

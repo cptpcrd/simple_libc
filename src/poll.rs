@@ -36,14 +36,15 @@ pub fn poll(fds: &mut [PollFd], timeout: Option<Duration>) -> io::Result<usize> 
         None => -1,
     };
 
-    crate::error::convert_neg_ret(unsafe {
+    let n = crate::error::convert_neg_ret(unsafe {
         libc::poll(
             fds.as_mut_ptr() as *mut libc::pollfd,
             fds.len() as libc::nfds_t,
             raw_timeout,
         )
-    })
-    .map(|n| n as usize)
+    })?;
+
+    Ok(n as usize)
 }
 
 #[cfg(target_os = "netbsd")]
@@ -91,15 +92,16 @@ pub fn ppoll(
         None => std::ptr::null(),
     };
 
-    crate::error::convert_neg_ret(unsafe {
+    let n = crate::error::convert_neg_ret(unsafe {
         LIBC_PPOLL(
             fds.as_mut_ptr() as *mut libc::pollfd,
             fds.len() as libc::nfds_t,
             raw_timeout,
             raw_sigmask,
         )
-    })
-    .map(|n| n as usize)
+    })?;
+
+    Ok(n as usize)
 }
 
 #[cfg(test)]

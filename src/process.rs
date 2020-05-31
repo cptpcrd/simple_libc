@@ -228,21 +228,17 @@ pub fn getlogin() -> io::Result<ffi::OsString> {
             let length = init_length * (i as usize + 1);
             let mut buf = Vec::new();
 
-            crate::error::convert_nzero(
-                unsafe {
-                    buf.resize(length, 0);
-                    externs::getlogin_r(buf.as_mut_ptr(), length)
-                },
-                buf,
-            )
-            .map(|buf| {
-                ffi::OsString::from_vec(
-                    buf.iter()
-                        .take_while(|x| **x > 0)
-                        .map(|x| *x as u8)
-                        .collect(),
-                )
-            })
+            crate::error::convert_nzero_ret(unsafe {
+                buf.resize(length, 0);
+                externs::getlogin_r(buf.as_mut_ptr(), length)
+            })?;
+
+            Ok(ffi::OsString::from_vec(
+                buf.iter()
+                    .take_while(|x| **x > 0)
+                    .map(|x| *x as u8)
+                    .collect(),
+            ))
         },
         10,
     )

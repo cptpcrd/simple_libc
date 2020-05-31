@@ -106,7 +106,9 @@ impl Sigset {
     }
 
     pub fn ismember(&self, sig: i32) -> io::Result<bool> {
-        crate::error::convert_ret(unsafe { libc::sigismember(&self.set, sig) }).map(|res| res != 0)
+        let res = crate::error::convert_ret(unsafe { libc::sigismember(&self.set, sig) })?;
+
+        Ok(res != 0)
     }
 
     #[inline]

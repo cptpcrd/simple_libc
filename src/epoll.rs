@@ -68,9 +68,9 @@ pub struct Epoll {
 
 impl Epoll {
     pub fn new(flags: EpollFlags) -> io::Result<Epoll> {
-        let fd = unsafe { libc::epoll_create1(flags.bits) };
+        let fd = crate::error::convert_neg_ret(unsafe { libc::epoll_create1(flags.bits) })?;
 
-        crate::error::convert_neg_ret(fd).map(|fd| Epoll { fd })
+        Ok(Epoll { fd })
     }
 
     #[deprecated(since = "0.5.0", note = "Use `as_raw_fd()` instead")]
@@ -85,9 +85,8 @@ impl Epoll {
             u64: data,
         };
 
-        crate::error::convert(
-            unsafe { libc::epoll_ctl(self.fd, op as Int, fd, &mut ep_event) },
-            (),
+        crate::error::convert_nzero_ret(
+            unsafe { libc::epoll_ctl(self.fd, op as Int, fd, &mut ep_event) }
         )
     }
 
@@ -137,16 +136,16 @@ impl Epoll {
         let mut ep_events = Vec::new();
         ep_events.resize(maxevents, RawEvent { events: Events::empty(), data: 0 });
 
-        self.pwait_raw(&mut ep_events, timeout, sigmask)
-        .map(|res| {
-            for i in 0..(res as usize) {
-                events[i] = Event {
-                    events: ep_events[i].events,
-                    data: ep_events[i].data,
-                };
-            }
-            res
-        })
+        let res = self.pwait_raw(&mut ep_events, timeout, sigmask)?;
+
+        for i in 0..(res as usize) {
+            events[i] = Event {
+                events: ep_events[i].events,
+                data: ep_events[i].data,
+            };
+        }
+
+        Ok(res)
     }
 
     pub fn pwait_raw(

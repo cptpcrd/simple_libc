@@ -59,7 +59,10 @@ pub fn getpeereid(sock: &unix::net::UnixStream) -> io::Result<(UidT, GidT)> {
 
 pub fn get_peer_ids_raw(sockfd: Int) -> io::Result<(UidT, GidT)> {
     #[cfg(target_os = "linux")]
-    return ucred::get_ucred_raw(sockfd).map(|ucred| (ucred.uid, ucred.gid));
+    {
+        let cred = ucred::get_ucred_raw(sockfd)?;
+        return Ok((cred.uid, cred.gid));
+    }
 
     #[cfg(not(target_os = "linux"))]
     return getpeereid_raw(sockfd);
@@ -77,10 +80,12 @@ pub fn get_peer_ids(sock: &unix::net::UnixStream) -> io::Result<(UidT, GidT)> {
 ))]
 pub fn get_peer_pid_ids_raw(sockfd: Int) -> io::Result<(crate::PidT, UidT, GidT)> {
     #[cfg(any(target_os = "linux", target_os = "openbsd", target_os = "netbsd"))]
-    return ucred::get_ucred_raw(sockfd).map(|ucred| (ucred.pid, ucred.uid, ucred.gid));
+    let cred = ucred::get_ucred_raw(sockfd)?;
 
     #[cfg(target_os = "freebsd")]
-    return xucred::get_xucred_raw(sockfd).map(|xucred| (xucred.pid, xucred.uid, xucred.gid));
+    let cred = xucred::get_xucred_raw(sockfd)?;
+
+    Ok((cred.pid, cred.uid, cred.gid))
 }
 
 #[cfg(any(

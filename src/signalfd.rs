@@ -12,34 +12,37 @@ pub struct SignalFd {
 
 impl SignalFd {
     pub fn new(mask: &Sigset, flags: Int) -> io::Result<SignalFd> {
-        error::convert_ret(unsafe { libc::signalfd(-1, &mask.raw_set(), flags) })
-            .map(|fd| SignalFd { fd })
+        let fd = error::convert_ret(unsafe { libc::signalfd(-1, &mask.raw_set(), flags) })?;
+
+        Ok(SignalFd { fd })
     }
 
     pub fn read_one(&self) -> io::Result<Siginfo> {
         let mut siginfo = unsafe { std::mem::zeroed() };
 
-        error::convert_neg(
+        error::convert_neg_ret(
             unsafe {
                 libc::read(
                     self.fd,
                     (&mut siginfo as *mut Siginfo) as *mut libc::c_void,
                     std::mem::size_of::<Siginfo>(),
                 )
-            },
-            siginfo,
-        )
+            }
+        )?;
+
+        Ok(siginfo)
     }
 
     pub fn read(&self, siginfos: &mut [Siginfo]) -> io::Result<usize> {
-        error::convert_neg_ret(unsafe {
+        let n = error::convert_neg_ret(unsafe {
             libc::read(
                 self.fd,
                 siginfos.as_mut_ptr() as *mut libc::c_void,
                 siginfos.len() * std::mem::size_of::<Siginfo>(),
             )
-        })
-        .map(|n| (n as usize) / std::mem::size_of::<Siginfo>())
+        })? as usize;
+
+        Ok(n / std::mem::size_of::<Siginfo>())
     }
 }
 

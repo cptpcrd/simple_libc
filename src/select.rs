@@ -162,7 +162,7 @@ pub fn pselect_raw(
         None => std::ptr::null(),
     };
 
-    crate::error::convert_neg_ret(unsafe {
+    let n = crate::error::convert_neg_ret(unsafe {
         libc::pselect(
             nfds,
             raw_opt_fdset(readfds),
@@ -171,8 +171,9 @@ pub fn pselect_raw(
             raw_timeout,
             raw_sigmask,
         )
-    })
-    .map(|n| n as usize)
+    })?;
+
+    Ok(n as usize)
 }
 
 pub fn select_raw(
@@ -190,7 +191,7 @@ pub fn select_raw(
         None => std::ptr::null_mut(),
     };
 
-    crate::error::convert_neg_ret(unsafe {
+    let n = crate::error::convert_neg_ret(unsafe {
         libc::select(
             nfds,
             raw_opt_fdset(readfds),
@@ -198,8 +199,9 @@ pub fn select_raw(
             raw_opt_fdset(errorfds),
             raw_timeout,
         )
-    })
-    .map(|n| n as usize)
+    })?;
+
+    Ok(n as usize)
 }
 
 fn build_raw_setup(

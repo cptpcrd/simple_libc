@@ -115,8 +115,9 @@ fn sigaction(sig: Int, act: Option<Sigaction>) -> io::Result<Sigaction> {
         newact = &libc::sigaction::from(a);
     }
 
-    crate::error::convert(unsafe { libc::sigaction(sig, newact, &mut oldact) }, oldact)
-        .map(Sigaction::from)
+    crate::error::convert_nzero_ret(unsafe { libc::sigaction(sig, newact, &mut oldact) })?;
+
+    Ok(Sigaction::from(oldact))
 }
 
 pub fn sig_getaction(sig: Int) -> io::Result<Sigaction> {

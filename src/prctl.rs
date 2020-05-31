@@ -615,22 +615,22 @@ impl CapState {
             inheritable: 0,
         }; 2];
 
-        error::convert_nzero(unsafe { externs::capget(&mut header, &mut raw_dat[0]) }, raw_dat).map(
-            |raw_dat| Self {
-                effective: CapSet::from_bits_safe(Self::combine_raw(
-                    raw_dat[0].effective,
-                    raw_dat[1].effective,
-                )),
-                permitted: CapSet::from_bits_safe(Self::combine_raw(
-                    raw_dat[0].permitted,
-                    raw_dat[1].permitted,
-                )),
-                inheritable: CapSet::from_bits_safe(Self::combine_raw(
-                    raw_dat[0].inheritable,
-                    raw_dat[1].inheritable,
-                )),
-            },
-        )
+        error::convert_nzero_ret(unsafe { externs::capget(&mut header, &mut raw_dat[0]) })?;
+
+        Ok(Self {
+            effective: CapSet::from_bits_safe(Self::combine_raw(
+                raw_dat[0].effective,
+                raw_dat[1].effective,
+            )),
+            permitted: CapSet::from_bits_safe(Self::combine_raw(
+                raw_dat[0].permitted,
+                raw_dat[1].permitted,
+            )),
+            inheritable: CapSet::from_bits_safe(Self::combine_raw(
+                raw_dat[0].inheritable,
+                raw_dat[1].inheritable,
+            )),
+        })
     }
 
     #[inline]
@@ -671,22 +671,30 @@ unsafe fn prctl(option: Int, arg2: Ulong, arg3: Ulong, arg4: Ulong, arg5: Ulong)
 
 #[inline]
 pub fn get_no_new_privs() -> io::Result<bool> {
-    unsafe { prctl(libc::PR_GET_NO_NEW_PRIVS, 0, 0, 0, 0).map(|x| x != 0) }
+    let res = unsafe { prctl(libc::PR_GET_NO_NEW_PRIVS, 0, 0, 0, 0) }?;
+
+    Ok(res != 0)
 }
 
 #[inline]
 pub fn set_no_new_privs() -> io::Result<()> {
-    unsafe { prctl(libc::PR_GET_NO_NEW_PRIVS, 1, 0, 0, 0).and(Ok(())) }
+    unsafe { prctl(libc::PR_GET_NO_NEW_PRIVS, 1, 0, 0, 0) }?;
+
+    Ok(())
 }
 
 #[inline]
 pub fn get_keepcaps() -> io::Result<bool> {
-    unsafe { prctl(libc::PR_GET_KEEPCAPS, 0, 0, 0, 0).map(|x| x != 0) }
+    let res = unsafe { prctl(libc::PR_GET_KEEPCAPS, 0, 0, 0, 0) }?;
+
+    Ok(res != 0)
 }
 
 #[inline]
 pub fn set_keepcaps(keep: bool) -> io::Result<()> {
-    unsafe { prctl(libc::PR_SET_KEEPCAPS, keep as Ulong, 0, 0, 0).and(Ok(())) }
+    unsafe { prctl(libc::PR_SET_KEEPCAPS, keep as Ulong, 0, 0, 0) }?;
+
+    Ok(())
 }
 
 pub mod ambient {
@@ -705,8 +713,9 @@ pub mod ambient {
                 0,
                 0,
             )
-        }
-        .and(Ok(()))
+        }?;
+
+        Ok(())
     }
 
     #[inline]
@@ -719,13 +728,14 @@ pub mod ambient {
                 0,
                 0,
             )
-        }
-        .and(Ok(()))
+        }?;
+
+        Ok(())
     }
 
     #[inline]
     pub fn is_set(cap: Cap) -> io::Result<bool> {
-        unsafe {
+        let x = unsafe {
             super::prctl(
                 libc::PR_CAP_AMBIENT,
                 libc::PR_CAP_AMBIENT_IS_SET as Ulong,
@@ -733,8 +743,9 @@ pub mod ambient {
                 0,
                 0,
             )
-        }
-        .map(|x| x != 0)
+        }?;
+
+        Ok(x != 0)
     }
 
     #[inline]
@@ -747,8 +758,9 @@ pub mod ambient {
                 0,
                 0,
             )
-        }
-        .and(Ok(()))
+        }?;
+
+        Ok(())
     }
 
     #[inline]
@@ -777,12 +789,16 @@ pub mod bounding {
 
     #[inline]
     pub fn drop(cap: Cap) -> io::Result<()> {
-        unsafe { super::prctl(libc::PR_CAPBSET_DROP, cap as Ulong, 0, 0, 0).and(Ok(())) }
+        unsafe { super::prctl(libc::PR_CAPBSET_DROP, cap as Ulong, 0, 0, 0) }?;
+
+        Ok(())
     }
 
     #[inline]
     pub fn read(cap: Cap) -> io::Result<bool> {
-        unsafe { super::prctl(libc::PR_CAPBSET_READ, cap as Ulong, 0, 0, 0).map(|x| x != 0) }
+        let res = unsafe { super::prctl(libc::PR_CAPBSET_READ, cap as Ulong, 0, 0, 0) }?;
+
+        Ok(res != 0)
     }
 
     // Slightly easier to understand than read()
@@ -851,15 +867,18 @@ pub mod secbits {
 
     #[inline]
     pub fn set(flags: SecFlags) -> io::Result<()> {
-        unsafe { super::prctl(libc::PR_SET_SECUREBITS, flags.bits(), 0, 0, 0).and(Ok(())) }
+        unsafe { super::prctl(libc::PR_SET_SECUREBITS, flags.bits(), 0, 0, 0) }?;
+
+        Ok(())
     }
 
     #[inline]
     pub fn get() -> io::Result<SecFlags> {
-        unsafe {
+        let f = unsafe {
             super::prctl(libc::PR_GET_SECUREBITS, 0, 0, 0, 0)
-                .map(|f| SecFlags::from_bits_truncate(f as Ulong))
-        }
+        }?;
+
+        Ok(SecFlags::from_bits_truncate(f as Ulong))
     }
 }
 

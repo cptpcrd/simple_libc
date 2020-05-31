@@ -56,11 +56,10 @@ pub fn set(t: Target, value: Int) -> io::Result<()> {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
     #[test]
     fn test_get_equals_nice() {
-        assert_eq!(
-            super::nice(0).unwrap(),
-            super::get(super::Target::Process(0)).unwrap()
-        );
+        assert_eq!(nice(0).unwrap(), get(Target::Process(0)).unwrap());
     }
 }

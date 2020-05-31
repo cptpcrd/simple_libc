@@ -85,17 +85,19 @@ const RAW_EVENT_SIZE: usize = std::mem::size_of::<libc::inotify_event>();
 impl Inotify {
     /// Construct a new inotify file descriptor with the given options.
     pub fn new(flags: InotifyFlags) -> io::Result<Self> {
-        crate::error::convert_neg_ret(unsafe { libc::inotify_init1(flags.bits) })
-            .map(|fd| Self { fd })
+        let fd = crate::error::convert_neg_ret(unsafe { libc::inotify_init1(flags.bits) })?;
+
+        Ok(Self { fd })
     }
 
     fn add_watch_impl<P: AsRef<Path>>(&mut self, path: P, flags: u32) -> io::Result<Watch> {
         let c_path = ffi::CString::new(path.as_ref().as_os_str().as_bytes())?;
 
-        crate::error::convert_neg_ret(unsafe {
+        let wd = crate::error::convert_neg_ret(unsafe {
             libc::inotify_add_watch(self.fd, c_path.as_ptr(), flags)
-        })
-        .map(|wd| Watch { wd })
+        })?;
+
+        Ok(Watch { wd })
     }
 
     /// Add a new watch (or modify an existing watch) for the given file.
