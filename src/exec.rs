@@ -80,7 +80,7 @@ pub fn execve<T: AsRef<OsStr>, U: AsRef<OsStr>, V: AsRef<OsStr>>(
 /// a file descriptor specifying the program to be executed.
 ///
 /// If this function returns, it means an error occurred.
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "freebsd"))]
 pub fn fexecve<U: AsRef<OsStr>, V: AsRef<OsStr>>(
     fd: crate::Int,
     argv: &[U],
