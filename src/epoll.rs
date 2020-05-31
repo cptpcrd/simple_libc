@@ -181,7 +181,6 @@ impl Epoll {
         self.pwait(events, timeout, None)
     }
 
-
     #[inline]
     pub fn wait_raw(&self, events: &mut [RawEvent], timeout: Option<time::Duration>) -> io::Result<Int> {
         self.pwait_raw(events, timeout, None)
