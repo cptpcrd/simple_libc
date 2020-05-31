@@ -2,14 +2,14 @@ crate::attr_group! {
     #![cfg(target_os = "linux")]
 
     #[repr(C)]
-    pub struct c_cap_user_header {
+    pub struct cap_user_header_t {
         pub version: u32,
         pub pid: libc::c_int,
     }
 
     #[derive(Copy, Clone)]
     #[repr(C)]
-    pub struct c_cap_data_struct {
+    pub struct cap_user_data_t {
         pub effective: u32,
         pub permitted: u32,
         pub inheritable: u32,

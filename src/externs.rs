@@ -48,12 +48,12 @@ extern "C" {
 #[cfg(target_os = "linux")]
 extern "C" {
     pub fn capget(
-        hdrp: &mut crate::types::c_cap_user_header,
-        datap: &mut crate::types::c_cap_data_struct,
+        hdrp: &mut crate::types::cap_user_header_t,
+        datap: &mut crate::types::cap_user_data_t,
     ) -> libc::c_int;
 
     pub fn capset(
-        hdrp: &mut crate::types::c_cap_user_header,
-        datap: &crate::types::c_cap_data_struct,
+        hdrp: &mut crate::types::cap_user_header_t,
+        datap: &crate::types::cap_user_data_t,
     ) -> libc::c_int;
 }

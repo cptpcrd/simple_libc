@@ -604,12 +604,12 @@ impl CapState {
     }
 
     pub fn get_for_pid(pid: Int) -> io::Result<Self> {
-        let mut header = types::c_cap_user_header {
+        let mut header = types::cap_user_header_t {
             version: constants::_LINUX_CAPABILITY_VERSION_3,
             pid,
         };
 
-        let mut raw_dat = [types::c_cap_data_struct {
+        let mut raw_dat = [types::cap_user_data_t {
             effective: 0,
             permitted: 0,
             inheritable: 0,
@@ -639,7 +639,7 @@ impl CapState {
     }
 
     pub fn set_current(&self) -> io::Result<()> {
-        let mut header = types::c_cap_user_header {
+        let mut header = types::cap_user_header_t {
             version: constants::_LINUX_CAPABILITY_VERSION_3,
             pid: 0,
         };
@@ -649,12 +649,12 @@ impl CapState {
         let inheritable = self.inheritable.bits;
 
         let raw_dat = [
-            types::c_cap_data_struct {
+            types::cap_user_data_t {
                 effective: effective as u32,
                 permitted: permitted as u32,
                 inheritable: inheritable as u32,
             },
-            types::c_cap_data_struct {
+            types::cap_user_data_t {
                 effective: (effective >> 32) as u32,
                 permitted: (permitted >> 32) as u32,
                 inheritable: (inheritable >> 32) as u32,
