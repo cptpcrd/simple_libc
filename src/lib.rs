@@ -185,8 +185,8 @@ pub fn pipe2(flags: Int) -> io::Result<(fs::File, fs::File)> {
 }
 
 /// Closes the given file descriptor.
-pub fn close_fd(fd: Int) -> io::Result<()> {
-    error::convert_nzero_ret(unsafe { libc::close(fd) })
+pub unsafe fn close_fd(fd: Int) -> io::Result<()> {
+    error::convert_nzero_ret(libc::close(fd))
 }
 
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
@@ -414,8 +414,10 @@ mod tests {
         assert_eq!(buf, &[4, 5, 6, 7]);
 
         let (r, w) = pipe_raw().unwrap();
-        close_fd(r).unwrap();
-        close_fd(w).unwrap();
+        unsafe {
+            close_fd(r).unwrap();
+            close_fd(w).unwrap();
+        }
     }
 
     #[cfg(target_os = "linux")]
@@ -436,8 +438,10 @@ mod tests {
         assert_eq!(buf, &[4, 5, 6, 7]);
 
         let (r, w) = pipe2_raw(0).unwrap();
-        close_fd(r).unwrap();
-        close_fd(w).unwrap();
+        unsafe {
+            close_fd(r).unwrap();
+            close_fd(w).unwrap();
+        }
     }
 
     #[test]
