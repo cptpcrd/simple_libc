@@ -12,8 +12,10 @@ repository = "https://github.com/cptpcrd/simple_libc"
 [features]
 default = ["serde_full"]
 
+strum_full = ["strum", "strum_macros"]
+
 # Some serializers/deserializers require strum to work properly.
-serde_full = ["serde", "strum", "strum_macros"]
+serde_full = ["serde", "strum_full"]
 
 [dependencies]
 libc = { version = "0.2", features = ["extra_traits"] }
