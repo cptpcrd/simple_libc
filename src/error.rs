@@ -134,6 +134,7 @@ pub fn is_ewouldblock(err: &io::Error) -> bool {
     err.raw_os_error() == Some(libc::EWOULDBLOCK)
 }
 
+#[deprecated(since = "0.5.0", note = "Please loop manually instead")]
 pub fn while_erange<F: FnMut(i32) -> io::Result<T>, T>(
     mut callback: F,
     max_n: i32,
@@ -282,6 +283,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)]
     fn test_while_erange() {
         while_erange(
             |i| match i {
