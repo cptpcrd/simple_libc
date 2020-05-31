@@ -363,7 +363,11 @@ crate::attr_group! {
     }
 
     pub fn setresuid2(ruid: Option<UidT>, euid: Option<UidT>, suid: Option<UidT>) -> io::Result<()> {
-        setresuid(ruid.unwrap_or_else(minus_one_either), euid.unwrap_or_else(minus_one_either), suid.unwrap_or_else(minus_one_either))
+        setresuid(
+            ruid.unwrap_or_else(minus_one_either),
+            euid.unwrap_or_else(minus_one_either),
+            suid.unwrap_or_else(minus_one_either),
+        )
     }
 
     pub fn setresgid(rgid: GidT, egid: GidT, sgid: GidT) -> io::Result<()> {
@@ -373,7 +377,11 @@ crate::attr_group! {
     }
 
     pub fn setresgid2(rgid: Option<GidT>, egid: Option<GidT>, sgid: Option<GidT>) -> io::Result<()> {
-        setresgid(rgid.unwrap_or_else(minus_one_either), egid.unwrap_or_else(minus_one_either), sgid.unwrap_or_else(minus_one_either))
+        setresgid(
+            rgid.unwrap_or_else(minus_one_either),
+            egid.unwrap_or_else(minus_one_either),
+            sgid.unwrap_or_else(minus_one_either),
+        )
     }
 
     fn getreuid_impl() -> (UidT, UidT) {
