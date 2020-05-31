@@ -126,29 +126,10 @@ impl Epoll {
     ) -> io::Result<Int> {
         let maxevents = events.len();
 
-        let raw_timeout: Int = match timeout {
-            Some(t) => t.as_millis().try_into().unwrap_or(Int::MAX),
-            None => -1,
-        };
-
-        let raw_sigmask = match sigmask {
-            Some(s) => &s.raw_set(),
-            None => std::ptr::null(),
-        };
-
         let mut ep_events = Vec::new();
-
         ep_events.resize(maxevents, libc::epoll_event { events: 0, u64: 0 });
 
-        crate::error::convert_neg_ret(unsafe {
-            libc::epoll_pwait(
-                self.fd,
-                ep_events.as_mut_ptr(),
-                maxevents as Int,
-                raw_timeout,
-                raw_sigmask,
-            )
-        })
+        self.pwait_raw(&mut ep_events, timeout, sigmask)
         .map(|res| {
             for i in 0..(res as usize) {
                 events[i] = Event {
@@ -160,9 +141,42 @@ impl Epoll {
         })
     }
 
+    pub fn pwait_raw(
+        &self,
+        events: &mut [libc::epoll_event],
+        timeout: Option<time::Duration>,
+        sigmask: Option<crate::signal::Sigset>,
+    ) -> io::Result<Int> {
+        let raw_timeout: Int = match timeout {
+            Some(t) => t.as_millis().try_into().unwrap_or(Int::MAX),
+            None => -1,
+        };
+
+        let raw_sigmask = match sigmask {
+            Some(s) => &s.raw_set(),
+            None => std::ptr::null(),
+        };
+
+        crate::error::convert_neg_ret(unsafe {
+            libc::epoll_pwait(
+                self.fd,
+                events.as_mut_ptr(),
+                events.len() as Int,
+                raw_timeout,
+                raw_sigmask,
+            )
+        })
+    }
+
     #[inline]
     pub fn wait(&self, events: &mut [Event], timeout: Option<time::Duration>) -> io::Result<Int> {
         self.pwait(events, timeout, None)
+    }
+
+
+    #[inline]
+    pub fn wait_raw(&self, events: &mut [libc::epoll_event], timeout: Option<time::Duration>) -> io::Result<Int> {
+        self.pwait_raw(events, timeout, None)
     }
 }
 
