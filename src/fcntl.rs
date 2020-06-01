@@ -103,10 +103,14 @@ mod tests {
 
         let f2 = dupfd(f.as_raw_fd(), 0).unwrap();
         assert!(is_inheritable(f2).unwrap());
-        unsafe { crate::close_fd(f2).unwrap(); }
+        unsafe {
+            crate::close_fd(f2).unwrap();
+        }
 
         let f2 = dupfd_cloexec(f.as_raw_fd(), 0).unwrap();
         assert!(!is_inheritable(f2).unwrap());
-        unsafe { crate::close_fd(f2).unwrap(); }
+        unsafe {
+            crate::close_fd(f2).unwrap();
+        }
     }
 }
