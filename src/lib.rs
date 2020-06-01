@@ -2,7 +2,7 @@ use std::cmp;
 use std::ffi;
 use std::fs;
 use std::io;
-use std::os::unix::ffi::{OsStrExt, OsStringExt};
+use std::os::unix::ffi::OsStringExt;
 use std::os::unix::io::FromRawFd;
 
 mod constants;
@@ -385,117 +385,123 @@ fn bytes_to_osstring<'a, T: IntoIterator<Item = &'a Char>>(bytes: T) -> ffi::OsS
     )
 }
 
-fn getxattr_raw_internal(
-    path: &ffi::CStr,
-    name: &ffi::CStr,
-    value: &mut [u8],
-    follow_links: bool,
-) -> io::Result<usize> {
-    let callback_fn = if follow_links {
-        libc::getxattr
-    } else {
-        libc::lgetxattr
-    };
+attr_group! {
+    #![cfg(target_os = "linux")]
 
-    let n = error::convert_neg_ret(unsafe {
-        callback_fn(
-            path.as_ptr(),
-            name.as_ptr(),
-            value.as_mut_ptr() as *mut libc::c_void,
-            value.len(),
-        )
-    })?;
+    use std::os::unix::ffi::OsStrExt;
 
-    Ok(n as usize)
-}
+    fn getxattr_raw_internal(
+        path: &ffi::CStr,
+        name: &ffi::CStr,
+        value: &mut [u8],
+        follow_links: bool,
+    ) -> io::Result<usize> {
+        let callback_fn = if follow_links {
+            libc::getxattr
+        } else {
+            libc::lgetxattr
+        };
 
-pub fn getxattr_raw<P: AsRef<ffi::OsStr>, N: AsRef<ffi::OsStr>>(
-    path: P,
-    name: N,
-    value: &mut [u8],
-    follow_links: bool,
-) -> io::Result<usize> {
-    let c_path = ffi::CString::new(path.as_ref().as_bytes())?;
-    let c_name = ffi::CString::new(name.as_ref().as_bytes())?;
+        let n = error::convert_neg_ret(unsafe {
+            callback_fn(
+                path.as_ptr(),
+                name.as_ptr(),
+                value.as_mut_ptr() as *mut libc::c_void,
+                value.len(),
+            )
+        })?;
 
-    getxattr_raw_internal(&c_path, &c_name, value, follow_links)
-}
-
-pub fn getxattr<P: AsRef<ffi::OsStr>, N: AsRef<ffi::OsStr>>(
-    path: P,
-    name: N,
-    follow_links: bool,
-) -> io::Result<Vec<u8>> {
-    let c_path = ffi::CString::new(path.as_ref().as_bytes())?;
-    let c_name = ffi::CString::new(name.as_ref().as_bytes())?;
-
-    let mut buf = Vec::new();
-    let init_size = getxattr_raw_internal(&c_path, &c_name, &mut buf, follow_links)?;
-    buf.resize(init_size, 0);
-
-    loop {
-        match getxattr_raw_internal(&c_path, &c_name, &mut buf, follow_links) {
-            Ok(n) => {
-                buf.resize(n as usize, 0);
-
-                return Ok(buf);
-            }
-            Err(e) => {
-                if !error::is_erange(&e) || buf.len() > init_size * 4 {
-                    return Err(e);
-                }
-            }
-        }
-
-        buf.resize(buf.len() * 2, 0);
+        Ok(n as usize)
     }
-}
 
-fn fgetxattr_raw_internal(fd: Int, name: &ffi::CStr, value: &mut [u8]) -> io::Result<usize> {
-    let n = error::convert_neg_ret(unsafe {
-        libc::fgetxattr(
-            fd,
-            name.as_ptr(),
-            value.as_mut_ptr() as *mut libc::c_void,
-            value.len(),
-        )
-    })?;
+    pub fn getxattr_raw<P: AsRef<ffi::OsStr>, N: AsRef<ffi::OsStr>>(
+        path: P,
+        name: N,
+        value: &mut [u8],
+        follow_links: bool,
+    ) -> io::Result<usize> {
+        let c_path = ffi::CString::new(path.as_ref().as_bytes())?;
+        let c_name = ffi::CString::new(name.as_ref().as_bytes())?;
 
-    Ok(n as usize)
-}
+        getxattr_raw_internal(&c_path, &c_name, value, follow_links)
+    }
 
-pub fn fgetxattr_raw<N: AsRef<ffi::OsStr>>(
-    fd: Int,
-    name: N,
-    value: &mut [u8],
-) -> io::Result<usize> {
-    let c_name = ffi::CString::new(name.as_ref().as_bytes())?;
+    pub fn getxattr<P: AsRef<ffi::OsStr>, N: AsRef<ffi::OsStr>>(
+        path: P,
+        name: N,
+        follow_links: bool,
+    ) -> io::Result<Vec<u8>> {
+        let c_path = ffi::CString::new(path.as_ref().as_bytes())?;
+        let c_name = ffi::CString::new(name.as_ref().as_bytes())?;
 
-    fgetxattr_raw_internal(fd, &c_name, value)
-}
+        let mut buf = Vec::new();
+        let init_size = getxattr_raw_internal(&c_path, &c_name, &mut buf, follow_links)?;
+        buf.resize(init_size, 0);
 
-pub fn fgetxattr<N: AsRef<ffi::OsStr>>(fd: Int, name: N) -> io::Result<Vec<u8>> {
-    let c_name = ffi::CString::new(name.as_ref().as_bytes())?;
+        loop {
+            match getxattr_raw_internal(&c_path, &c_name, &mut buf, follow_links) {
+                Ok(n) => {
+                    buf.resize(n as usize, 0);
 
-    let mut buf = Vec::new();
-    let init_size = fgetxattr_raw_internal(fd, &c_name, &mut buf)?;
-    buf.resize(init_size, 0);
-
-    loop {
-        match fgetxattr_raw_internal(fd, &c_name, &mut buf) {
-            Ok(n) => {
-                buf.resize(n, 0);
-
-                return Ok(buf);
-            }
-            Err(e) => {
-                if !error::is_erange(&e) || buf.len() > init_size * 4 {
-                    return Err(e);
+                    return Ok(buf);
+                }
+                Err(e) => {
+                    if !error::is_erange(&e) || buf.len() > init_size * 4 {
+                        return Err(e);
+                    }
                 }
             }
-        }
 
-        buf.resize(buf.len() * 2, 0);
+            buf.resize(buf.len() * 2, 0);
+        }
+    }
+
+    fn fgetxattr_raw_internal(fd: Int, name: &ffi::CStr, value: &mut [u8]) -> io::Result<usize> {
+        let n = error::convert_neg_ret(unsafe {
+            libc::fgetxattr(
+                fd,
+                name.as_ptr(),
+                value.as_mut_ptr() as *mut libc::c_void,
+                value.len(),
+            )
+        })?;
+
+        Ok(n as usize)
+    }
+
+    pub fn fgetxattr_raw<N: AsRef<ffi::OsStr>>(
+        fd: Int,
+        name: N,
+        value: &mut [u8],
+    ) -> io::Result<usize> {
+        let c_name = ffi::CString::new(name.as_ref().as_bytes())?;
+
+        fgetxattr_raw_internal(fd, &c_name, value)
+    }
+
+    pub fn fgetxattr<N: AsRef<ffi::OsStr>>(fd: Int, name: N) -> io::Result<Vec<u8>> {
+        let c_name = ffi::CString::new(name.as_ref().as_bytes())?;
+
+        let mut buf = Vec::new();
+        let init_size = fgetxattr_raw_internal(fd, &c_name, &mut buf)?;
+        buf.resize(init_size, 0);
+
+        loop {
+            match fgetxattr_raw_internal(fd, &c_name, &mut buf) {
+                Ok(n) => {
+                    buf.resize(n, 0);
+
+                    return Ok(buf);
+                }
+                Err(e) => {
+                    if !error::is_erange(&e) || buf.len() > init_size * 4 {
+                        return Err(e);
+                    }
+                }
+            }
+
+            buf.resize(buf.len() * 2, 0);
+        }
     }
 }
 
