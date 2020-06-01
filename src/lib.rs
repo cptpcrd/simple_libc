@@ -185,6 +185,12 @@ pub fn pipe2(flags: Int) -> io::Result<(fs::File, fs::File)> {
 }
 
 /// Closes the given file descriptor.
+///
+/// # Safety
+///
+/// If used to close file descriptors opened by builtin types (such as `File`
+/// or `TcpStream`), this could violate assumptions made by those types, or
+/// code that uses them.
 pub unsafe fn close_fd(fd: Int) -> io::Result<()> {
     error::convert_nzero_ret(libc::close(fd))
 }
