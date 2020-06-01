@@ -1,7 +1,8 @@
-use std::ops::{BitAnd, BitOr, BitXor, Sub};
+use std::convert::TryInto;
+use std::ffi::OsStr;
 use std::io;
 use std::iter::FromIterator;
-use std::ops::Not;
+use std::ops::{BitAnd, BitOr, BitXor, Not, Sub};
 
 #[cfg(all(
     feature = "serde",
@@ -22,7 +23,7 @@ use crate::error;
 use crate::externs;
 use crate::types;
 
-use crate::{Int, Ulong};
+use crate::{Int, UidT, Ulong};
 
 #[cfg_attr(
     any(all(feature = "strum", feature = "strum_macros"), test),
@@ -618,24 +619,19 @@ impl CapState {
         error::convert_nzero_ret(unsafe { externs::capget(&mut header, &mut raw_dat[0]) })?;
 
         Ok(Self {
-            effective: CapSet::from_bits_safe(Self::combine_raw(
+            effective: CapSet::from_bits_safe(combine_raw_u32s(
                 raw_dat[0].effective,
                 raw_dat[1].effective,
             )),
-            permitted: CapSet::from_bits_safe(Self::combine_raw(
+            permitted: CapSet::from_bits_safe(combine_raw_u32s(
                 raw_dat[0].permitted,
                 raw_dat[1].permitted,
             )),
-            inheritable: CapSet::from_bits_safe(Self::combine_raw(
+            inheritable: CapSet::from_bits_safe(combine_raw_u32s(
                 raw_dat[0].inheritable,
                 raw_dat[1].inheritable,
             )),
         })
-    }
-
-    #[inline]
-    const fn combine_raw(lower: u32, upper: u32) -> u64 {
-        ((upper as u64) << 32) + (lower as u64)
     }
 
     pub fn set_current(&self) -> io::Result<()> {
@@ -662,6 +658,89 @@ impl CapState {
         ];
 
         error::convert_nzero_ret(unsafe { externs::capset(&mut header, &raw_dat[0]) })
+    }
+}
+
+#[inline]
+const fn combine_raw_u32s(lower: u32, upper: u32) -> u64 {
+    ((upper as u64) << 32) + (lower as u64)
+}
+
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+pub struct FileCaps {
+    pub permitted: CapSet,
+    pub inheritable: CapSet,
+    pub rootid: Option<UidT>,
+}
+
+impl FileCaps {
+    pub fn get_for_file<P: AsRef<OsStr>>(path: P, follow_links: bool) -> io::Result<Self> {
+        match crate::getxattr(path, constants::XATTR_NAME_CAPS, follow_links) {
+            Ok(attrs) => Self::unpack_attrs(&attrs),
+            Err(e) => {
+                if e.raw_os_error() == Some(libc::ENODATA) {
+                    Ok(FileCaps {
+                        permitted: CapSet::empty(),
+                        inheritable: CapSet::empty(),
+                        rootid: None,
+                    })
+                } else {
+                    Err(e)
+                }
+            }
+        }
+    }
+
+    pub fn unpack_attrs(attrs: &[u8]) -> io::Result<Self> {
+        let len = attrs.len();
+
+        if len < 4 {
+            return Err(io::Error::from_raw_os_error(libc::EINVAL));
+        }
+
+        let version = u32::from_le_bytes(attrs[0..4].try_into().unwrap()) & (!constants::VFS_CAP_FLAGS_EFFECTIVE);
+
+        if version == constants::VFS_CAP_REVISION_2 && len == constants::XATTR_CAPS_SZ_2 {
+            Ok(FileCaps {
+                permitted: CapSet::from_bits_safe(
+                    combine_raw_u32s(
+                        u32::from_le_bytes(attrs[4..8].try_into().unwrap()),
+                        u32::from_le_bytes(attrs[8..12].try_into().unwrap()),
+                    )
+                ),
+                inheritable: CapSet::from_bits_safe(
+                    combine_raw_u32s(
+                        u32::from_le_bytes(attrs[12..16].try_into().unwrap()),
+                        u32::from_le_bytes(attrs[16..20].try_into().unwrap()),
+                    )
+                ),
+                rootid: None,
+            })
+        } else if version == constants::VFS_CAP_REVISION_3 && len == constants::XATTR_CAPS_SZ_3 {
+            Ok(FileCaps {
+                permitted: CapSet::from_bits_safe(
+                    combine_raw_u32s(
+                        u32::from_le_bytes(attrs[4..8].try_into().unwrap()),
+                        u32::from_le_bytes(attrs[8..12].try_into().unwrap()),
+                    )
+                ),
+                inheritable: CapSet::from_bits_safe(
+                    combine_raw_u32s(
+                        u32::from_le_bytes(attrs[12..16].try_into().unwrap()),
+                        u32::from_le_bytes(attrs[16..20].try_into().unwrap()),
+                    )
+                ),
+                rootid: Some(u32::from_le_bytes(attrs[20..24].try_into().unwrap())),
+            })
+        } else if version == constants::VFS_CAP_REVISION_1 && len == constants::XATTR_CAPS_SZ_1 {
+            Ok(FileCaps {
+                permitted: CapSet::from_bits_safe(u32::from_le_bytes(attrs[4..8].try_into().unwrap()) as u64),
+                inheritable: CapSet::from_bits_safe(u32::from_le_bytes(attrs[8..12].try_into().unwrap()) as u64),
+                rootid: None,
+            })
+        } else {
+            Err(io::Error::from_raw_os_error(libc::EINVAL))
+        }
     }
 }
 
