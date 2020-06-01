@@ -451,6 +451,54 @@ pub fn getxattr<P: AsRef<ffi::OsStr>, N: AsRef<ffi::OsStr>>(
     }
 }
 
+fn fgetxattr_raw_internal(fd: Int, name: &ffi::CStr, value: &mut [u8]) -> io::Result<usize> {
+    let n = error::convert_neg_ret(unsafe {
+        libc::fgetxattr(
+            fd,
+            name.as_ptr(),
+            value.as_mut_ptr() as *mut libc::c_void,
+            value.len(),
+        )
+    })?;
+
+    Ok(n as usize)
+}
+
+pub fn fgetxattr_raw<N: AsRef<ffi::OsStr>>(
+    fd: Int,
+    name: N,
+    value: &mut [u8],
+) -> io::Result<usize> {
+    let c_name = ffi::CString::new(name.as_ref().as_bytes())?;
+
+    fgetxattr_raw_internal(fd, &c_name, value)
+}
+
+pub fn fgetxattr<N: AsRef<ffi::OsStr>>(fd: Int, name: N) -> io::Result<Vec<u8>> {
+    let c_name = ffi::CString::new(name.as_ref().as_bytes())?;
+
+    let mut buf = Vec::new();
+    let init_size = fgetxattr_raw_internal(fd, &c_name, &mut buf)?;
+    buf.resize(init_size, 0);
+
+    loop {
+        match fgetxattr_raw_internal(fd, &c_name, &mut buf) {
+            Ok(n) => {
+                buf.resize(n, 0);
+
+                return Ok(buf);
+            }
+            Err(e) => {
+                if !error::is_erange(&e) || buf.len() > init_size * 4 {
+                    return Err(e);
+                }
+            }
+        }
+
+        buf.resize(buf.len() * 2, 0);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::io::{Read, Write};
