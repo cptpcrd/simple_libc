@@ -4,7 +4,7 @@
 crate::attr_group! {
     #![cfg(target_os = "linux")]
 
-    use crate::Ulong;
+    use crate::{Int, Ulong};
 
     // BEGIN USED BY process/capabilities.rs
 
@@ -85,6 +85,21 @@ crate::attr_group! {
     pub const IN_MASK_ADD: u32 = 0x2000_0000;
     pub const IN_MASK_CREATE: u32 = 0x1000_0000;
     // END USED by inotify.rs
+
+
+    // BEGIN USED BY ioprio.rs
+    pub const IOPRIO_WHO_PROCESS: Int = 1;
+    pub const IOPRIO_WHO_PGRP: Int = 2;
+    pub const IOPRIO_WHO_USER: Int = 3;
+
+    pub const IOPRIO_CLASS_NONE: Int = 0;
+    pub const IOPRIO_CLASS_RT: Int = 1;
+    pub const IOPRIO_CLASS_BE: Int = 2;
+    pub const IOPRIO_CLASS_IDLE: Int = 3;
+
+    pub const IOPRIO_CLASS_SHIFT: u8 = 13;
+    pub const IOPRIO_PRIO_MASK: Int = (1 << IOPRIO_CLASS_SHIFT) - 1;
+    // END USED BY ioprio.rs
 }
 
 crate::attr_group! {

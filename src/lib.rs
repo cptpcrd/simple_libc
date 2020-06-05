@@ -54,6 +54,7 @@ attr_group! {
 
     pub mod epoll;
     pub mod inotify;
+    pub mod ioprio;
     pub mod namespace;
     pub mod prctl;
     pub mod signalfd;
