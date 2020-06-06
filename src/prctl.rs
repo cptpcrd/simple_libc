@@ -1,5 +1,6 @@
 use std::convert::TryInto;
 use std::ffi::OsStr;
+use std::fmt;
 use std::io;
 use std::iter::FromIterator;
 use std::ops::{BitAnd, BitOr, BitXor, Not, Sub};
@@ -288,7 +289,7 @@ impl<'d> serde::Deserialize<'d> for Cap {
     }
 }
 
-#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
+#[derive(Copy, Clone, Eq, Hash, PartialEq)]
 pub struct CapSet {
     bits: u64,
 }
@@ -483,6 +484,12 @@ impl IntoIterator for CapSet {
             bits: self.bits,
             i: 0,
         }
+    }
+}
+
+impl fmt::Debug for CapSet {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_set().entries(self.iter()).finish()
     }
 }
 
