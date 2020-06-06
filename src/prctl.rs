@@ -675,6 +675,7 @@ const fn combine_raw_u32s(lower: u32, upper: u32) -> u64 {
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct FileCaps {
+    pub effective: bool,
     pub permitted: CapSet,
     pub inheritable: CapSet,
     pub rootid: Option<UidT>,
@@ -695,6 +696,7 @@ impl FileCaps {
             Err(e) => {
                 if e.raw_os_error() == Some(libc::ENODATA) {
                     Ok(FileCaps {
+                        effective: false,
                         permitted: CapSet::empty(),
                         inheritable: CapSet::empty(),
                         rootid: None,
@@ -713,10 +715,13 @@ impl FileCaps {
             return Err(io::Error::from_raw_os_error(libc::EINVAL));
         }
 
-        let version = u32::from_le_bytes(attrs[0..4].try_into().unwrap()) & (!constants::VFS_CAP_FLAGS_EFFECTIVE);
+        let magic = u32::from_le_bytes(attrs[0..4].try_into().unwrap());
+        let effective = (magic & constants::VFS_CAP_FLAGS_EFFECTIVE) != 0;
+        let version = magic & (!constants::VFS_CAP_FLAGS_EFFECTIVE);
 
         if version == constants::VFS_CAP_REVISION_2 && len == constants::XATTR_CAPS_SZ_2 {
             Ok(FileCaps {
+                effective,
                 permitted: CapSet::from_bits_safe(
                     combine_raw_u32s(
                         u32::from_le_bytes(attrs[4..8].try_into().unwrap()),
@@ -733,6 +738,7 @@ impl FileCaps {
             })
         } else if version == constants::VFS_CAP_REVISION_3 && len == constants::XATTR_CAPS_SZ_3 {
             Ok(FileCaps {
+                effective,
                 permitted: CapSet::from_bits_safe(
                     combine_raw_u32s(
                         u32::from_le_bytes(attrs[4..8].try_into().unwrap()),
@@ -749,6 +755,7 @@ impl FileCaps {
             })
         } else if version == constants::VFS_CAP_REVISION_1 && len == constants::XATTR_CAPS_SZ_1 {
             Ok(FileCaps {
+                effective,
                 permitted: CapSet::from_bits_safe(u32::from_le_bytes(attrs[4..8].try_into().unwrap()) as u64),
                 inheritable: CapSet::from_bits_safe(u32::from_le_bytes(attrs[8..12].try_into().unwrap()) as u64),
                 rootid: None,
