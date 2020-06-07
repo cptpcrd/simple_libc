@@ -682,25 +682,29 @@ pub struct FileCaps {
 }
 
 impl FileCaps {
-    pub fn get_for_file<P: AsRef<OsStr>>(path: P, follow_links: bool) -> io::Result<Self> {
+    pub fn empty() -> Self {
+        Self {
+            effective: false,
+            permitted: CapSet::empty(),
+            inheritable: CapSet::empty(),
+            rootid: None,
+        }
+    }
+
+    pub fn get_for_file<P: AsRef<OsStr>>(path: P, follow_links: bool) -> io::Result<Option<Self>> {
         Self::extract_attr_or_error(crate::getxattr(path, constants::XATTR_NAME_CAPS, follow_links))
     }
 
-    pub fn get_for_fd(fd: Int) -> io::Result<Self> {
+    pub fn get_for_fd(fd: Int) -> io::Result<Option<Self>> {
         Self::extract_attr_or_error(crate::fgetxattr(fd, constants::XATTR_NAME_CAPS))
     }
 
-    fn extract_attr_or_error(attr_res: io::Result<Vec<u8>>) -> io::Result<Self> {
+    fn extract_attr_or_error(attr_res: io::Result<Vec<u8>>) -> io::Result<Option<Self>> {
         match attr_res {
-            Ok(attrs) => Self::unpack_attrs(&attrs),
+            Ok(attrs) => Ok(Some(Self::unpack_attrs(&attrs)?)),
             Err(e) => {
                 if e.raw_os_error() == Some(libc::ENODATA) {
-                    Ok(FileCaps {
-                        effective: false,
-                        permitted: CapSet::empty(),
-                        inheritable: CapSet::empty(),
-                        rootid: None,
-                    })
+                    Ok(None)
                 } else {
                     Err(e)
                 }
