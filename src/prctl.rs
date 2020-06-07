@@ -987,6 +987,34 @@ pub mod secbits {
     }
 }
 
+pub fn with_effective_capset<T, F: FnOnce() -> T>(capset: CapSet, f: F) -> io::Result<T> {
+    let orig_state = CapState::get_current()?;
+
+    let mut new_state = orig_state;
+    new_state.effective = capset;
+    new_state.set_current()?;
+
+    let retval = f();
+
+    orig_state.set_current()?;
+
+    Ok(retval)
+}
+
+pub fn with_effective_cap<T, F: FnOnce() -> T>(cap: Cap, f: F) -> io::Result<T> {
+    let orig_state = CapState::get_current()?;
+
+    let mut new_state = orig_state;
+    new_state.effective.add(cap);
+    new_state.set_current()?;
+
+    let retval = f();
+
+    orig_state.set_current()?;
+
+    Ok(retval)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
