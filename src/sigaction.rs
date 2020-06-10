@@ -129,3 +129,44 @@ pub fn sig_setaction(sig: Int, act: Sigaction) -> io::Result<Sigaction> {
 }
 
 pub extern "C" fn empty_sighandler(_sig: Int) {}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_sig_getaction() {
+        sig_getaction(crate::signal::SIGINT).unwrap();
+    }
+
+    #[test]
+    fn test_sigaction_construct() {
+        // There isn't much to test here...
+        let ignore = Sigaction::ignore();
+        assert_eq!(ignore, Sigaction::ignoreflags(Flags::empty()));
+        assert_eq!(ignore.handler, SigHandler::Ignore);
+
+        assert_eq!(Sigaction::default().handler, SigHandler::Default);
+        assert_eq!(
+            Sigaction::empty_handler().handler,
+            SigHandler::Handler(empty_sighandler),
+        );
+    }
+
+    #[test]
+    fn test_sigaction_convert() {
+        for s in &[
+            Sigaction::ignore(),
+            Sigaction::default(),
+            Sigaction::empty_handler(),
+        ] {
+            assert_eq!(Sigaction::from(libc::sigaction::from(*s)), *s);
+        }
+    }
+
+    #[test]
+    fn test_empty_sighandler() {
+        // Just a dummy call so it shows up as covered
+        empty_sighandler(crate::signal::SIGINT);
+    }
+}
