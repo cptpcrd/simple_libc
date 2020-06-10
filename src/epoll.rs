@@ -212,6 +212,14 @@ mod tests {
     use crate::pipe2;
 
     #[test]
+    fn test_default() {
+        assert_eq!(Events::empty(), Events::default());
+        assert_eq!(EpollFlags::empty(), EpollFlags::default());
+
+        assert!(!EpollFlags::default().contains(EpollFlags::CLOEXEC));
+    }
+
+    #[test]
     fn test_epoll() {
         assert_eq!(std::mem::size_of::<RawEvent>(), std::mem::size_of::<libc::epoll_event>());
 
