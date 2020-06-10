@@ -151,6 +151,28 @@ pub fn deserialize_limit<'a, D: serde::Deserializer<'a>>(
     Ok(Option::<Limit>::deserialize(deserializer)?.unwrap_or(LIMIT_INFINITY))
 }
 
+pub fn min_limit(val1: Limit, val2: Limit) -> Limit {
+    // If either value is infinity, use the other one.
+    // Otherwise, just take the minimum.
+    if val1 == LIMIT_INFINITY {
+        val2
+    } else if val2 == LIMIT_INFINITY {
+        val1
+    } else {
+        std::cmp::min(val1, val2)
+    }
+}
+
+pub fn max_limit(val1: Limit, val2: Limit) -> Limit {
+    // If either value is infinity, return infinity.
+    // Otherwise, just take the maximum.
+    if val1 == LIMIT_INFINITY || val2 == LIMIT_INFINITY {
+        LIMIT_INFINITY
+    } else {
+        std::cmp::max(val1, val2)
+    }
+}
+
 pub type Limit = libc::rlim_t;
 pub const LIMIT_INFINITY: Limit = libc::RLIM_INFINITY;
 
@@ -350,5 +372,18 @@ mod tests {
 
         assert_eq!(nice_thresh_to_rlimit(-100), 40);
         assert_eq!(nice_thresh_to_rlimit(100), 1);
+    }
+
+    #[test]
+    fn test_min_max_limit() {
+        assert_eq!(min_limit(1, 2), 1);
+        assert_eq!(min_limit(1, LIMIT_INFINITY), 1);
+        assert_eq!(min_limit(LIMIT_INFINITY, 1), 1);
+        assert_eq!(min_limit(LIMIT_INFINITY, LIMIT_INFINITY), LIMIT_INFINITY);
+
+        assert_eq!(max_limit(1, 2), 2);
+        assert_eq!(max_limit(1, LIMIT_INFINITY), LIMIT_INFINITY);
+        assert_eq!(max_limit(LIMIT_INFINITY, 1), LIMIT_INFINITY);
+        assert_eq!(max_limit(LIMIT_INFINITY, LIMIT_INFINITY), LIMIT_INFINITY);
     }
 }
