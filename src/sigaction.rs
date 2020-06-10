@@ -25,7 +25,7 @@ pub enum SigHandler {
     ActionHandler(extern "C" fn(Int, *mut libc::siginfo_t, *mut libc::c_void)),
 }
 
-#[derive(Copy, Clone, Eq, Hash, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Sigaction {
     pub handler: SigHandler,
     pub mask: Sigset,
