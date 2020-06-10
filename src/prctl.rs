@@ -1224,6 +1224,13 @@ mod tests {
         assert_eq!(a - b, c);
     }
 
+    #[test]
+    fn test_capset_fmt() {
+        assert_eq!(format!("{:?}", CapSet::empty()), "{}");
+        assert_eq!(format!("{:?}", CapSet::from_iter(vec![Cap::Chown])), "{Chown}");
+        assert_eq!(format!("{:?}", CapSet::from_iter(vec![Cap::Chown, Cap::Fowner])), "{Chown, Fowner}");
+    }
+
     #[cfg(feature = "serde")]
     #[test]
     fn test_capset_serde_seq() {
@@ -1431,5 +1438,14 @@ mod tests {
     #[test]
     fn test_secbits() {
         secbits::get().unwrap();
+    }
+
+    #[test]
+    fn test_filecaps_empty() {
+        let empty_caps = FileCaps::empty();
+        assert!(!empty_caps.effective);
+        assert!(empty_caps.permitted.is_empty());
+        assert!(empty_caps.inheritable.is_empty());
+        assert!(empty_caps.rootid.is_none());
     }
 }
