@@ -30,6 +30,16 @@ pub struct PollFd {
     pub revents: Events,
 }
 
+impl PollFd {
+    pub const fn new(fd: Int, events: Events) -> Self {
+        Self {
+            fd,
+            events,
+            revents: Events::empty(),
+        }
+    }
+}
+
 pub fn poll(fds: &mut [PollFd], timeout: Option<Duration>) -> io::Result<usize> {
     let raw_timeout = match timeout {
         Some(t) => t.as_millis().try_into().unwrap_or(Int::MAX),
