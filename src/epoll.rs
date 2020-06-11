@@ -38,6 +38,16 @@ pub struct RawEvent {
     pub data: u64,
 }
 
+impl Default for RawEvent {
+    #[inline]
+    fn default() -> Self {
+        Self {
+            events: Events::empty(),
+            data: 0,
+        }
+    }
+}
+
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Event {
     pub events: Events,
