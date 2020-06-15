@@ -39,6 +39,15 @@ pub mod wait;
 ))]
 pub mod flock;
 
+#[cfg(any(
+    target_os = "freebsd",
+    target_os = "openbsd",
+    target_os = "netbsd",
+    target_os = "dragonfly",
+    target_os = "macos",
+))]
+pub mod kqueue;
+
 #[macro_export]
 macro_rules! attr_group {
     (#![$attr:meta] $($stmts:item)*) => {

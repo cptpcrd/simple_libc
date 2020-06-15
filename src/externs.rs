@@ -60,3 +60,8 @@ extern "C" {
     pub fn __libc_current_sigrtmin() -> libc::c_int;
     pub fn __libc_current_sigrtmax() -> libc::c_int;
 }
+
+#[cfg(target_os = "netbsd")]
+extern "C" {
+    pub fn kqueue1(flags: libc::c_int) -> libc::c_int;
+}
