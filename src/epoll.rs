@@ -64,21 +64,14 @@ impl Default for Event {
     }
 }
 
-bitflags! {
-    #[derive(Default)]
-    pub struct EpollFlags: Int {
-        const CLOEXEC = libc::EPOLL_CLOEXEC;
-    }
-}
-
 #[derive(Debug)]
 pub struct Epoll {
     fd: Int,
 }
 
 impl Epoll {
-    pub fn new(flags: EpollFlags) -> io::Result<Epoll> {
-        let fd = crate::error::convert_neg_ret(unsafe { libc::epoll_create1(flags.bits) })?;
+    pub fn new() -> io::Result<Epoll> {
+        let fd = crate::error::convert_neg_ret(unsafe { libc::epoll_create1(libc::EPOLL_CLOEXEC) })?;
 
         Ok(Epoll { fd })
     }
@@ -224,16 +217,13 @@ mod tests {
     #[test]
     fn test_default() {
         assert_eq!(Events::empty(), Events::default());
-        assert_eq!(EpollFlags::empty(), EpollFlags::default());
-
-        assert!(!EpollFlags::default().contains(EpollFlags::CLOEXEC));
     }
 
     #[test]
     fn test_epoll() {
         assert_eq!(std::mem::size_of::<RawEvent>(), std::mem::size_of::<libc::epoll_event>());
 
-        let mut poller = Epoll::new(EpollFlags::CLOEXEC).unwrap();
+        let mut poller = Epoll::new().unwrap();
         let mut events = [Event::default(); 3];
 
         assert_eq!(poller.fd, poller.as_raw_fd());

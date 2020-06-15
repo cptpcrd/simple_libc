@@ -24,14 +24,9 @@ bitflags! {
     }
 }
 
-bitflags! {
-    #[derive(Default)]
-    pub struct Flags: u32 {
-        const CLOEXEC = 0b1;
-    }
-}
+pub trait Poller: Sized {
+    fn new() -> io::Result<Self>;
 
-pub trait Poller {
     /// Begin monitoring the given file descriptor for the given events.
     ///
     /// If the file object was already registered, this returns an `EEXIST` error.

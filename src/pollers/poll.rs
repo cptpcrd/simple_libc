@@ -3,7 +3,7 @@ use std::io;
 use std::os::unix::io::RawFd;
 use std::time::Duration;
 
-use super::{Events, Flags, Poller};
+use super::{Events, Poller};
 use crate::poll::{poll, Events as PollEvents, PollFd};
 
 #[cfg(any(
@@ -22,14 +22,6 @@ pub struct PollPoller {
 }
 
 impl PollPoller {
-    #[inline]
-    pub fn new(_flags: Flags) -> io::Result<Self> {
-        Ok(Self {
-            pollfds: Vec::new(),
-            fdset: HashSet::new(),
-        })
-    }
-
     fn translate_events(events: Events) -> PollEvents {
         let mut ev = PollEvents::empty();
 
@@ -76,6 +68,13 @@ impl PollPoller {
 }
 
 impl Poller for PollPoller {
+    fn new() -> io::Result<Self> {
+        Ok(Self {
+            pollfds: Vec::new(),
+            fdset: HashSet::new(),
+        })
+    }
+
     fn register(&mut self, fd: RawFd, events: Events) -> io::Result<()> {
         if self.fdset.contains(&fd) {
             Err(io::Error::from_raw_os_error(libc::EEXIST))
@@ -192,7 +191,7 @@ mod tests {
         let (r1, mut w1) = pipe_cloexec().unwrap();
         let (r2, mut w2) = pipe_cloexec().unwrap();
 
-        let mut poller = PollPoller::new(Flags::CLOEXEC).unwrap();
+        let mut poller = PollPoller::new().unwrap();
 
         // Nothing to start
         assert_eq!(poller.poll(timeout_0).unwrap(), vec![]);

@@ -2,8 +2,8 @@ use std::io;
 use std::os::unix::io::RawFd;
 use std::time::Duration;
 
-use super::{Events, Flags, Poller, Ppoller};
-use crate::epoll::{Epoll, EpollFlags, Events as EpollEvents, RawEvent as RawEpollEvent};
+use super::{Events, Poller, Ppoller};
+use crate::epoll::{Epoll, Events as EpollEvents, RawEvent as RawEpollEvent};
 use crate::signal::Sigset;
 
 #[derive(Debug)]
@@ -12,18 +12,6 @@ pub struct EpollPoller {
 }
 
 impl EpollPoller {
-    #[inline]
-    pub fn new(flags: Flags) -> io::Result<Self> {
-        let mut epoll_flags = EpollFlags::empty();
-        if flags.contains(Flags::CLOEXEC) {
-            epoll_flags.insert(EpollFlags::CLOEXEC);
-        }
-
-        Ok(Self {
-            epoll: Epoll::new(epoll_flags)?,
-        })
-    }
-
     fn translate_events(events: Events) -> EpollEvents {
         let mut ev = EpollEvents::empty();
 
@@ -69,6 +57,12 @@ impl EpollPoller {
 }
 
 impl Poller for EpollPoller {
+    fn new() -> io::Result<Self> {
+        Ok(Self {
+            epoll: Epoll::new()?,
+        })
+    }
+
     fn register(&mut self, fd: RawFd, events: Events) -> io::Result<()> {
         self.epoll.add(fd, Self::translate_events(events))
     }
@@ -122,7 +116,7 @@ mod tests {
         let (r1, mut w1) = pipe2(libc::O_CLOEXEC).unwrap();
         let (r2, mut w2) = pipe2(libc::O_CLOEXEC).unwrap();
 
-        let mut poller = EpollPoller::new(Flags::CLOEXEC).unwrap();
+        let mut poller = EpollPoller::new().unwrap();
 
         // Nothing to start
         assert_eq!(poller.poll(timeout_0).unwrap(), vec![]);

@@ -4,7 +4,7 @@ use std::io;
 use std::os::unix::io::RawFd;
 use std::time::Duration;
 
-use super::{Events, Flags, Poller, Ppoller};
+use super::{Events, Poller, Ppoller};
 use crate::select::{build_fdset_opt, pselect_raw, FdSet};
 use crate::signal::Sigset;
 
@@ -14,13 +14,6 @@ pub struct SelectPoller {
 }
 
 impl SelectPoller {
-    #[inline]
-    pub fn new(_flags: Flags) -> io::Result<Self> {
-        Ok(Self {
-            files: HashMap::new(),
-        })
-    }
-
     fn build_fdset(&self, events: Events, nfds: RawFd) -> (Option<FdSet>, RawFd) {
         build_fdset_opt(
             self.files.iter().filter_map(|(fd, mon_ev)| {
@@ -36,6 +29,13 @@ impl SelectPoller {
 }
 
 impl Poller for SelectPoller {
+    #[inline]
+    fn new() -> io::Result<Self> {
+        Ok(Self {
+            files: HashMap::new(),
+        })
+    }
+
     fn register(&mut self, fd: RawFd, events: Events) -> io::Result<()> {
         match self.files.entry(fd) {
             hash_map::Entry::Vacant(e) => {
@@ -164,7 +164,7 @@ mod tests {
         let (r1, mut w1) = pipe_cloexec().unwrap();
         let (r2, mut w2) = pipe_cloexec().unwrap();
 
-        let mut poller = SelectPoller::new(Flags::CLOEXEC).unwrap();
+        let mut poller = SelectPoller::new().unwrap();
 
         // Nothing to start
         assert_eq!(poller.poll(timeout_0).unwrap(), vec![]);
