@@ -67,14 +67,6 @@ pub struct Watch {
     wd: i32,
 }
 
-bitflags! {
-    #[derive(Default)]
-    pub struct InotifyFlags: i32 {
-        const NONBLOCK = libc::IN_NONBLOCK;
-        const CLOEXEC = libc::IN_CLOEXEC;
-    }
-}
-
 #[derive(Debug)]
 pub struct Inotify {
     fd: i32,
@@ -84,8 +76,13 @@ const RAW_EVENT_SIZE: usize = std::mem::size_of::<libc::inotify_event>();
 
 impl Inotify {
     /// Construct a new inotify file descriptor with the given options.
-    pub fn new(flags: InotifyFlags) -> io::Result<Self> {
-        let fd = crate::error::convert_neg_ret(unsafe { libc::inotify_init1(flags.bits) })?;
+    pub fn new(nonblock: bool) -> io::Result<Self> {
+        let mut flags = libc::IN_CLOEXEC;
+        if nonblock {
+            flags |= libc::IN_NONBLOCK;
+        }
+
+        let fd = crate::error::convert_neg_ret(unsafe { libc::inotify_init1(flags) })?;
 
         Ok(Self { fd })
     }
