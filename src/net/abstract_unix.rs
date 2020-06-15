@@ -1,12 +1,16 @@
 use std::ffi::{OsStr, OsString};
 use std::io;
-use std::os::unix::ffi::OsStringExt;
-use std::os::unix::io::FromRawFd;
 use std::os::unix::net::{UnixListener, UnixStream};
+use std::os::unix::prelude::*;
 
 use crate::SocklenT;
 
-fn build_abstract_addr(name: &OsStr) -> io::Result<(libc::sockaddr_un, SocklenT)> {
+fn build_abstract_addr(mut name: &OsStr) -> io::Result<(libc::sockaddr_un, SocklenT)> {
+    // Allow a leading NULL, but just ignore it since we add our own NULL anyway.
+    if !name.is_empty() && name.as_bytes()[0] == 0 {
+        name = OsStr::from_bytes(&name.as_bytes()[1..]);
+    }
+
     let mut addr = libc::sockaddr_un {
         sun_family: libc::AF_UNIX as libc::sa_family_t,
         sun_path: unsafe { std::mem::zeroed() },
@@ -84,6 +88,9 @@ mod tests {
 
     #[test]
     fn test_build_abstract_addr() {
+        build_abstract_addr(&OsString::from_vec(vec![0, 1])).unwrap();
+        build_abstract_addr(&OsString::from_vec(vec![1])).unwrap();
+
         build_abstract_addr(&OsString::from_vec([1].repeat(106))).unwrap();
 
         let err = build_abstract_addr(&OsString::from_vec([1].repeat(107))).unwrap_err();
