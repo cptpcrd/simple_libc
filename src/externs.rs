@@ -56,4 +56,7 @@ extern "C" {
         hdrp: &mut crate::types::cap_user_header_t,
         datap: &crate::types::cap_user_data_t,
     ) -> libc::c_int;
+
+    pub fn __libc_current_sigrtmin() -> libc::c_int;
+    pub fn __libc_current_sigrtmax() -> libc::c_int;
 }

@@ -63,6 +63,24 @@ pub fn sig_from_name(name: &str) -> Option<Int> {
     SIGNALS_BY_NAME.get(name).copied()
 }
 
+#[cfg(target_os = "linux")]
+pub fn get_rtsig_minmax() -> io::Result<(Int, Int)> {
+    let res = unsafe {
+        (
+            crate::externs::__libc_current_sigrtmin(),
+            crate::externs::__libc_current_sigrtmax(),
+        )
+    };
+
+    Ok(res)
+}
+
+#[cfg(target_os = "linux")]
+pub fn get_rtsig_range() -> io::Result<std::ops::RangeInclusive<Int>> {
+    let (sigrtmin, sigrtmax) = get_rtsig_minmax()?;
+    Ok(sigrtmin..=sigrtmax)
+}
+
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Sigset {
     set: libc::sigset_t,
@@ -170,5 +188,12 @@ mod tests {
 
         set = Sigset::full();
         assert!(set.ismember(SIGTERM).unwrap());
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn test_get_rtsig_minmax_range() {
+        get_rtsig_minmax().unwrap();
+        get_rtsig_range().unwrap();
     }
 }
