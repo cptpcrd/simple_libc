@@ -25,10 +25,17 @@ fn build_abstract_addr(mut name: &OsStr) -> io::Result<(libc::sockaddr_un, Sockl
 
     let name_vec = OsString::from(name).into_vec();
 
-    let mut i = 0;
-    while i < name_vec.len() {
-        addr.sun_path[i + 1] = name_vec[i] as libc::c_char;
-        i += 1;
+    for (i, ch) in name_vec.iter().enumerate() {
+        let ch = *ch;
+
+        if ch == 0 {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "Abstract socket name cannot contain null bytes",
+            ));
+        }
+
+        addr.sun_path[i + 1] = ch as libc::c_char;
     }
 
     let addrlen = (std::mem::size_of::<libc::sa_family_t>() + name_vec.len() + 1) as SocklenT;
@@ -94,6 +101,15 @@ mod tests {
         build_abstract_addr(&OsString::from_vec([1].repeat(106))).unwrap();
 
         let err = build_abstract_addr(&OsString::from_vec([1].repeat(107))).unwrap_err();
+        assert_eq!(err.kind(), io::ErrorKind::InvalidInput);
+
+        let err = build_abstract_addr(&OsString::from_vec(vec![0, 1, 0])).unwrap_err();
+        assert_eq!(err.kind(), io::ErrorKind::InvalidInput);
+
+        let err = build_abstract_addr(&OsString::from_vec(vec![1, 0])).unwrap_err();
+        assert_eq!(err.kind(), io::ErrorKind::InvalidInput);
+
+        let err = build_abstract_addr(&OsString::from_vec(vec![0, 0])).unwrap_err();
         assert_eq!(err.kind(), io::ErrorKind::InvalidInput);
     }
 
