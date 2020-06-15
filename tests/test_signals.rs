@@ -26,7 +26,7 @@ simple_libc::attr_group! {
 
         // Create a signalfd
         let sigfd =
-            signalfd::SignalFd::new(&Sigset::full(), libc::SFD_CLOEXEC | libc::SFD_NONBLOCK).unwrap();
+            signalfd::SignalFd::new(&Sigset::full(), true).unwrap();
 
         let mut sigs = [signalfd::Siginfo::default(); 3];
 

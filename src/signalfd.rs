@@ -11,7 +11,12 @@ pub struct SignalFd {
 }
 
 impl SignalFd {
-    pub fn new(mask: &Sigset, flags: Int) -> io::Result<SignalFd> {
+    pub fn new(mask: &Sigset, nonblock: bool) -> io::Result<SignalFd> {
+        let mut flags = libc::SFD_CLOEXEC;
+        if nonblock {
+            flags |= libc::SFD_NONBLOCK;
+        }
+
         let fd = error::convert_ret(unsafe { libc::signalfd(-1, &mask.raw_set(), flags) })?;
 
         Ok(SignalFd { fd })
