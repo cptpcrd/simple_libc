@@ -245,6 +245,26 @@ mod tests {
     }
 
     #[cfg(any(
+        target_os = "macos",
+        target_os = "openbsd",
+        target_os = "freebsd",
+        target_os = "dragonfly",
+        target_os = "netbsd",
+    ))]
+    #[test]
+    fn test_getpeereid() {
+        let (a, b) = UnixStream::pair().unwrap();
+
+        let (auid, agid) = getpeereid(&a).unwrap();
+        assert_eq!(auid, process::geteuid());
+        assert_eq!(agid, process::getegid());
+
+        let (buid, bgid) = getpeereid(&b).unwrap();
+        assert_eq!(buid, process::geteuid());
+        assert_eq!(bgid, process::getegid());
+    }
+
+    #[cfg(any(
         target_os = "linux",
         target_os = "openbsd",
         target_os = "netbsd",
