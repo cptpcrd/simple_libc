@@ -6,7 +6,7 @@ use crate::{Int, SocklenT};
 
 // Linux, NetBSD, and OpenBSD use almost exactly the same interface.
 // The only differences are 1) the name of the socket option and 2) the order
-// the fields in the resulting struct. We can special-case both of those.
+// of the fields in the resulting struct. We can special-case both of those.
 //
 // Note that on OpenBSD this is called 'sockpeercred', and on NetBSD
 // it is called 'unpcbid'. But it's still pretty much the same
