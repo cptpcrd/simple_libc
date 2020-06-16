@@ -110,6 +110,15 @@ jobs:
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
+        with:
+          name: ${{ matrix.toolchain }}-${{ matrix.target }}
+          fail_ci_if_error: true
+        env:
+          CODECOV_ENV: OS,TARGET,TOOLCHAIN,JOB
+          JOB: ${{ github.job }}
+          OS: ${{ matrix.os }}
+          TARGET: ${{ matrix.target }}
+          TOOLCHAIN: ${{ matrix.toolchain }}
 
   coverage-grcov:
     name: Grcov
@@ -169,3 +178,12 @@ jobs:
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
+        with:
+          name: ${{ matrix.toolchain }}-${{ matrix.target }}
+          fail_ci_if_error: true
+        env:
+          CODECOV_ENV: OS,TARGET,TOOLCHAIN,JOB
+          JOB: ${{ github.job }}
+          OS: ${{ matrix.os }}
+          TARGET: ${{ matrix.target }}
+          TOOLCHAIN: ${{ matrix.toolchain }}
