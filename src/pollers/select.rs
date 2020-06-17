@@ -129,40 +129,16 @@ mod tests {
     use super::*;
 
     use std::collections::HashSet;
-    use std::fs;
     use std::io::Write;
     use std::iter::FromIterator;
     use std::os::unix::io::AsRawFd;
-
-    #[cfg(any(
-        target_os = "linux",
-        target_os = "freebsd",
-        target_os = "openbsd",
-        target_os = "netbsd",
-        target_os = "dragonfly",
-    ))]
-    fn pipe_cloexec() -> io::Result<(fs::File, fs::File)> {
-        use crate::pipe2;
-        pipe2(libc::O_CLOEXEC)
-    }
-
-    #[cfg(target_os = "macos")]
-    fn pipe_cloexec() -> io::Result<(fs::File, fs::File)> {
-        use crate::fcntl;
-        use crate::pipe;
-
-        let (r, w) = pipe()?;
-        fcntl::set_inheritable(r.as_raw_fd(), false).unwrap();
-        fcntl::set_inheritable(w.as_raw_fd(), false).unwrap();
-        Ok((r, w))
-    }
 
     #[test]
     fn test_select_poller() {
         let timeout_0 = Some(Duration::from_secs(0));
 
-        let (r1, mut w1) = pipe_cloexec().unwrap();
-        let (r2, mut w2) = pipe_cloexec().unwrap();
+        let (r1, mut w1) = crate::pipe().unwrap();
+        let (r2, mut w2) = crate::pipe().unwrap();
 
         let mut poller = SelectPoller::new().unwrap();
 

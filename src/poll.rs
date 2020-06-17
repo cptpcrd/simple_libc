@@ -118,33 +118,13 @@ pub fn ppoll(
 mod tests {
     use super::*;
 
-    use std::fs;
     use std::io::Write;
     use std::os::unix::io::AsRawFd;
 
-    #[cfg(any(
-        target_os = "linux",
-        target_os = "freebsd",
-        target_os = "openbsd",
-        target_os = "netbsd",
-        target_os = "dragonfly",
-    ))]
-    fn pipe_cloexec() -> io::Result<(fs::File, fs::File)> {
-        crate::pipe2(libc::O_CLOEXEC)
-    }
-
-    #[cfg(target_os = "macos")]
-    fn pipe_cloexec() -> io::Result<(fs::File, fs::File)> {
-        let (r, w) = crate::pipe()?;
-        crate::fcntl::set_inheritable(r.as_raw_fd(), false).unwrap();
-        crate::fcntl::set_inheritable(w.as_raw_fd(), false).unwrap();
-        Ok((r, w))
-    }
-
     #[test]
     fn test_poll() {
-        let (r1, mut w1) = pipe_cloexec().unwrap();
-        let (r2, mut w2) = pipe_cloexec().unwrap();
+        let (r1, mut w1) = crate::pipe().unwrap();
+        let (r2, mut w2) = crate::pipe().unwrap();
 
         let mut fds = [
             PollFd {
@@ -186,8 +166,8 @@ mod tests {
     ))]
     #[test]
     fn test_ppoll() {
-        let (r1, mut w1) = pipe_cloexec().unwrap();
-        let (r2, mut w2) = pipe_cloexec().unwrap();
+        let (r1, mut w1) = crate::pipe().unwrap();
+        let (r2, mut w2) = crate::pipe().unwrap();
 
         let mut fds = [
             PollFd {

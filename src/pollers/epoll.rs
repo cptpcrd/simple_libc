@@ -107,14 +107,12 @@ mod tests {
     use std::io::Write;
     use std::os::unix::io::AsRawFd;
 
-    use crate::pipe2;
-
     #[test]
     fn test_epoll_poller() {
         let timeout_0 = Some(Duration::from_secs(0));
 
-        let (r1, mut w1) = pipe2(libc::O_CLOEXEC).unwrap();
-        let (r2, mut w2) = pipe2(libc::O_CLOEXEC).unwrap();
+        let (r1, mut w1) = crate::pipe().unwrap();
+        let (r2, mut w2) = crate::pipe().unwrap();
 
         let mut poller = EpollPoller::new().unwrap();
 
