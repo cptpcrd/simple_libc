@@ -1,5 +1,6 @@
 # simple_libc
 
+[![Crates.io](https://img.shields.io/crates/v/simple_libc.svg)](https://crates.io/crates/simple_libc)
 [![GitHub Actions](https://github.com/cptpcrd/simple_libc/workflows/CI/badge.svg?branch=master&event=push)](https://github.com/cptpcrd/simple_libc/actions?query=workflow%3ACI+branch%3Amaster+event%3Apush)
 [![codecov](https://codecov.io/gh/cptpcrd/simple_libc/branch/master/graph/badge.svg)](https://codecov.io/gh/cptpcrd/simple_libc)
 
