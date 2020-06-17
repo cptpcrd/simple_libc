@@ -1,5 +1,5 @@
 use std::io;
-use std::os::unix::io::AsRawFd;
+use std::os::unix::prelude::*;
 
 use crate::error;
 use crate::signal::Sigset;

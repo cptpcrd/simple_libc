@@ -1,6 +1,6 @@
 use std::fs::File;
 use std::io;
-use std::os::unix::io::AsRawFd;
+use std::os::unix::prelude::*;
 use std::path::Path;
 
 use bitflags::bitflags;

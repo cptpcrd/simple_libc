@@ -1,6 +1,6 @@
 use std::io;
-use std::os::unix;
-use std::os::unix::io::AsRawFd;
+use std::os::unix::net::UnixStream;
+use std::os::unix::prelude::*;
 
 use crate::error;
 use crate::{GidT, Int, UidT};
@@ -103,15 +103,13 @@ fn read_sockcred_groups(cred: &libc::sockcred) -> Vec<GidT> {
 }
 
 #[inline]
-pub fn recv_sockcred(sock: &mut unix::net::UnixStream, block: bool) -> io::Result<Sockcred> {
+pub fn recv_sockcred(sock: &mut UnixStream, block: bool) -> io::Result<Sockcred> {
     recv_sockcred_raw(sock.as_raw_fd(), block)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    use std::os::unix::net::UnixStream;
 
     use crate::process;
 

@@ -1,5 +1,5 @@
 use std::io;
-use std::os::unix::io::RawFd;
+use std::os::unix::prelude::*;
 use std::time::Duration;
 
 use bitflags::bitflags;

@@ -1,6 +1,6 @@
 use std::io;
-use std::os::unix;
-use std::os::unix::io::AsRawFd;
+use std::os::unix::net::UnixStream;
+use std::os::unix::prelude::*;
 
 use crate::{GidT, Int, SocklenT, UidT};
 
@@ -72,15 +72,13 @@ pub fn get_xucred_raw(sockfd: Int) -> io::Result<Xucred> {
 }
 
 #[inline]
-pub fn get_xucred(sock: &unix::net::UnixStream) -> io::Result<Xucred> {
+pub fn get_xucred(sock: &UnixStream) -> io::Result<Xucred> {
     get_xucred_raw(sock.as_raw_fd())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    use std::os::unix::net::UnixStream;
 
     use crate::process;
 

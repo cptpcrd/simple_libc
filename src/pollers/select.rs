@@ -1,7 +1,7 @@
 use std::collections::hash_map;
 use std::collections::HashMap;
 use std::io;
-use std::os::unix::io::RawFd;
+use std::os::unix::prelude::*;
 use std::time::Duration;
 
 use super::{Events, Poller, Ppoller};
@@ -131,7 +131,6 @@ mod tests {
     use std::collections::HashSet;
     use std::io::Write;
     use std::iter::FromIterator;
-    use std::os::unix::io::AsRawFd;
 
     #[test]
     fn test_select_poller() {

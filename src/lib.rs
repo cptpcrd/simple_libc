@@ -2,8 +2,7 @@ use std::cmp;
 use std::ffi;
 use std::fs;
 use std::io;
-use std::os::unix::ffi::OsStringExt;
-use std::os::unix::io::FromRawFd;
+use std::os::unix::prelude::*;
 
 mod constants;
 mod externs;
@@ -435,8 +434,6 @@ fn bytes_to_osstring<'a, T: IntoIterator<Item = &'a Char>>(bytes: T) -> ffi::OsS
 attr_group! {
     #![cfg(target_os = "linux")]
 
-    use std::os::unix::ffi::OsStrExt;
-
     fn getxattr_raw_internal(
         path: &ffi::CStr,
         name: &ffi::CStr,
@@ -555,7 +552,6 @@ attr_group! {
 #[cfg(test)]
 mod tests {
     use std::io::{Read, Write};
-    use std::os::unix::io::AsRawFd;
 
     use super::*;
 

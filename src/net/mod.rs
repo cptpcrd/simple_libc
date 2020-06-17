@@ -1,13 +1,11 @@
 use std::io;
-use std::os::unix;
-use std::os::unix::io::AsRawFd;
+use std::os::unix::net::UnixStream;
+use std::os::unix::prelude::*;
 
 #[cfg(target_os = "linux")]
 use std::ffi::OsString;
 #[cfg(target_os = "linux")]
-use std::os::unix::ffi::OsStringExt;
-#[cfg(target_os = "linux")]
-use std::os::unix::net::{UnixListener, UnixStream};
+use std::os::unix::net::UnixListener;
 
 use crate::{GidT, Int, SocklenT, UidT};
 
@@ -53,7 +51,7 @@ pub fn getpeereid_raw(sockfd: Int) -> io::Result<(UidT, GidT)> {
     target_os = "dragonfly",
     target_os = "netbsd",
 ))]
-pub fn getpeereid(sock: &unix::net::UnixStream) -> io::Result<(UidT, GidT)> {
+pub fn getpeereid(sock: &UnixStream) -> io::Result<(UidT, GidT)> {
     getpeereid_raw(sock.as_raw_fd())
 }
 
@@ -69,7 +67,7 @@ pub fn get_peer_ids_raw(sockfd: Int) -> io::Result<(UidT, GidT)> {
     return getpeereid_raw(sockfd);
 }
 
-pub fn get_peer_ids(sock: &unix::net::UnixStream) -> io::Result<(UidT, GidT)> {
+pub fn get_peer_ids(sock: &UnixStream) -> io::Result<(UidT, GidT)> {
     get_peer_ids_raw(sock.as_raw_fd())
 }
 
@@ -95,7 +93,7 @@ pub fn get_peer_pid_ids_raw(sockfd: Int) -> io::Result<(crate::PidT, UidT, GidT)
     target_os = "netbsd",
     target_os = "freebsd",
 ))]
-pub fn get_peer_pid_ids(sock: &unix::net::UnixStream) -> io::Result<(crate::PidT, UidT, GidT)> {
+pub fn get_peer_pid_ids(sock: &UnixStream) -> io::Result<(crate::PidT, UidT, GidT)> {
     get_peer_pid_ids_raw(sock.as_raw_fd())
 }
 
@@ -226,8 +224,6 @@ pub fn get_unix_stream_raw_peername(sock: &UnixStream) -> io::Result<OsString> {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    use std::os::unix::net::UnixStream;
 
     use crate::process;
 

@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 use std::io;
-use std::os::unix::io::RawFd;
+use std::os::unix::prelude::*;
 use std::time::Duration;
 
 use super::{Events, Poller};
@@ -158,7 +158,6 @@ mod tests {
     use super::*;
 
     use std::io::Write;
-    use std::os::unix::io::AsRawFd;
 
     #[test]
     fn test_poll_poller() {

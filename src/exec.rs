@@ -1,6 +1,6 @@
 use std::ffi::{CString, OsStr};
 use std::io;
-use std::os::unix::ffi::OsStrExt;
+use std::os::unix::prelude::*;
 
 use crate::Char;
 

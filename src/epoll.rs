@@ -1,7 +1,7 @@
 use std::convert::TryInto;
 use std::io;
 use std::time;
-use std::os::unix::io::{AsRawFd, RawFd};
+use std::os::unix::prelude::*;
 
 use bitflags::bitflags;
 
@@ -210,7 +210,6 @@ mod tests {
     use super::*;
 
     use std::io::Write;
-    use std::os::unix::io::AsRawFd;
 
     #[test]
     fn test_default() {

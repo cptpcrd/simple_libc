@@ -1,6 +1,6 @@
 use std::io;
-use std::os::unix;
-use std::os::unix::io::AsRawFd;
+use std::os::unix::net::UnixStream;
+use std::os::unix::prelude::*;
 
 use crate::{Int, SocklenT};
 
@@ -54,15 +54,13 @@ pub fn get_ucred_raw(sockfd: Int) -> io::Result<Ucred> {
 }
 
 /// Attempts to read credentials from the given Unix stream socket.
-pub fn get_ucred(sock: &unix::net::UnixStream) -> io::Result<Ucred> {
+pub fn get_ucred(sock: &UnixStream) -> io::Result<Ucred> {
     get_ucred_raw(sock.as_raw_fd())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    use std::os::unix::net::UnixStream;
 
     use crate::process;
 

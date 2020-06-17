@@ -1,5 +1,5 @@
 use std::io;
-use std::os::unix::io::RawFd;
+use std::os::unix::prelude::*;
 use std::time::Duration;
 
 use super::{Events, Poller, Ppoller};
@@ -105,7 +105,6 @@ mod tests {
     use super::*;
 
     use std::io::Write;
-    use std::os::unix::io::AsRawFd;
 
     #[test]
     fn test_epoll_poller() {

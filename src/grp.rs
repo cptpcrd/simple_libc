@@ -1,7 +1,7 @@
 use std::ffi;
 use std::io;
 use std::io::BufRead;
-use std::os::unix::ffi::{OsStrExt, OsStringExt};
+use std::os::unix::prelude::*;
 use std::str::FromStr;
 
 use lazy_static::lazy_static;

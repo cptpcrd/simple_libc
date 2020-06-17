@@ -1,8 +1,7 @@
 use std::convert::TryFrom;
 use std::ffi;
 use std::io;
-use std::os::unix::ffi::OsStrExt;
-use std::os::unix::ffi::OsStringExt;
+use std::os::unix::prelude::*;
 use std::path::Path;
 
 use crate::externs;
