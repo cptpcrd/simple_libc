@@ -145,12 +145,58 @@ pub fn constrain<T: Ord + Eq>(val: T, min: T, max: T) -> T {
     cmp::min(cmp::max(val, min), max)
 }
 
-pub fn pipe_raw() -> io::Result<(Int, Int)> {
+pub fn pipe_inheritable_raw() -> io::Result<(Int, Int)> {
     let mut fds = [0; 2];
 
     error::convert_nzero_ret(unsafe { libc::pipe(fds.as_mut_ptr()) })?;
 
     Ok((fds[0], fds[1]))
+}
+
+pub fn pipe_inheritable() -> io::Result<(fs::File, fs::File)> {
+    let (r, w) = pipe_inheritable_raw()?;
+    unsafe { Ok((fs::File::from_raw_fd(r), fs::File::from_raw_fd(w))) }
+}
+
+#[allow(clippy::needless_return)]
+pub fn pipe_raw() -> io::Result<(Int, Int)> {
+    #[cfg(any(
+        target_os = "linux",
+        target_os = "freebsd",
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "dragonfly",
+    ))]
+    {
+        return pipe2_raw(libc::O_CLOEXEC);
+    }
+
+    #[cfg(not(any(
+        target_os = "linux",
+        target_os = "freebsd",
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "dragonfly",
+    )))]
+    {
+        let fds = pipe_inheritable_raw()?;
+
+        let res = fcntl::set_inheritable(fds.0, false)
+            .and_then(|()| fcntl::set_inheritable(fds.1, false));
+
+        if let Err(e) = res {
+            unsafe {
+                libc::close(fds.0);
+            }
+            unsafe {
+                libc::close(fds.1);
+            }
+
+            return Err(e);
+        }
+
+        return Ok(fds);
+    }
 }
 
 pub fn pipe() -> io::Result<(fs::File, fs::File)> {
@@ -509,6 +555,7 @@ attr_group! {
 #[cfg(test)]
 mod tests {
     use std::io::{Read, Write};
+    use std::os::unix::io::AsRawFd;
 
     use super::*;
 
@@ -526,7 +573,19 @@ mod tests {
 
     #[test]
     fn test_pipe() {
-        let (mut r, mut w) = pipe().unwrap();
+        let (r, w) = pipe().unwrap();
+
+        assert!(!fcntl::is_inheritable(r.as_raw_fd()).unwrap());
+        assert!(!fcntl::is_inheritable(w.as_raw_fd()).unwrap());
+    }
+
+    #[test]
+    fn test_pipe_inheritable() {
+        let (mut r, mut w) = pipe_inheritable().unwrap();
+
+        assert!(fcntl::is_inheritable(r.as_raw_fd()).unwrap());
+        assert!(fcntl::is_inheritable(w.as_raw_fd()).unwrap());
+
         let mut buf: Vec<u8> = Vec::new();
 
         buf.resize(5, 10);
@@ -547,10 +606,28 @@ mod tests {
         }
     }
 
-    #[cfg(target_os = "linux")]
+    #[cfg(any(
+        target_os = "linux",
+        target_os = "freebsd",
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "dragonfly",
+    ))]
     #[test]
     fn test_pipe2() {
-        let (mut r, mut w) = pipe2(0).unwrap();
+        let (r, w) = pipe2(0).unwrap();
+
+        assert!(fcntl::is_inheritable(r.as_raw_fd()).unwrap());
+        assert!(fcntl::is_inheritable(w.as_raw_fd()).unwrap());
+
+        drop(r);
+        drop(w);
+
+        let (mut r, mut w) = pipe2(libc::O_CLOEXEC).unwrap();
+
+        assert!(!fcntl::is_inheritable(r.as_raw_fd()).unwrap());
+        assert!(!fcntl::is_inheritable(w.as_raw_fd()).unwrap());
+
         let mut buf: Vec<u8> = Vec::new();
 
         buf.resize(5, 10);
