@@ -586,6 +586,9 @@ mod tests {
         assert!(fcntl::is_inheritable(r.as_raw_fd()).unwrap());
         assert!(fcntl::is_inheritable(w.as_raw_fd()).unwrap());
 
+        fcntl::set_inheritable(r.as_raw_fd(), false).unwrap();
+        fcntl::set_inheritable(w.as_raw_fd(), false).unwrap();
+
         let mut buf: Vec<u8> = Vec::new();
 
         buf.resize(5, 10);
