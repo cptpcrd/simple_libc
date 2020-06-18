@@ -122,6 +122,45 @@ mod tests {
     }
 
     #[test]
+    fn test_from_ioprio() {
+        assert_eq!(
+            Priority::from_ioprio(constants::IOPRIO_CLASS_NONE << constants::IOPRIO_CLASS_SHIFT),
+            Some(Priority::None),
+        );
+        assert_eq!(
+            Priority::from_ioprio((constants::IOPRIO_CLASS_NONE << constants::IOPRIO_CLASS_SHIFT) + 7),
+            Some(Priority::None),
+        );
+
+        assert_eq!(
+            Priority::from_ioprio(constants::IOPRIO_CLASS_RT << constants::IOPRIO_CLASS_SHIFT),
+            Some(Priority::RealTime(0)),
+        );
+        assert_eq!(
+            Priority::from_ioprio((constants::IOPRIO_CLASS_RT << constants::IOPRIO_CLASS_SHIFT) + 7),
+            Some(Priority::RealTime(7)),
+        );
+
+        assert_eq!(
+            Priority::from_ioprio(constants::IOPRIO_CLASS_BE << constants::IOPRIO_CLASS_SHIFT),
+            Some(Priority::BestEffort(0)),
+        );
+        assert_eq!(
+            Priority::from_ioprio((constants::IOPRIO_CLASS_BE << constants::IOPRIO_CLASS_SHIFT) + 7),
+            Some(Priority::BestEffort(7)),
+        );
+
+        assert_eq!(
+            Priority::from_ioprio(constants::IOPRIO_CLASS_IDLE << constants::IOPRIO_CLASS_SHIFT),
+            Some(Priority::Idle),
+        );
+        assert_eq!(
+            Priority::from_ioprio((constants::IOPRIO_CLASS_IDLE << constants::IOPRIO_CLASS_SHIFT) + 7),
+            Some(Priority::Idle),
+        );
+    }
+
+    #[test]
     fn test_get_set() {
         let prio = get(Target::Process(0)).unwrap();
         set(Target::Process(0), prio).unwrap();
