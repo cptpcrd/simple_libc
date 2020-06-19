@@ -1400,7 +1400,8 @@ mod tests {
 
     #[test]
     fn test_capstate() {
-        CapState::get_current().unwrap();
+        let state = CapState::get_current().unwrap();
+        state.set_current().unwrap();
     }
 
     #[test]
