@@ -121,11 +121,11 @@ impl Group {
     pub fn list_from_reader<R: io::Read>(reader: R) -> io::Result<Vec<Self>> {
         let mut reader = io::BufReader::new(reader);
         let mut line_vec = Vec::new();
-        let mut passwds = Vec::new();
+        let mut groups = Vec::new();
 
         loop {
             if reader.read_until(b'\n', &mut line_vec)? == 0 {
-                return Ok(passwds);
+                return Ok(groups);
             }
 
             if line_vec[line_vec.len() - 1] == b'\n' {
@@ -148,7 +148,7 @@ impl Group {
                 members.push(ffi::OsString::from_vec(slice.into()));
             }
 
-            passwds.push(Self {
+            groups.push(Self {
                 name: ffi::OsString::from_vec(name_slice.into()),
                 passwd: ffi::OsString::from_vec(passwd_slice.into()),
                 gid,
