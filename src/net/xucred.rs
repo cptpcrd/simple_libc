@@ -25,10 +25,7 @@ type RawXucred = libc::xucred;
 pub fn get_xucred_raw(sockfd: Int) -> io::Result<Xucred> {
     let mut raw_xucred: RawXucred = unsafe { std::mem::zeroed() };
 
-    #[cfg(not(target_os = "openbsd"))]
-    {
-        raw_xucred.cr_version = libc::XUCRED_VERSION;
-    }
+    raw_xucred.cr_version = libc::XUCRED_VERSION;
 
     let len = unsafe {
         super::getsockopt_raw(
@@ -43,29 +40,21 @@ pub fn get_xucred_raw(sockfd: Int) -> io::Result<Xucred> {
         return Err(io::Error::from_raw_os_error(libc::EINVAL));
     }
 
-    #[cfg(not(target_os = "openbsd"))]
-    {
-        if raw_xucred.cr_version != libc::XUCRED_VERSION {
-            return Err(io::Error::from_raw_os_error(libc::EINVAL));
-        }
+    if raw_xucred.cr_version != libc::XUCRED_VERSION {
+        return Err(io::Error::from_raw_os_error(libc::EINVAL));
+    }
 
-        // On FreeBSD, DragonflyBSD, and macOS, we need a GID to pull
-        // out as the primary GID.
-        if raw_xucred.cr_ngroups < 1 {
-            return Err(io::Error::from_raw_os_error(libc::EINVAL));
-        }
+    // We need a GID to pull out as the primary GID.
+    if raw_xucred.cr_ngroups < 1 {
+        return Err(io::Error::from_raw_os_error(libc::EINVAL));
     }
 
     Ok(Xucred {
         #[cfg(target_os = "freebsd")]
         pid: unsafe { raw_xucred.cr_pid() },
         uid: raw_xucred.cr_uid,
-        // OpenBSD has a separate field for the GID.
-        #[cfg(target_os = "openbsd")]
-        gid: raw_xucred.cr_gid,
         // FreeBSD, DragonflyBSD, and macOS just use the first
-        // ID from `cr_groups`.
-        #[cfg(not(target_os = "openbsd"))]
+        // ID in `cr_groups` to store the primary GID.
         gid: raw_xucred.cr_groups[0],
         groups: raw_xucred.cr_groups[..raw_xucred.cr_ngroups as usize].into(),
     })

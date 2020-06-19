@@ -21,7 +21,7 @@ pub mod ucred;
 #[cfg(any(target_os = "freebsd", target_os = "netbsd"))]
 pub mod sockcred;
 
-#[cfg(any(target_os = "macos", target_os = "openbsd", target_os = "freebsd"))]
+#[cfg(any(target_os = "macos", target_os = "freebsd", target_os = "dragonfly"))]
 pub mod xucred;
 
 #[cfg(any(target_os = "linux", target_os = "openbsd"))]
