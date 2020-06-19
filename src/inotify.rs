@@ -5,6 +5,7 @@ use std::path::Path;
 
 use bitflags::bitflags;
 
+use crate::Int;
 use crate::constants;
 
 bitflags! {
