@@ -1,25 +1,15 @@
 use std::io;
 
 use crate::internal::{minus_one_signed, MinusOneSigned};
-use crate::Int;
 
 #[cfg(target_os = "linux")]
-#[inline]
-unsafe fn errno_mut_ptr() -> *mut Int {
-    libc::__errno_location()
-}
+use libc::__errno_location as errno_mut_ptr;
 
 #[cfg(any(target_os = "freebsd", target_os = "dragonfly", target_os = "macos"))]
-#[inline]
-unsafe fn errno_mut_ptr() -> *mut Int {
-    libc::__error()
-}
+use libc::__error as errno_mut_ptr;
 
 #[cfg(any(target_os = "netbsd", target_os = "openbsd"))]
-#[inline]
-unsafe fn errno_mut_ptr() -> *mut Int {
-    libc::__errno()
-}
+use libc::__errno as errno_mut_ptr;
 
 pub fn set_errno_success() {
     unsafe {
