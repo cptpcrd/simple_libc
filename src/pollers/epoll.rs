@@ -91,7 +91,7 @@ impl Ppoller for EpollPoller {
             data: 0,
         }; 10];
 
-        let n = self.epoll.pwait_raw(&mut events, timeout, sigmask)? as usize;
+        let n = self.epoll.pwait_raw(&mut events, timeout, sigmask)?;
         Ok(events
             .iter()
             .filter_map(Self::translate_epoll_event)
