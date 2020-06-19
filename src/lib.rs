@@ -122,13 +122,8 @@ pub fn sysconf_raw(name: Int) -> io::Result<Long> {
 /// possibilities, use `sysconf_raw()`.
 pub fn sysconf(name: Int) -> Option<Long> {
     match sysconf_raw(name) {
-        Ok(ret) => {
-            if ret < 0 {
-                return None;
-            }
-            Some(ret)
-        }
-        Err(_) => None,
+        Ok(ret) if ret >= 0 => Some(ret),
+        _ => None,
     }
 }
 
