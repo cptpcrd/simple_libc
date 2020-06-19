@@ -52,6 +52,7 @@ impl Group {
     /// 3. Making calls to any of the following C functions: `setgrent()`,
     ///    `getgrent()`, `getgrent_r()`, `endgrent()`, `getgrgid()`, `getgrnam()`
     ///    (or C functions that call them).
+    /// 4. Calling `pwd::Passwd::list_groups_single_thread()`.
     pub unsafe fn list_single_thread() -> io::Result<Vec<Self>> {
         let groups;
         let err;
@@ -87,6 +88,7 @@ impl Group {
     /// 3. Making calls to any of the following C functions: `setgrent()`,
     ///    `getgrent()`, `getgrent_r()`, `endgrent()`, `getgrgid()`, `getgrnam()`
     ///    (or C functions that call them).
+    /// 4. Calling `pwd::Passwd::list_groups_single_thread()`.
     ///
     /// Note: To help ensure safety, the value MUST be dropped as soon as it is
     /// no longer used! Exhausting the iterator is NOT enough (`endgrent()`
