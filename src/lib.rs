@@ -225,6 +225,80 @@ pub fn pipe2(flags: Int) -> io::Result<(fs::File, fs::File)> {
     unsafe { Ok((fs::File::from_raw_fd(r), fs::File::from_raw_fd(w))) }
 }
 
+pub fn dup_inheritable(oldfd: Int) -> io::Result<Int> {
+    error::convert_neg_ret(unsafe { libc::dup(oldfd) })
+}
+
+pub fn dup(oldfd: Int) -> io::Result<Int> {
+    fcntl::dupfd_cloexec(oldfd, 0)
+}
+
+pub fn dup2_inheritable(oldfd: Int, newfd: Int) -> io::Result<Int> {
+    if oldfd == newfd {
+        fcntl::set_inheritable(newfd, true)?;
+        Ok(newfd)
+    } else {
+        error::convert_neg_ret(unsafe { libc::dup2(oldfd, newfd) })
+    }
+}
+
+pub fn dup2(oldfd: Int, newfd: Int) -> io::Result<Int> {
+    let fd;
+
+    #[cfg(any(
+        target_os = "linux",
+        target_os = "freebsd",
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "dragonfly",
+    ))]
+    {
+        if oldfd == newfd {
+            // dup3() fails if oldfd == newfd.
+            // Since we're emulating dup2(), let's just ignore this.
+            fd = newfd;
+
+            // However, let's match the behavior of the alternate dup2()-based
+            // code below and make the file descriptor non-inheritable.
+            fcntl::set_inheritable(fd, false)?;
+        } else {
+            fd = dup3(oldfd, newfd, libc::O_CLOEXEC)?;
+        }
+    }
+
+    #[cfg(not(any(
+        target_os = "linux",
+        target_os = "freebsd",
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "dragonfly",
+    )))]
+    {
+        fd = dup2_inheritable(oldfd, newfd)?;
+
+        if let Err(e) = fcntl::set_inheritable(fd, false) {
+            unsafe {
+                libc::close(fd);
+            }
+
+            return Err(e);
+        }
+    }
+
+    Ok(fd)
+}
+
+#[cfg(any(
+    target_os = "linux",
+    target_os = "freebsd",
+    target_os = "openbsd",
+    target_os = "netbsd",
+    target_os = "dragonfly",
+))]
+pub fn dup3(oldfd: Int, newfd: Int, flags: Int) -> io::Result<Int> {
+    error::convert_neg_ret(unsafe { libc::dup3(oldfd, newfd, flags) })
+}
+
 /// Closes the given file descriptor.
 ///
 /// # Safety
@@ -640,6 +714,44 @@ mod tests {
             close_fd(r).unwrap();
             close_fd(w).unwrap();
         }
+    }
+
+    #[test]
+    fn test_dup() {
+        let (r, w) = pipe().unwrap();
+
+        let fd = dup(r.as_raw_fd()).unwrap();
+        assert!(!fcntl::is_inheritable(fd).unwrap());
+        unsafe {
+            close_fd(fd).unwrap();
+        }
+
+        let fd = dup_inheritable(r.as_raw_fd()).unwrap();
+        assert!(fcntl::is_inheritable(fd).unwrap());
+        unsafe {
+            close_fd(fd).unwrap();
+        }
+    }
+
+    #[test]
+    fn test_dup2() {
+        let (r, w) = pipe().unwrap();
+
+        dup2(r.as_raw_fd(), w.as_raw_fd()).unwrap();
+        assert!(!fcntl::is_inheritable(w.as_raw_fd()).unwrap());
+
+        dup2_inheritable(r.as_raw_fd(), w.as_raw_fd()).unwrap();
+        assert!(fcntl::is_inheritable(w.as_raw_fd()).unwrap());
+
+        // Now duplicate into the same file descriptor.
+
+        // dup2() will always make it non-inheritable.
+        dup2(r.as_raw_fd(), r.as_raw_fd()).unwrap();
+        assert!(!fcntl::is_inheritable(r.as_raw_fd()).unwrap());
+
+        // dup2_inheritable() will always make it inheritable.
+        dup2_inheritable(r.as_raw_fd(), r.as_raw_fd()).unwrap();
+        assert!(fcntl::is_inheritable(r.as_raw_fd()).unwrap());
     }
 
     #[test]
