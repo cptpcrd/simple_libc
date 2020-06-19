@@ -133,7 +133,7 @@ impl Epoll {
         events: &mut [Event],
         timeout: Option<time::Duration>,
         sigmask: Option<crate::signal::Sigset>,
-    ) -> io::Result<Int> {
+    ) -> io::Result<usize> {
         let maxevents = events.len();
 
         let mut ep_events = Vec::new();
@@ -141,7 +141,7 @@ impl Epoll {
 
         let res = self.pwait_raw(&mut ep_events, timeout, sigmask)?;
 
-        for i in 0..(res as usize) {
+        for i in 0..res {
             events[i] = Event {
                 events: ep_events[i].events,
                 data: ep_events[i].data,
@@ -156,7 +156,7 @@ impl Epoll {
         events: &mut [RawEvent],
         timeout: Option<time::Duration>,
         sigmask: Option<crate::signal::Sigset>,
-    ) -> io::Result<Int> {
+    ) -> io::Result<usize> {
         let raw_timeout: Int = match timeout {
             Some(t) => t.as_millis().try_into().unwrap_or(Int::MAX),
             None => -1,
@@ -167,7 +167,7 @@ impl Epoll {
             None => std::ptr::null(),
         };
 
-        crate::error::convert_neg_ret(unsafe {
+        let n = crate::error::convert_neg_ret(unsafe {
             libc::epoll_pwait(
                 self.fd,
                 events.as_mut_ptr() as *mut libc::epoll_event,
@@ -175,16 +175,18 @@ impl Epoll {
                 raw_timeout,
                 raw_sigmask,
             )
-        })
+        })?;
+
+        Ok(n as usize)
     }
 
     #[inline]
-    pub fn wait(&self, events: &mut [Event], timeout: Option<time::Duration>) -> io::Result<Int> {
+    pub fn wait(&self, events: &mut [Event], timeout: Option<time::Duration>) -> io::Result<usize> {
         self.pwait(events, timeout, None)
     }
 
     #[inline]
-    pub fn wait_raw(&self, events: &mut [RawEvent], timeout: Option<time::Duration>) -> io::Result<Int> {
+    pub fn wait_raw(&self, events: &mut [RawEvent], timeout: Option<time::Duration>) -> io::Result<usize> {
         self.pwait_raw(events, timeout, None)
     }
 }
