@@ -106,17 +106,14 @@ impl Poller for PollPoller {
     }
 
     fn modify(&mut self, fd: RawFd, events: Events) -> io::Result<()> {
-        if let Some(index) = self.pollfds.iter().position(|pfd| pfd.fd == fd) {
-            self.pollfds[index] = PollFd {
-                fd,
-                events: Self::translate_events(events),
-                revents: PollEvents::empty(),
-            };
-
-            Ok(())
-        } else {
-            Err(io::Error::from_raw_os_error(libc::ENOENT))
+        for pfd in self.pollfds.iter_mut() {
+            if(pfd.fd == fd) {
+                pfd.events = Self::translate_events(events);
+                return Ok(());
+            }
         }
+
+        Err(io::Error::from_raw_os_error(libc::ENOENT))
     }
 
     fn poll(&mut self, timeout: Option<Duration>) -> io::Result<Vec<(RawFd, Events)>> {
@@ -249,6 +246,16 @@ mod tests {
             vec![
                 (r2.as_raw_fd(), Events::READ),
                 (w1.as_raw_fd(), Events::WRITE),
+            ],
+        );
+
+        poller
+            .modify(w1.as_raw_fd(), Events::READ)
+            .unwrap();
+        assert_eq!(
+            poller.poll(timeout_0).unwrap(),
+            vec![
+                (r2.as_raw_fd(), Events::READ),
             ],
         );
     }
