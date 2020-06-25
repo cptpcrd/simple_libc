@@ -13,6 +13,7 @@ pub mod error;
 pub mod exec;
 pub mod fcntl;
 pub mod grp;
+pub mod ioctl;
 pub mod lockf;
 pub mod net;
 pub mod poll;
