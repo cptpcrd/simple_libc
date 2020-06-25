@@ -199,14 +199,10 @@ mod tests {
             ],
         );
 
-        poller
-            .modify(w1.as_raw_fd(), Events::READ)
-            .unwrap();
+        poller.modify(w1.as_raw_fd(), Events::READ).unwrap();
         assert_eq!(
             poller.poll(timeout_0).unwrap(),
-            vec![
-                (r2.as_raw_fd(), Events::READ),
-            ],
+            vec![(r2.as_raw_fd(), Events::READ)],
         );
     }
 }
