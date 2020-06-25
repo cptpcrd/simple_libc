@@ -1017,6 +1017,8 @@ pub fn with_effective_cap<T, F: FnOnce() -> T>(cap: Cap, f: F) -> io::Result<T> 
 
 #[cfg(test)]
 mod tests {
+    use std::os::unix::prelude::*;
+
     use super::*;
     use crate::constants;
 
@@ -1448,5 +1450,16 @@ mod tests {
         assert!(empty_caps.permitted.is_empty());
         assert!(empty_caps.inheritable.is_empty());
         assert!(empty_caps.rootid.is_none());
+    }
+
+    #[test]
+    fn test_filecaps_get() {
+        let current_exe = std::env::current_exe().unwrap();
+
+        FileCaps::get_for_file(&current_exe, true).unwrap();
+        FileCaps::get_for_file(&current_exe, false).unwrap();
+
+        let f = std::fs::File::open(&current_exe).unwrap();
+        FileCaps::get_for_fd(f.as_raw_fd()).unwrap();
     }
 }
