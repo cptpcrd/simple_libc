@@ -1,21 +1,21 @@
 use std::io;
 
-use crate::Int;
+use crate::{Int, PidT, UidT};
 use crate::constants;
 
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Target {
-    Process(Int),
-    ProcGroup(Int),
-    User(Int),
+    Process(PidT),
+    ProcGroup(PidT),
+    User(UidT),
 }
 
 impl Target {
     fn unpack(self) -> (Int, Int) {
         match self {
-            Self::Process(w) => (constants::IOPRIO_WHO_PROCESS, w),
-            Self::ProcGroup(w) => (constants::IOPRIO_WHO_PGRP, w),
-            Self::User(w) => (constants::IOPRIO_WHO_USER, w),
+            Self::Process(w) => (constants::IOPRIO_WHO_PROCESS, w as Int),
+            Self::ProcGroup(w) => (constants::IOPRIO_WHO_PGRP, w as Int),
+            Self::User(w) => (constants::IOPRIO_WHO_USER, w as Int),
         }
     }
 }
