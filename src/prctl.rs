@@ -692,11 +692,11 @@ impl FileCaps {
     }
 
     pub fn get_for_file<P: AsRef<OsStr>>(path: P, follow_links: bool) -> io::Result<Option<Self>> {
-        Self::extract_attr_or_error(crate::getxattr(path, constants::XATTR_NAME_CAPS, follow_links))
+        Self::extract_attr_or_error(crate::xattr::getxattr(path, constants::XATTR_NAME_CAPS, follow_links))
     }
 
     pub fn get_for_fd(fd: Int) -> io::Result<Option<Self>> {
-        Self::extract_attr_or_error(crate::fgetxattr(fd, constants::XATTR_NAME_CAPS))
+        Self::extract_attr_or_error(crate::xattr::fgetxattr(fd, constants::XATTR_NAME_CAPS))
     }
 
     fn extract_attr_or_error(attr_res: io::Result<Vec<u8>>) -> io::Result<Option<Self>> {
