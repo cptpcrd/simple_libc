@@ -198,5 +198,15 @@ mod tests {
                 (w1.as_raw_fd(), Events::WRITE),
             ],
         );
+
+        poller
+            .modify(w1.as_raw_fd(), Events::READ)
+            .unwrap();
+        assert_eq!(
+            poller.poll(timeout_0).unwrap(),
+            vec![
+                (r2.as_raw_fd(), Events::READ),
+            ],
+        );
     }
 }
