@@ -1,7 +1,7 @@
 use std::io;
 
 use crate::error;
-use crate::{IdT, Int};
+use crate::{Int, PidT, UidT};
 
 pub fn nice(incr: Int) -> io::Result<Int> {
     error::set_errno_success();
@@ -10,9 +10,9 @@ pub fn nice(incr: Int) -> io::Result<Int> {
 
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Target {
-    Process(IdT),
-    ProcGroup(IdT),
-    User(IdT),
+    Process(PidT),
+    ProcGroup(PidT),
+    User(UidT),
 }
 
 // Work around GNU not implementing the POSIX standard correctly
@@ -23,7 +23,7 @@ type PriorityWhich = libc::__priority_which_t;
 type PriorityWhich = Int;
 
 #[cfg(any(target_os = "linux", target_os = "openbsd", target_os = "netbsd"))]
-type PriorityWho = IdT;
+type PriorityWho = crate::IdT;
 
 #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
 type PriorityWho = Int;
