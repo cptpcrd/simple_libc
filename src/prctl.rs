@@ -692,16 +692,20 @@ impl FileCaps {
     }
 
     pub fn get_for_file<P: AsRef<OsStr>>(path: P, follow_links: bool) -> io::Result<Option<Self>> {
-        Self::extract_attr_or_error(crate::xattr::getxattr(path, constants::XATTR_NAME_CAPS, follow_links))
+        let mut data = [0; constants::XATTR_CAPS_MAX_SIZE];
+        let res = crate::xattr::getxattr_raw(path, constants::XATTR_NAME_CAPS, &mut data, follow_links);
+        Self::extract_attr_or_error(&data, res)
     }
 
     pub fn get_for_fd(fd: Int) -> io::Result<Option<Self>> {
-        Self::extract_attr_or_error(crate::xattr::fgetxattr(fd, constants::XATTR_NAME_CAPS))
+        let mut data = [0; constants::XATTR_CAPS_MAX_SIZE];
+        let res = crate::xattr::fgetxattr_raw(fd, constants::XATTR_NAME_CAPS, &mut data);
+        Self::extract_attr_or_error(&data, res)
     }
 
-    fn extract_attr_or_error(attr_res: io::Result<Vec<u8>>) -> io::Result<Option<Self>> {
+    fn extract_attr_or_error(data: &[u8], attr_res: io::Result<usize>) -> io::Result<Option<Self>> {
         match attr_res {
-            Ok(attrs) => Ok(Some(Self::unpack_attrs(&attrs)?)),
+            Ok(n) => Ok(Some(Self::unpack_attrs(&data[..n])?)),
             Err(e) => {
                 if e.raw_os_error() == Some(libc::ENODATA) {
                     Ok(None)

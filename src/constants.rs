@@ -75,6 +75,8 @@ crate::attr_group! {
     pub const VFS_CAP_REVISION_3: u32 = 0x0300_0000;
     pub const XATTR_CAPS_SZ_3: usize = 24;
 
+    pub const XATTR_CAPS_MAX_SIZE: usize = XATTR_CAPS_SZ_3;
+
     pub const XATTR_NAME_CAPS: &str = "security.capability";
 
     // END USED BY process/capabilities.rs
