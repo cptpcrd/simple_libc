@@ -58,7 +58,7 @@ fn ioprio_get_raw(which: Int, who: Int) -> io::Result<Int> {
     crate::error::set_errno_success();
 
     crate::error::convert_if_errno_ret(unsafe {
-        libc::syscall(libc::SYS_ioprio_get, which, who, 0, 0, 0, 0) as i32
+        libc::syscall(libc::SYS_ioprio_get, which, who, 0, 0, 0, 0) as Int
     })
 }
 
