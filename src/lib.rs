@@ -657,24 +657,34 @@ mod tests {
     #[test]
     fn test_kill_bounds() {
         assert_eq!(
-            kill(KillSpec::Pid(0), libc::SIGTERM).unwrap_err().raw_os_error(),
+            kill(KillSpec::Pid(0), libc::SIGTERM)
+                .unwrap_err()
+                .raw_os_error(),
             Some(libc::EINVAL)
         );
         assert_eq!(
-            kill(KillSpec::Pid(-1), libc::SIGTERM).unwrap_err().raw_os_error(),
+            kill(KillSpec::Pid(-1), libc::SIGTERM)
+                .unwrap_err()
+                .raw_os_error(),
             Some(libc::EINVAL)
         );
 
         assert_eq!(
-            kill(KillSpec::Pgid(1), libc::SIGTERM).unwrap_err().raw_os_error(),
+            kill(KillSpec::Pgid(1), libc::SIGTERM)
+                .unwrap_err()
+                .raw_os_error(),
             Some(libc::EINVAL)
         );
         assert_eq!(
-            kill(KillSpec::Pgid(0), libc::SIGTERM).unwrap_err().raw_os_error(),
+            kill(KillSpec::Pgid(0), libc::SIGTERM)
+                .unwrap_err()
+                .raw_os_error(),
             Some(libc::EINVAL)
         );
         assert_eq!(
-            kill(KillSpec::Pgid(-1), libc::SIGTERM).unwrap_err().raw_os_error(),
+            kill(KillSpec::Pgid(-1), libc::SIGTERM)
+                .unwrap_err()
+                .raw_os_error(),
             Some(libc::EINVAL)
         );
     }
