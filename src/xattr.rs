@@ -21,6 +21,13 @@ fn getxattr_raw_internal(
     #[cfg(target_os = "macos")]
     let callback_fn = libc::getxattr;
 
+    #[cfg(target_os = "macos")]
+    let flags = if follow_links {
+        0
+    } else {
+        libc::XATTR_NOFOLLOW
+    };
+
     let n = error::convert_neg_ret(unsafe {
         callback_fn(
             path.as_ptr(),
@@ -30,11 +37,7 @@ fn getxattr_raw_internal(
             #[cfg(target_os = "macos")]
             0,
             #[cfg(target_os = "macos")]
-            if follow_links {
-                0
-            } else {
-                libc::XATTR_NOFOLLOW
-            },
+            flags,
         )
     })?;
 
@@ -146,17 +149,20 @@ pub fn listxattr_raw(path: &ffi::CStr, list: &mut [u8], follow_links: bool) -> i
     #[cfg(target_os = "macos")]
     let callback_fn = libc::listxattr;
 
+    #[cfg(target_os = "macos")]
+    let flags = if follow_links {
+        0
+    } else {
+        libc::XATTR_NOFOLLOW
+    };
+
     let n = error::convert_neg_ret(unsafe {
         callback_fn(
             path.as_ptr(),
             list.as_mut_ptr() as *mut Char,
             list.len(),
             #[cfg(target_os = "macos")]
-            if follow_links {
-                0
-            } else {
-                libc::XATTR_NOFOLLOW
-            },
+            flags,
         )
     })?;
 
