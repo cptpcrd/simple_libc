@@ -12,7 +12,7 @@ use crate::{Int, SocklenT};
 // it is called 'unpcbid'. But it's still pretty much the same
 // interface.
 
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "android"))]
 pub type Ucred = libc::ucred;
 
 #[cfg(target_os = "openbsd")]

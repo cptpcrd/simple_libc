@@ -60,3 +60,14 @@ extern "C" {
     pub fn __libc_current_sigrtmin() -> libc::c_int;
     pub fn __libc_current_sigrtmax() -> libc::c_int;
 }
+
+#[cfg(target_os = "android")]
+extern "C" {
+    pub fn epoll_pwait(
+        epfd: libc::c_int,
+         events: *mut libc::epoll_event,
+         maxevents: libc::c_int,
+         timeout: libc::c_int,
+         sigmask: *const libc::sigset_t,
+    ) -> libc::c_int;
+}

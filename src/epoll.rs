@@ -26,6 +26,7 @@ bitflags! {
         const RDHUP = libc::EPOLLRDHUP as u32;
         const ONESHOT = libc::EPOLLONESHOT as u32;
         const WAKEUP = libc::EPOLLWAKEUP as u32;
+        #[cfg(target_os = "linux")]
         const EXCLUSIVE = libc::EPOLLEXCLUSIVE as u32;
     }
 }
@@ -189,8 +190,20 @@ impl Epoll {
             None => std::ptr::null(),
         };
 
+        #[cfg(target_os = "linux")]
         let n = crate::error::convert_neg_ret(unsafe {
             libc::epoll_pwait(
+                self.fd,
+                events.as_mut_ptr() as *mut libc::epoll_event,
+                events.len() as Int,
+                raw_timeout,
+                raw_sigmask,
+            )
+        })?;
+
+        #[cfg(target_os = "android")]
+        let n = crate::error::convert_neg_ret(unsafe {
+            crate::externs::epoll_pwait(
                 self.fd,
                 events.as_mut_ptr() as *mut libc::epoll_event,
                 events.len() as Int,

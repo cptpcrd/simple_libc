@@ -4,7 +4,7 @@
 crate::attr_group! {
     #![cfg(target_os = "linux")]
 
-    use crate::{Int, Ulong};
+    use crate::Ulong;
 
     // BEGIN USED BY process/capabilities.rs
 
@@ -80,7 +80,12 @@ crate::attr_group! {
     pub const XATTR_NAME_CAPS: &str = "security.capability";
 
     // END USED BY process/capabilities.rs
+}
 
+crate::attr_group! {
+    #![cfg(any(target_os = "linux", target_os = "android"))]
+
+    use crate::Int;
 
     // BEGIN USED by inotify.rs
     pub const IN_EXCL_UNLINK: u32 = 0x0400_0000;

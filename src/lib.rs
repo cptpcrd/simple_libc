@@ -12,16 +12,13 @@ mod types;
 pub mod error;
 pub mod exec;
 pub mod fcntl;
-pub mod grp;
 pub mod ioctl;
-pub mod lockf;
 pub mod net;
 pub mod poll;
 pub mod pollers;
 pub mod power;
 pub mod priority;
 pub mod process;
-pub mod pwd;
 pub mod resource;
 pub mod select;
 pub mod sigaction;
@@ -29,8 +26,17 @@ pub mod sigmask;
 pub mod signal;
 pub mod wait;
 
+attr_group! {
+    #![cfg(not(target_os = "android"))]
+
+    pub mod grp;
+    pub mod lockf;
+    pub mod pwd;
+}
+
 #[cfg(any(
     target_os = "linux",
+    target_os = "android",
     target_os = "freebsd",
     target_os = "openbsd",
     target_os = "netbsd",
@@ -55,11 +61,16 @@ macro_rules! attr_group {
 attr_group! {
     #![cfg(target_os = "linux")]
 
+    pub mod namespace;
+    pub mod prctl;
+}
+
+attr_group! {
+    #![cfg(any(target_os = "linux", target_os = "android"))]
+
     pub mod epoll;
     pub mod inotify;
     pub mod ioprio;
-    pub mod namespace;
-    pub mod prctl;
     pub mod signalfd;
 }
 
@@ -89,12 +100,13 @@ pub type GidT = libc::gid_t;
 pub type OffT = libc::off_t;
 pub type SocklenT = libc::socklen_t;
 
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "android"))]
 pub type Off64T = libc::off64_t;
 
 /// Flush filesystem write caches.
 ///
 /// See the man page for sync(2) for more details.
+#[cfg(not(target_os = "android"))]
 pub fn sync() {
     unsafe { libc::sync() };
 }
@@ -160,6 +172,7 @@ pub fn pipe_inheritable() -> io::Result<(fs::File, fs::File)> {
 pub fn pipe_raw() -> io::Result<(Int, Int)> {
     #[cfg(any(
         target_os = "linux",
+        target_os = "android",
         target_os = "freebsd",
         target_os = "openbsd",
         target_os = "netbsd",
@@ -171,6 +184,7 @@ pub fn pipe_raw() -> io::Result<(Int, Int)> {
 
     #[cfg(not(any(
         target_os = "linux",
+        target_os = "android",
         target_os = "freebsd",
         target_os = "openbsd",
         target_os = "netbsd",
@@ -204,6 +218,7 @@ pub fn pipe() -> io::Result<(fs::File, fs::File)> {
 
 #[cfg(any(
     target_os = "linux",
+    target_os = "android",
     target_os = "freebsd",
     target_os = "openbsd",
     target_os = "netbsd",
@@ -219,6 +234,7 @@ pub fn pipe2_raw(flags: Int) -> io::Result<(Int, Int)> {
 
 #[cfg(any(
     target_os = "linux",
+    target_os = "android",
     target_os = "freebsd",
     target_os = "openbsd",
     target_os = "netbsd",
@@ -520,6 +536,7 @@ mod tests {
 
     use super::*;
 
+    #[cfg(not(target_os = "android"))]
     #[test]
     fn test_sync() {
         sync();

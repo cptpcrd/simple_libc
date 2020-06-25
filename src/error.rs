@@ -8,7 +8,7 @@ use libc::__errno_location as errno_mut_ptr;
 #[cfg(any(target_os = "freebsd", target_os = "dragonfly", target_os = "macos"))]
 use libc::__error as errno_mut_ptr;
 
-#[cfg(any(target_os = "netbsd", target_os = "openbsd"))]
+#[cfg(any(target_os = "android", target_os = "netbsd", target_os = "openbsd"))]
 use libc::__errno as errno_mut_ptr;
 
 pub fn set_errno_success() {

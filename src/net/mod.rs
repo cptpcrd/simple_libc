@@ -2,20 +2,20 @@ use std::io;
 use std::os::unix::net::UnixStream;
 use std::os::unix::prelude::*;
 
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "android"))]
 use std::ffi::OsString;
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "android"))]
 use std::os::unix::net::UnixListener;
 
 use crate::{GidT, Int, SocklenT, UidT};
 
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "android"))]
 pub mod abstract_unix;
 #[cfg(target_os = "linux")]
 #[deprecated(since = "0.5.0", note = "Moved into the 'abstract_unix' submodule")]
 pub use abstract_unix::{unix_stream_abstract_bind, unix_stream_abstract_connect};
 
-#[cfg(any(target_os = "linux", target_os = "openbsd", target_os = "netbsd"))]
+#[cfg(any(target_os = "linux", target_os = "android", target_os = "openbsd", target_os = "netbsd"))]
 pub mod ucred;
 
 #[cfg(any(target_os = "freebsd", target_os = "netbsd"))]
@@ -57,13 +57,13 @@ pub fn getpeereid(sock: &UnixStream) -> io::Result<(UidT, GidT)> {
 
 #[allow(clippy::needless_return)]
 pub fn get_peer_ids_raw(sockfd: Int) -> io::Result<(UidT, GidT)> {
-    #[cfg(target_os = "linux")]
+    #[cfg(any(target_os = "linux", target_os = "android"))]
     {
         let cred = ucred::get_ucred_raw(sockfd)?;
         return Ok((cred.uid, cred.gid));
     }
 
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(not(any(target_os = "linux", target_os = "android")))]
     return getpeereid_raw(sockfd);
 }
 
@@ -158,7 +158,7 @@ pub unsafe fn setsockopt_raw<T: Sized>(
     ))
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "android"))]
 fn get_unix_raw_sockname(sockfd: Int) -> io::Result<OsString> {
     let mut addr = libc::sockaddr_un {
         sun_family: libc::AF_UNIX as libc::sa_family_t,
@@ -182,7 +182,7 @@ fn get_unix_raw_sockname(sockfd: Int) -> io::Result<OsString> {
     ))
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "android"))]
 fn get_unix_raw_peername(sockfd: Int) -> io::Result<OsString> {
     let mut addr = libc::sockaddr_un {
         sun_family: libc::AF_UNIX as libc::sa_family_t,
@@ -206,17 +206,17 @@ fn get_unix_raw_peername(sockfd: Int) -> io::Result<OsString> {
     ))
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "android"))]
 pub fn get_unix_stream_raw_sockname(sock: &UnixStream) -> io::Result<OsString> {
     get_unix_raw_sockname(sock.as_raw_fd())
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "android"))]
 pub fn get_unix_listener_raw_sockname(sock: &UnixListener) -> io::Result<OsString> {
     get_unix_raw_sockname(sock.as_raw_fd())
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "android"))]
 pub fn get_unix_stream_raw_peername(sock: &UnixStream) -> io::Result<OsString> {
     get_unix_raw_peername(sock.as_raw_fd())
 }

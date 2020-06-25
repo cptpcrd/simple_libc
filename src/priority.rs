@@ -22,7 +22,7 @@ type PriorityWhich = libc::__priority_which_t;
 #[cfg(not(all(target_os = "linux", any(target_env = "", target_env = "gnu"))))]
 type PriorityWhich = Int;
 
-#[cfg(any(target_os = "linux", target_os = "openbsd", target_os = "netbsd"))]
+#[cfg(any(target_os = "linux", target_os = "android", target_os = "openbsd", target_os = "netbsd"))]
 type PriorityWho = crate::IdT;
 
 #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]

@@ -72,6 +72,11 @@ pub struct Inotify {
 
 const RAW_EVENT_SIZE: usize = std::mem::size_of::<libc::inotify_event>();
 
+#[cfg(target_os = "linux")]
+type RmWatchType = i32;
+#[cfg(target_os = "android")]
+type RmWatchType = crate::Uint;
+
 impl Inotify {
     /// Construct a new inotify file descriptor with the given options.
     pub fn new(nonblock: bool) -> io::Result<Self> {
@@ -130,7 +135,7 @@ impl Inotify {
 
     /// Remove a previously added watch.
     pub fn rm_watch(&mut self, watch: Watch) -> io::Result<()> {
-        crate::error::convert_nzero_ret(unsafe { libc::inotify_rm_watch(self.fd, watch.wd) })
+        crate::error::convert_nzero_ret(unsafe { libc::inotify_rm_watch(self.fd, watch.wd as RmWatchType) })
     }
 
     /// Read a list of events from the inotify file descriptor, or return an
