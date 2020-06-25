@@ -753,7 +753,7 @@ mod tests {
 
     #[test]
     fn test_dup() {
-        let (r, w) = pipe().unwrap();
+        let (r, _w) = pipe().unwrap();
 
         let fd = dup(r.as_raw_fd()).unwrap();
         assert!(!fcntl::is_inheritable(fd).unwrap());
