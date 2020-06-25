@@ -138,7 +138,7 @@ impl Inotify {
     /// empty vector if no events are pending.
     pub fn read_nowait(&mut self) -> io::Result<Vec<Event>> {
         // See how much data is ready for reading
-        let nbytes = crate::ioctl::get_readbuf_length()?;
+        let nbytes = crate::ioctl::get_readbuf_length(self.fd)?;
 
         // No data? Return an empty vector.
         if nbytes == 0 {
@@ -159,7 +159,7 @@ impl Inotify {
         })?;
 
         // Trim down if we read less data
-        buf.resize(nbytes, 0);
+        buf.resize(nbytes as usize, 0);
 
         Ok(Self::parse_multi(&buf))
     }
