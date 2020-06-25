@@ -326,8 +326,18 @@ pub enum KillSpec {
 
 pub fn kill(spec: KillSpec, sig: Int) -> io::Result<()> {
     let pid = match spec {
-        KillSpec::Pid(pid) => pid,
-        KillSpec::Pgid(pgid) => -pgid,
+        KillSpec::Pid(pid) => {
+            if pid <= 0 {
+                return Err(io::Error::from_raw_os_error(libc::EINVAL));
+            }
+            pid
+        }
+        KillSpec::Pgid(pgid) => {
+            if pgid <= 1 {
+                return Err(io::Error::from_raw_os_error(libc::EINVAL));
+            }
+            -pgid
+        }
         KillSpec::CurPgrp => 0,
         KillSpec::All => -1,
     };
@@ -642,6 +652,31 @@ mod tests {
 
         assert!(!fcntl::is_inheritable(r.as_raw_fd()).unwrap());
         assert!(!fcntl::is_inheritable(w.as_raw_fd()).unwrap());
+    }
+
+    #[test]
+    fn test_kill_bounds() {
+        assert_eq!(
+            kill(KillSpec::Pid(0), libc::SIGTERM).unwrap_err().raw_os_error(),
+            Some(libc::EINVAL)
+        );
+        assert_eq!(
+            kill(KillSpec::Pid(-1), libc::SIGTERM).unwrap_err().raw_os_error(),
+            Some(libc::EINVAL)
+        );
+
+        assert_eq!(
+            kill(KillSpec::Pgid(1), libc::SIGTERM).unwrap_err().raw_os_error(),
+            Some(libc::EINVAL)
+        );
+        assert_eq!(
+            kill(KillSpec::Pgid(0), libc::SIGTERM).unwrap_err().raw_os_error(),
+            Some(libc::EINVAL)
+        );
+        assert_eq!(
+            kill(KillSpec::Pgid(-1), libc::SIGTERM).unwrap_err().raw_os_error(),
+            Some(libc::EINVAL)
+        );
     }
 
     #[test]
