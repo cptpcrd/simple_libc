@@ -20,6 +20,8 @@ bitflags! {
     pub struct Events: u32 {
         const READ  = 0b001;
         const WRITE = 0b010;
+        /// Note: `ERROR` may be returned by `poll()` even if the file descriptor
+        /// was not registered with the `ERROR` event.
         const ERROR = 0b100;
     }
 }
