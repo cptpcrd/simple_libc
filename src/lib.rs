@@ -511,8 +511,9 @@ fn bytes_to_osstring<'a, T: IntoIterator<Item = &'a Char>>(bytes: T) -> ffi::OsS
 }
 
 attr_group! {
-    #![cfg(target_os = "linux")]
+    #![cfg(any(target_os = "linux", target_os = "macos"))]
 
+    #[cfg(target_os = "linux")]
     fn getxattr_raw_internal(
         path: &ffi::CStr,
         name: &ffi::CStr,
@@ -531,6 +532,27 @@ attr_group! {
                 name.as_ptr(),
                 value.as_mut_ptr() as *mut libc::c_void,
                 value.len(),
+            )
+        })?;
+
+        Ok(n as usize)
+    }
+
+    #[cfg(target_os = "macos")]
+    fn getxattr_raw_internal(
+        path: &ffi::CStr,
+        name: &ffi::CStr,
+        value: &mut [u8],
+        follow_links: bool,
+    ) -> io::Result<usize> {
+        let n = error::convert_neg_ret(unsafe {
+            libc::getxattr(
+                path.as_ptr(),
+                name.as_ptr(),
+                value.as_mut_ptr() as *mut libc::c_void,
+                value.len(),
+                0,
+                if follow_links { 0 } else { libc::XATTR_NOFOLLOW },
             )
         })?;
 
@@ -579,6 +601,7 @@ attr_group! {
         }
     }
 
+    #[cfg(target_os = "linux")]
     fn fgetxattr_raw_internal(fd: Int, name: &ffi::CStr, value: &mut [u8]) -> io::Result<usize> {
         let n = error::convert_neg_ret(unsafe {
             libc::fgetxattr(
@@ -586,6 +609,22 @@ attr_group! {
                 name.as_ptr(),
                 value.as_mut_ptr() as *mut libc::c_void,
                 value.len(),
+            )
+        })?;
+
+        Ok(n as usize)
+    }
+
+    #[cfg(target_os = "macos")]
+    fn fgetxattr_raw_internal(fd: Int, name: &ffi::CStr, value: &mut [u8]) -> io::Result<usize> {
+        let n = error::convert_neg_ret(unsafe {
+            libc::fgetxattr(
+                fd,
+                name.as_ptr(),
+                value.as_mut_ptr() as *mut libc::c_void,
+                value.len(),
+                0,
+                0,
             )
         })?;
 
@@ -627,6 +666,7 @@ attr_group! {
         }
     }
 
+    #[cfg(target_os = "linux")]
     pub fn listxattr_raw(
         path: &ffi::CStr,
         list: &mut [u8],
@@ -643,6 +683,24 @@ attr_group! {
                 path.as_ptr(),
                 list.as_mut_ptr() as *mut Char,
                 list.len(),
+            )
+        })?;
+
+        Ok(n as usize)
+    }
+
+    #[cfg(target_os = "macos")]
+    pub fn listxattr_raw(
+        path: &ffi::CStr,
+        list: &mut [u8],
+        follow_links: bool,
+    ) -> io::Result<usize> {
+        let n = error::convert_neg_ret(unsafe {
+            libc::listxattr(
+                path.as_ptr(),
+                list.as_mut_ptr() as *mut Char,
+                list.len(),
+                if follow_links { 0 } else { libc::XATTR_NOFOLLOW },
             )
         })?;
 
@@ -685,6 +743,7 @@ attr_group! {
         Ok(res)
     }
 
+    #[cfg(target_os = "linux")]
     pub fn flistxattr_raw(
         fd: Int,
         list: &mut [u8],
@@ -694,6 +753,23 @@ attr_group! {
                 fd,
                 list.as_mut_ptr() as *mut Char,
                 list.len(),
+            )
+        })?;
+
+        Ok(n as usize)
+    }
+
+    #[cfg(target_os = "macos")]
+    pub fn flistxattr_raw(
+        fd: Int,
+        list: &mut [u8],
+    ) -> io::Result<usize> {
+        let n = error::convert_neg_ret(unsafe {
+            libc::flistxattr(
+                fd,
+                list.as_mut_ptr() as *mut Char,
+                list.len(),
+                0,
             )
         })?;
 
@@ -915,7 +991,7 @@ mod tests {
         getdomainname().unwrap();
     }
 
-    #[cfg(target_os = "linux")]
+    #[cfg(any(target_os = "linux", target_os = "macos"))]
     #[test]
     fn test_listxattr() {
         let current_exe = std::env::current_exe().unwrap();
