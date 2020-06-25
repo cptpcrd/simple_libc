@@ -451,6 +451,16 @@ mod tests {
         }
     }
 
+    #[cfg(any(target_os = "linux", target_os = "netbsd"))]
+    #[test]
+    fn test_proc_rlimit() {
+        for res in Resource::iter() {
+            let limits = proc_rlimit(0, res, None).unwrap();
+            assert_eq!(proc_rlimit(0, res, Some(limits)).unwrap(), limits);
+            assert_eq!(proc_rlimit(0, res, None).unwrap(), limits);
+        }
+    }
+
     #[cfg(feature = "serde")]
     #[test]
     fn test_resource_serde() {
