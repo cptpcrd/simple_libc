@@ -32,10 +32,32 @@ bitflags! {
 
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
 #[repr(C)]
-#[repr(packed)]
+#[cfg_attr(
+    any(
+        target_arch = "x86_64",
+        all(
+            target_arch = "x86",
+            target_os = "linux",
+            any(
+                target_env = "gnu",
+                target_env = "",
+            ),
+        )
+    ),
+    repr(packed)
+)]
 pub struct RawEvent {
     pub events: Events,
     pub data: u64,
+}
+
+impl RawEvent {
+    // WARNING: Do not use this!
+    // Its purpose is to add a compile-time check that the size of a
+    // RawEvent matches the size of a libc::epoll_event.
+    unsafe fn _into_raw(&self) -> libc::epoll_event {
+        std::mem::transmute(*self)
+    }
 }
 
 impl Default for RawEvent {
