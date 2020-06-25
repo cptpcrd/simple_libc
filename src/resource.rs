@@ -231,6 +231,184 @@ pub fn prlimit(
     Ok((old_rlim.rlim_cur, old_rlim.rlim_max))
 }
 
+/// A generic version of Linux's `prlimit()` that is also implemented for some other
+/// platforms. (WARNING: the semantics may vary.)
+///
+/// Note that this function provides fewer guarantees than Linux's `prlimit()`. Namely:
+/// 1. On some platforms, it may not be possible to set new process limits for other
+///    processes. In that case, an `ENOSYS` error will be returned.
+/// 2. Getting the original limits and setting the new limits, as well as
+///    getting/setting the soft limit and getting/setting the hard limit, may be
+///    performed as separate operations. Besides the performance implications of this,
+///    if new limits are passed but an error is returned, the soft and/or hard limits
+///    may or may not have been changed.
+/// 4. The exact errors returned for different error conditions may vary slightly
+///    across platforms, though an attempt is made to standardize them on
+///    `prlimit()`-like errors.
+///
+/// This function will accept pid=0 to refer to the current process. However, on some
+/// platforms this may result in a fallback to `getrlimit()`/`setrlimit()`.
+#[cfg(any(target_os = "linux", target_os = "netbsd"))]
+#[inline]
+pub fn proc_rlimit(
+    pid: crate::PidT,
+    resource: Resource,
+    new_limits: Option<(Limit, Limit)>,
+) -> io::Result<(Limit, Limit)> {
+    let res;
+
+    #[cfg(target_os = "linux")]
+    {
+        res = prlimit(pid, resource, new_limits);
+    }
+
+    #[cfg(not(target_os = "linux"))]
+    {
+        res = proc_rlimit_impl(pid, resource, new_limits);
+    }
+
+    res
+}
+
+#[cfg(target_os = "netbsd")]
+fn proc_rlimit_impl(
+    pid: crate::PidT,
+    resource: Resource,
+    new_limits: Option<(Limit, Limit)>,
+) -> io::Result<(Limit, Limit)> {
+    // Split the new limits into two Options
+    let (new_soft, new_hard) = if let Some((soft, hard)) = new_limits {
+        // Return EINVAL if soft > hard
+        if soft > hard {
+            return Err(io::Error::from_raw_os_error(libc::EINVAL));
+        }
+
+        (Some(soft), Some(hard))
+    } else {
+        (None, None)
+    };
+
+    // If both the soft and hard limits are being raised, then we need to set the
+    // hard limit first, since the new soft limit may be greater than the old hard
+    // limit (but less than the new hard limit).
+    //
+    // If both the soft and hard limits are being lowered, then we need to set the
+    // soft limit first. That way, when we set the hard limit we won't be trying
+    // to set it to a value below the soft limit.
+    //
+    // If we're moving the soft and hard limits in opposite directions (raising one
+    // and lowering the other), then we can set the soft/hard limits in either order.
+    //
+    // So here's what we do:
+    // 1. We try to get/set the soft limit.
+    //    If this succeeds, we skip step 3.
+    //    If we get EINVAL, we ignore it (but we don't skip step 3).
+    //    If we get any other error, we return it up to the caller.
+    // 2. We try to get/set the hard limit, returning any errors up to the caller.
+    // 3. If step 1 failed with EINVAL, we try to get/set the soft limit again,
+    //    returning any errors up to the caller.
+
+    let old_soft = match proc_limit_getset(pid, resource, new_soft, false) {
+        Ok(old_soft) => Some(old_soft),
+        Err(e) => {
+            if e.raw_os_error() == Some(libc::EINVAL) {
+                None
+            } else {
+                return Err(e);
+            }
+        }
+    };
+
+    let old_hard = proc_limit_getset(pid, resource, new_hard, true)?;
+
+    let old_soft = if let Some(val) = old_soft {
+        val
+    } else {
+        // The original call failed with EINVAL. Try again.
+        proc_limit_getset(pid, resource, new_soft, false)?
+    };
+
+    Ok((old_soft, old_hard))
+}
+
+#[cfg(target_os = "netbsd")]
+fn proc_limit_getset(
+    pid: crate::PidT,
+    resource: Resource,
+    new_limit: Option<Limit>,
+    hard: bool,
+) -> io::Result<Limit> {
+    // Extract the pointer to the new limit
+    let (new_lim_ptr, new_lim_len) = if let Some(ref new_lim) = new_limit {
+        (new_lim as *const Limit, std::mem::size_of::<Limit>())
+    } else {
+        (std::ptr::null(), 0)
+    };
+
+    // Get the raw value for representing the resource.
+    let raw_level = match resource {
+        Resource::AS => constants::PROC_PID_LIMIT_AS,
+        Resource::CPU => constants::PROC_PID_LIMIT_CPU,
+        Resource::FSIZE => constants::PROC_PID_LIMIT_FSIZE,
+        Resource::STACK => constants::PROC_PID_LIMIT_STACK,
+        Resource::CORE => constants::PROC_PID_LIMIT_CORE,
+        Resource::RSS => constants::PROC_PID_LIMIT_RSS,
+        Resource::MEMLOCK => constants::PROC_PID_LIMIT_MEMLOCK,
+        Resource::NPROC => constants::PROC_PID_LIMIT_NPROC,
+        Resource::NOFILE => constants::PROC_PID_LIMIT_NOFILE,
+        Resource::DATA => constants::PROC_PID_LIMIT_DATA,
+        Resource::SBSIZE => constants::PROC_PID_LIMIT_SBSIZE,
+        Resource::NTHR => constants::PROC_PID_LIMIT_NTHR,
+    };
+
+    // Construct the MIB path
+    let mib = [
+        libc::CTL_PROC,
+        if pid == 0 {
+            constants::PROC_CURPROC
+        } else {
+            pid as Int
+        },
+        constants::PROC_PID_LIMIT,
+        raw_level,
+        if hard {
+            constants::PROC_PID_LIMIT_TYPE_HARD
+        } else {
+            constants::PROC_PID_LIMIT_TYPE_SOFT
+        },
+    ];
+
+    let mut nbytes = std::mem::size_of::<Limit>();
+    let mut old_lim: Limit = LIMIT_INFINITY;
+
+    // Try to actually get/set the limit
+    if let Err(e) = crate::error::convert_ret(unsafe {
+        libc::sysctl(
+            mib.as_ptr(),
+            mib.len() as crate::Uint,
+            &mut old_lim as *mut Limit as *mut libc::c_void,
+            &mut nbytes,
+            new_lim_ptr as *const libc::c_void,
+            new_lim_len,
+        )
+    }) {
+        // ENOENT means the node doesn't exist. Probably this means the process
+        // doesn't exist, so we return ESRCH instead.
+        return Err(if e.raw_os_error() == Some(libc::ENOENT) {
+            io::Error::from_raw_os_error(libc::ESRCH)
+        } else {
+            e
+        });
+    }
+
+    // Sanity check
+    if nbytes != std::mem::size_of::<Limit>() {
+        return Err(io::Error::from_raw_os_error(libc::EINVAL));
+    }
+
+    Ok(old_lim)
+}
+
 #[cfg(target_os = "linux")]
 pub fn nice_rlimit_to_thresh(nice_rlim: Limit) -> Int {
     if nice_rlim == LIMIT_INFINITY {

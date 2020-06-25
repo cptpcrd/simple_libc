@@ -126,6 +126,25 @@ crate::attr_group! {
     pub const RLIMIT_SBSIZE: Int = 9;
     pub const RLIMIT_AS: Int = 10;
     pub const RLIMIT_NTHR: Int = 11;
+
+    pub const PROC_CURPROC: Int = (!(1u32 << 31)) as Int;
+
+    pub const PROC_PID_LIMIT: Int = 2;
+    pub const PROC_PID_LIMIT_CPU: Int = libc::RLIMIT_CPU + 1;
+    pub const PROC_PID_LIMIT_FSIZE: Int = libc::RLIMIT_FSIZE + 1;
+    pub const PROC_PID_LIMIT_DATA: Int = libc::RLIMIT_DATA + 1;
+    pub const PROC_PID_LIMIT_STACK: Int = libc::RLIMIT_STACK + 1;
+    pub const PROC_PID_LIMIT_CORE: Int = libc::RLIMIT_CORE + 1;
+    pub const PROC_PID_LIMIT_RSS: Int = libc::RLIMIT_RSS + 1;
+    pub const PROC_PID_LIMIT_MEMLOCK: Int = libc::RLIMIT_MEMLOCK + 1;
+    pub const PROC_PID_LIMIT_NPROC: Int = libc::RLIMIT_NPROC + 1;
+    pub const PROC_PID_LIMIT_NOFILE: Int = libc::RLIMIT_NOFILE + 1;
+    pub const PROC_PID_LIMIT_SBSIZE: Int = RLIMIT_SBSIZE + 1;
+    pub const PROC_PID_LIMIT_AS: Int = RLIMIT_AS + 1;
+    pub const PROC_PID_LIMIT_NTHR: Int = RLIMIT_NTHR + 1;
+
+    pub const PROC_PID_LIMIT_TYPE_SOFT: Int = 1;
+    pub const PROC_PID_LIMIT_TYPE_HARD: Int = 2;
     // END USED by process/resource.rs
 
     // BEGIN USED by power.rs
