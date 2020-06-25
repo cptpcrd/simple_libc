@@ -107,7 +107,7 @@ impl Poller for PollPoller {
 
     fn modify(&mut self, fd: RawFd, events: Events) -> io::Result<()> {
         for pfd in self.pollfds.iter_mut() {
-            if(pfd.fd == fd) {
+            if pfd.fd == fd {
                 pfd.events = Self::translate_events(events);
                 return Ok(());
             }
