@@ -21,29 +21,21 @@ pub fn recv_sockcred_raw(sockfd: Int, block: bool) -> io::Result<Sockcred> {
 
     let mut cmsg_dat: Vec<u8> = Vec::new();
 
-    #[cfg(target_os = "freebsd")]
-    let sockcred_size = unsafe { libc::SOCKCREDSIZE(libc::CMGROUP_MAX) };
+    let sockcred_size;
 
-    #[cfg(target_os = "netbsd")]
-    let mut sockcred_size: Int = 0;
+    #[cfg(target_os = "freebsd")]
+    {
+        sockcred_size = unsafe { libc::SOCKCREDSIZE(libc::CMGROUP_MAX) };
+    }
 
     #[cfg(target_os = "netbsd")]
     {
-        error::convert_neg(
-            unsafe { libc::ioctl(sockfd, libc::FIONREAD, &mut sockcred_size) },
-            (),
-        )?;
-
-        let base_sockcred_size = unsafe { libc::SOCKCREDSIZE(1) } as Int;
-        if sockcred_size <= base_sockcred_size {
-            sockcred_size = base_sockcred_size;
-        }
+        sockcred_size = std::cmp::max(crate::ioctl::get_readbuf_length(sockfd)?, unsafe {
+            libc::SOCKCREDSIZE(1)
+        });
     }
 
-    cmsg_dat.resize(
-        std::mem::size_of::<libc::cmsghdr>() + sockcred_size as usize,
-        0,
-    );
+    cmsg_dat.resize(std::mem::size_of::<libc::cmsghdr>() + sockcred_size, 0);
 
     let cmsg = libc::cmsghdr {
         cmsg_len: cmsg_dat.len() as libc::socklen_t,
