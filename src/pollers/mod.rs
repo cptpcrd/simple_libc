@@ -77,13 +77,7 @@ crate::attr_group! {
 }
 
 crate::attr_group! {
-    #![cfg(not(any(
-        target_os = "linux",
-        target_os = "freebsd",
-        target_os = "openbsd",
-        target_os = "netbsd",
-        target_os = "dragonfly",
-    )))]
+    #![cfg(target_os = "macos")]
 
     pub type DefaultPoller = PollPoller;
     pub type DefaultPpoller = SelectPoller;
