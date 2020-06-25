@@ -59,8 +59,18 @@ pub fn waitpid(
     options: WaitpidOptions,
 ) -> io::Result<Option<(PidT, ProcStatus)>> {
     let wpid = match spec {
-        WaitpidSpec::Pid(pid) => pid,
-        WaitpidSpec::Pgid(pgid) => -pgid,
+        WaitpidSpec::Pid(pid) => {
+            if pid <= 0 {
+                return Err(io::Error::from_raw_os_error(libc::EINVAL));
+            }
+            pid
+        }
+        WaitpidSpec::Pgid(pgid) => {
+            if pgid <= 1 {
+                return Err(io::Error::from_raw_os_error(libc::EINVAL));
+            }
+            -pgid
+        }
         WaitpidSpec::Any => -1,
         WaitpidSpec::CurrentPgid => 0,
     };
