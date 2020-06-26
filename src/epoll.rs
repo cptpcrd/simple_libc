@@ -30,33 +30,70 @@ bitflags! {
     }
 }
 
-#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
-#[repr(C)]
-#[cfg_attr(target_arch = "x86_64", repr(packed))]
-pub struct RawEvent {
-    pub events: Events,
-    pub data: u64,
-}
+crate::attr_group! {
+    #![cfg(target_arch = "x86_64")]
 
-impl RawEvent {
-    // WARNING: Do not use this!
-    // Its purpose is to add a compile-time check that the size of a
-    // RawEvent matches the size of a libc::epoll_event.
-    unsafe fn _into_raw(&self) -> libc::epoll_event {
-        std::mem::transmute(*self)
+    /// The raw event representation. Read the documentation of `Event`
+    /// for details.
+    #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
+    #[repr(C)]
+    #[repr(packed)]
+    pub struct RawEvent {
+        pub events: Events,
+        pub data: u64,
     }
-}
 
-impl Default for RawEvent {
-    #[inline]
-    fn default() -> Self {
-        Self {
-            events: Events::empty(),
-            data: 0,
+    #[cfg(target_arch = "x86_64")]
+    impl RawEvent {
+        // WARNING: Do not use this!
+        // Its purpose is to add a compile-time check that the size of a
+        // RawEvent matches the size of a libc::epoll_event.
+        unsafe fn _into_raw(&self) -> libc::epoll_event {
+            std::mem::transmute(*self)
+        }
+    }
+
+    #[cfg(target_arch = "x86_64")]
+    impl Default for RawEvent {
+        #[inline]
+        fn default() -> Self {
+            Self {
+                events: Events::empty(),
+                data: 0,
+            }
         }
     }
 }
 
+/// An event that occurred on a file descriptor.
+///
+/// # `Event` vs `RawEvent`
+///
+/// **TL;DR**: If you want a quick 99% solution, use `Event` and
+/// `Epoll::wait()`/`Epoll::pwait()`. If you've read this carefully, you understand
+/// how to interact an unpacked struct properly, and you want the *slight* performance
+/// boost that `RawEvent` provides on x86_64, use `RawEvent` and
+/// `Epoll::wait_raw()`/`Epoll::pwait_raw()`.
+///
+/// On x86_64, the `epoll_event` structure is *packed* to make 32-bit compatibility
+/// easier. As a result, the version of this structure used to interact with the kernel
+/// must be packed. However, since Rust is moving towards making borrows of packed
+/// fields unsafe (see [issue 46043](https://github.com/rust-lang/rust/issues/46043)
+/// for details), this struct is difficult to use directly in a safe manner.
+///
+/// As a result, this module exposes two structures, `RawEvent` and `Event`.
+/// `RawEvent` is the structure passed directly to the kernel, which may be packed and
+/// can be used with `Epoll::wait_raw()` and `Epoll::pwait_raw()`. `Event`, meanwhile,
+/// is guaranteed *not* to be packed and can be used with `Epoll::wait()` and
+/// `Epoll::pwait()`. (Note that on non-x86_64 platforms the "raw" and non-"raw"
+/// types/functions are identical; meanwhile, on x86_64 `wait()`/`pwait()` simply copies
+/// data from `RawEvent`s to `Event`s.)
+///
+/// The data copying that is necessary for `Event` on x86_64 results in a slight
+/// slowdown. As a result, if your application has a lot of events on file descriptors
+/// watched by an `Epoll`, it may be possible to improve performance slightly by switching
+/// to `RawEvent` and the `*wait_raw()` methods -- just be sure to read the issue linked
+/// above for information on how to properly handle packed structs.
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Event {
     pub events: Events,
@@ -72,6 +109,11 @@ impl Default for Event {
         }
     }
 }
+
+/// The raw event representation. Read the documentation of `Event`
+/// for details.
+#[cfg(not(target_arch = "x86_64"))]
+pub type RawEvent = Event;
 
 #[derive(Debug)]
 pub struct Epoll {
@@ -137,6 +179,7 @@ impl Epoll {
         self.ctl(CtlOp::Mod, fd, events, data)
     }
 
+    #[cfg(target_arch = "x86_64")]
     pub fn pwait(
         &self,
         events: &mut [Event],
@@ -156,6 +199,17 @@ impl Epoll {
         }
 
         Ok(res)
+    }
+
+    #[cfg(not(target_arch = "x86_64"))]
+    #[inline]
+    pub fn pwait(
+        &self,
+        events: &mut [Event],
+        timeout: Option<time::Duration>,
+        sigmask: Option<crate::signal::Sigset>,
+    ) -> io::Result<usize> {
+        self.pwait_raw(events, timeout, sigmask)
     }
 
     pub fn pwait_raw(
