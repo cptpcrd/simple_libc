@@ -32,20 +32,7 @@ bitflags! {
 
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
 #[repr(C)]
-#[cfg_attr(
-    any(
-        target_arch = "x86_64",
-        all(
-            target_arch = "x86",
-            target_os = "linux",
-            any(
-                target_env = "gnu",
-                target_env = "",
-            ),
-        )
-    ),
-    repr(packed)
-)]
+#[cfg_attr(target_arch = "x86_64", repr(packed))]
 pub struct RawEvent {
     pub events: Events,
     pub data: u64,
