@@ -65,8 +65,8 @@ pub struct Event {
 
 impl Default for Event {
     #[inline]
-    fn default() -> Event {
-        Event {
+    fn default() -> Self {
+        Self {
             events: Events::empty(),
             data: 0,
         }
@@ -79,10 +79,10 @@ pub struct Epoll {
 }
 
 impl Epoll {
-    pub fn new() -> io::Result<Epoll> {
+    pub fn new() -> io::Result<Self> {
         let fd = crate::error::convert_neg_ret(unsafe { libc::epoll_create1(libc::EPOLL_CLOEXEC) })?;
 
-        Ok(Epoll { fd })
+        Ok(Self { fd })
     }
 
     #[deprecated(since = "0.5.0", note = "Use `as_raw_fd()` instead")]
