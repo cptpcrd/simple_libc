@@ -62,4 +62,9 @@ mod tests {
     fn test_get_equals_nice() {
         assert_eq!(nice(0).unwrap(), get(Target::Process(0)).unwrap());
     }
+
+    #[test]
+    fn test_set() {
+        set(Target::Process(0), get(Target::Process(0)).unwrap()).unwrap();
+    }
 }
