@@ -36,16 +36,12 @@ pub fn get_xucred_raw(sockfd: Int) -> io::Result<Xucred> {
         )
     }?;
 
-    if len != std::mem::size_of::<RawXucred>() as SocklenT {
-        return Err(io::Error::from_raw_os_error(libc::EINVAL));
-    }
-
-    if raw_xucred.cr_version != libc::XUCRED_VERSION {
-        return Err(io::Error::from_raw_os_error(libc::EINVAL));
-    }
-
-    // We need a GID to pull out as the primary GID.
-    if raw_xucred.cr_ngroups < 1 {
+    // We want to make sure that 1) the length matches, 2) the version number
+    // matches, and 3) we have at least one GID to pull out as the primary GID.
+    if len != std::mem::size_of::<RawXucred>() as SocklenT
+        || raw_xucred.cr_version != libc::XUCRED_VERSION
+        || raw_xucred.cr_ngroups < 1
+    {
         return Err(io::Error::from_raw_os_error(libc::EINVAL));
     }
 
