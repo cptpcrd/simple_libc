@@ -143,10 +143,8 @@ impl Epoll {
         timeout: Option<time::Duration>,
         sigmask: Option<crate::signal::Sigset>,
     ) -> io::Result<usize> {
-        let maxevents = events.len();
-
         let mut ep_events = Vec::new();
-        ep_events.resize(maxevents, RawEvent { events: Events::empty(), data: 0 });
+        ep_events.resize(events.len(), RawEvent { events: Events::empty(), data: 0 });
 
         let res = self.pwait_raw(&mut ep_events, timeout, sigmask)?;
 
