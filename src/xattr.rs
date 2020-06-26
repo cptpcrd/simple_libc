@@ -72,8 +72,50 @@ impl Target {
                 ),
             };
 
+            #[cfg(any(target_os = "freebsd", target_os = "netbsd"))]
+            let res = {
+                let (namespace, sub_name) = Self::split_attr_name(name);
+
+                match self {
+                    Self::File(path) => libc::extattr_get_file(
+                        path.as_ptr(),
+                        namespace,
+                        sub_name.as_ptr(),
+                        value.as_mut_ptr() as *mut libc::c_void,
+                        value.len(),
+                    ),
+                    Self::Link(path) => libc::extattr_get_link(
+                        path.as_ptr(),
+                        namespace,
+                        sub_name.as_ptr(),
+                        value.as_mut_ptr() as *mut libc::c_void,
+                        value.len(),
+                    ),
+                    Self::Fd(fd) => libc::extattr_get_fd(*fd,
+                        namespace,
+                        sub_name.as_ptr(),
+                        value.as_mut_ptr() as *mut libc::c_void,
+                        value.len(),
+                    ),
+                }
+            };
+
+
             let n = error::convert_neg_ret(res)?;
             Ok(n as usize)
+        }
+    }
+
+    #[cfg(any(target_os = "freebsd", target_os = "netbsd"))]
+    fn split_attr_name(name: &CStr) -> (Int, &CStr) {
+        let bytes = name.to_bytes_with_nul();
+
+        if bytes.starts_with(b"user.") {
+            (libc::EXTATTR_NAMESPACE_USER, CStr::from_bytes_with_nul(&bytes[5..]).unwrap())
+        } else if bytes.starts_with(b"system.") {
+            (libc::EXTATTR_NAMESPACE_SYSTEM, CStr::from_bytes_with_nul(&bytes[7..]).unwrap())
+        } else {
+            (libc::EXTATTR_NAMESPACE_USER, name)
         }
     }
 
@@ -112,6 +154,34 @@ impl Target {
                     list.len(),
                     0,
                 ),
+            };
+
+            #[cfg(any(target_os = "freebsd", target_os = "netbsd"))]
+            let res = {
+                let (namespace, sub_name) = Self::split_attr_name(name);
+
+                match self {
+                    Self::File(path) => libc::extattr_list_file(
+                        path.as_ptr(),
+                        namespace,
+                        sub_name.as_ptr(),
+                        value.as_mut_ptr() as *mut libc::c_void,
+                        value.len(),
+                    ),
+                    Self::Link(path) => libc::extattr_get_link(
+                        path.as_ptr(),
+                        namespace,
+                        sub_name.as_ptr(),
+                        value.as_mut_ptr() as *mut libc::c_void,
+                        value.len(),
+                    ),
+                    Self::Fd(fd) => libc::extattr_get_fd(*fd,
+                        namespace,
+                        sub_name.as_ptr(),
+                        value.as_mut_ptr() as *mut libc::c_void,
+                        value.len(),
+                    ),
+                }
             };
 
             let n = error::convert_neg_ret(res)?;

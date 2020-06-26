@@ -39,7 +39,7 @@ pub mod wait;
 ))]
 pub mod flock;
 
-#[cfg(any(target_os = "linux", target_os = "macos"))]
+#[cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd"))]
 pub mod xattr;
 
 #[macro_export]
