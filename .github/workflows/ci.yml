@@ -70,7 +70,8 @@ jobs:
         # Only try to run the tests if the OS/architecture we're building for
         # matches the host machine.
         if: >-
-          matrix.os == 'ubuntu-latest' && startsWith(matrix.target, 'x86_64-unknown-linux-')
+          matrix.os == 'ubuntu-latest' && (startsWith(matrix.target, 'x86_64-unknown-linux-')
+              || startsWith(matrix.target, 'i686-unknown-linux-'))
           || matrix.os == 'macos-latest' && startsWith(matrix.target, 'x86_64-apple-darwin')
 
   coverage-tarpaulin:
