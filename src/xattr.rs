@@ -30,17 +30,20 @@ impl Target {
         unsafe {
             #[cfg(target_os = "linux")]
             let res = match self {
-                Self::File(path) => libc::getxattr(path.as_ptr(),
+                Self::File(path) => libc::getxattr(
+                    path.as_ptr(),
                     name.as_ptr(),
                     value.as_mut_ptr() as *mut libc::c_void,
                     value.len(),
                 ),
-                Self::Link(path) => libc::lgetxattr(path.as_ptr(),
+                Self::Link(path) => libc::lgetxattr(
+                    path.as_ptr(),
                     name.as_ptr(),
                     value.as_mut_ptr() as *mut libc::c_void,
                     value.len(),
                 ),
-                Self::Fd(fd) => libc::fgetxattr(*fd,
+                Self::Fd(fd) => libc::fgetxattr(
+                    *fd,
                     name.as_ptr(),
                     value.as_mut_ptr() as *mut libc::c_void,
                     value.len(),
@@ -49,21 +52,24 @@ impl Target {
 
             #[cfg(target_os = "macos")]
             let res = match self {
-                Self::File(path) => libc::getxattr(path.as_ptr(),
+                Self::File(path) => libc::getxattr(
+                    path.as_ptr(),
                     name.as_ptr(),
                     value.as_mut_ptr() as *mut libc::c_void,
                     value.len(),
                     0,
                     0,
                 ),
-                Self::Link(path) => libc::getxattr(path.as_ptr(),
+                Self::Link(path) => libc::getxattr(
+                    path.as_ptr(),
                     name.as_ptr(),
                     value.as_mut_ptr() as *mut libc::c_void,
                     value.len(),
                     0,
-                    libc::XATTR_NOFOLLOW
+                    libc::XATTR_NOFOLLOW,
                 ),
-                Self::Fd(fd) => libc::fgetxattr(*fd,
+                Self::Fd(fd) => libc::fgetxattr(
+                    *fd,
                     name.as_ptr(),
                     value.as_mut_ptr() as *mut libc::c_void,
                     value.len(),
@@ -81,37 +87,38 @@ impl Target {
         unsafe {
             #[cfg(target_os = "linux")]
             let res = match self {
-                Self::File(path) => libc::listxattr(path.as_ptr(),
+                Self::File(path) => libc::listxattr(
+                    path.as_ptr(),
                     list.as_mut_ptr() as *mut crate::Char,
                     list.len(),
                 ),
-                Self::Link(path) => libc::llistxattr(path.as_ptr(),
+                Self::Link(path) => libc::llistxattr(
+                    path.as_ptr(),
                     list.as_mut_ptr() as *mut crate::Char,
                     list.len(),
                 ),
-                Self::Fd(fd) => libc::flistxattr(*fd,
-                    list.as_mut_ptr() as *mut crate::Char,
-                    list.len(),
-                ),
+                Self::Fd(fd) => {
+                    libc::flistxattr(*fd, list.as_mut_ptr() as *mut crate::Char, list.len())
+                }
             };
 
             #[cfg(target_os = "macos")]
             let res = match self {
-                Self::File(path) => libc::listxattr(path.as_ptr(),
+                Self::File(path) => libc::listxattr(
+                    path.as_ptr(),
                     list.as_mut_ptr() as *mut crate::Char,
                     list.len(),
                     0,
                 ),
-                Self::Link(path) => libc::listxattr(path.as_ptr(),
+                Self::Link(path) => libc::listxattr(
+                    path.as_ptr(),
                     list.as_mut_ptr() as *mut crate::Char,
                     list.len(),
-                    libc::XATTR_NOFOLLOW
+                    libc::XATTR_NOFOLLOW,
                 ),
-                Self::Fd(fd) => libc::flistxattr(*fd,
-                    list.as_mut_ptr() as *mut crate::Char,
-                    list.len(),
-                    0,
-                ),
+                Self::Fd(fd) => {
+                    libc::flistxattr(*fd, list.as_mut_ptr() as *mut crate::Char, list.len(), 0)
+                }
             };
 
             let n = error::convert_neg_ret(res)?;
@@ -120,10 +127,7 @@ impl Target {
     }
 }
 
-fn getxattr_impl(
-    target: Target,
-    name: &CStr,
-) -> io::Result<Vec<u8>> {
+fn getxattr_impl(target: Target, name: &CStr) -> io::Result<Vec<u8>> {
     let mut buf = Vec::new();
     let init_size = target.getxattr(&name, &mut buf)?;
     buf.resize(init_size, 0);
@@ -165,11 +169,7 @@ pub fn getxattr<P: AsRef<OsStr>, N: AsRef<OsStr>>(
     getxattr_impl(Target::build_from_path(path, follow_links)?, &c_name)
 }
 
-pub fn fgetxattr_raw<N: AsRef<OsStr>>(
-    fd: Int,
-    name: N,
-    value: &mut [u8],
-) -> io::Result<usize> {
+pub fn fgetxattr_raw<N: AsRef<OsStr>>(fd: Int, name: N, value: &mut [u8]) -> io::Result<usize> {
     Target::Fd(fd).getxattr_name(name, value)
 }
 
@@ -212,7 +212,11 @@ fn listxattr_impl(target: Target) -> io::Result<Vec<OsString>> {
     Ok(res)
 }
 
-pub fn listxattr_raw<P: AsRef<OsStr>>(path: P, list: &mut [u8], follow_links: bool) -> io::Result<usize> {
+pub fn listxattr_raw<P: AsRef<OsStr>>(
+    path: P,
+    list: &mut [u8],
+    follow_links: bool,
+) -> io::Result<usize> {
     Target::build_from_path(path, follow_links)?.listxattr(list)
 }
 
