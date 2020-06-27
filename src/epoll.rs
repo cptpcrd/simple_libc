@@ -71,8 +71,8 @@ crate::attr_group! {
 ///
 /// **TL;DR**: If you want a quick 99% solution, use `Event` and
 /// `Epoll::wait()`/`Epoll::pwait()`. If you've read this carefully, you understand
-/// how to interact an unpacked struct properly, and you want the *slight* performance
-/// boost that `RawEvent` provides on x86_64, use `RawEvent` and
+/// how to interact with an unpacked struct properly, and you want the *slight*
+/// performance boost that `RawEvent` provides on x86_64, use `RawEvent` and
 /// `Epoll::wait_raw()`/`Epoll::pwait_raw()`.
 ///
 /// On x86_64, the `epoll_event` structure is *packed* to make 32-bit compatibility
@@ -82,10 +82,10 @@ crate::attr_group! {
 /// for details), this struct is difficult to use directly in a safe manner.
 ///
 /// As a result, this module exposes two structures, `RawEvent` and `Event`.
-/// `RawEvent` is the structure passed directly to the kernel, which may be packed and
-/// can be used with `Epoll::wait_raw()` and `Epoll::pwait_raw()`. `Event`, meanwhile,
-/// is guaranteed *not* to be packed and can be used with `Epoll::wait()` and
-/// `Epoll::pwait()`. (Note that on non-x86_64 platforms the "raw" and non-"raw"
+/// `RawEvent` is the structure passed directly to the kernel, which may be packed (depending
+/// on the architecture) and can be used with `Epoll::wait_raw()` and `Epoll::pwait_raw()`.
+/// `Event`, meanwhile, is guaranteed *not* to be packed and can be used with `Epoll::wait()`
+/// and `Epoll::pwait()`. (Note that on non-x86_64 platforms the "raw" and non-"raw"
 /// types/functions are identical; meanwhile, on x86_64 `wait()`/`pwait()` simply copies
 /// data from `RawEvent`s to `Event`s.)
 ///
