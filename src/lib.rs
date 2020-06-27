@@ -60,6 +60,7 @@ attr_group! {
     pub mod ioprio;
     pub mod namespace;
     pub mod prctl;
+    pub mod sched;
     pub mod signalfd;
 }
 
