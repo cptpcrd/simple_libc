@@ -95,6 +95,7 @@ crate::attr_group! {
 /// to `RawEvent` and the `*wait_raw()` methods -- just be sure to read the issue linked
 /// above for information on how to properly handle packed structs.
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
+#[cfg_attr(not(target_arch = "x86_64"), repr(C))]
 pub struct Event {
     pub events: Events,
     pub data: u64,
