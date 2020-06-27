@@ -100,14 +100,6 @@ jobs:
           toolchain: ${{ matrix.toolchain }}
           target: ${{ matrix.target }}
 
-      - name: Setup Cargo cache
-        uses: actions/cache@v2
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-          key: ${{ matrix.os }}-${{ matrix.toolchain }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.toml') }}
-
       - name: Install tarpaulin
         uses: actions-rs/cargo@v1
         with:
