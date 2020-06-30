@@ -235,13 +235,14 @@ pub fn prlimit(
 /// platforms. (WARNING: the semantics may vary.)
 ///
 /// Note that this function provides fewer guarantees than Linux's `prlimit()`. Namely:
+///
 /// 1. On some platforms, it may not be possible to set new process limits for other
 ///    processes. In that case, an `ENOSYS` error will be returned.
 /// 2. Getting the original limits and setting the new limits, as well as
 ///    getting/setting the soft limit and getting/setting the hard limit, may be
-///    performed as separate operations. Besides the performance implications of this,
-///    if new limits are passed but an error is returned, the soft and/or hard limits
-///    may or may not have been changed.
+///    performed as separate operations. Besides the implications of this for performance
+///    and creation of race conditions, if new limits are passed but an error is
+///    returned, the soft and/or hard limits may or may not have been changed.
 /// 4. The exact errors returned for different error conditions may vary slightly
 ///    across platforms, though an attempt is made to standardize them on
 ///    `prlimit()`-like errors.
