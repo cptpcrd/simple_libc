@@ -4,15 +4,23 @@ use std::time::Duration;
 
 use bitflags::bitflags;
 
-#[cfg(target_os = "linux")]
-mod epoll;
 mod poll;
 mod select;
 
 #[cfg(target_os = "linux")]
-pub use epoll::EpollPoller;
+mod epoll;
+
+#[cfg(target_os = "macos")]
+mod kqueue;
+
 pub use poll::PollPoller;
 pub use select::SelectPoller;
+
+#[cfg(target_os = "linux")]
+pub use epoll::EpollPoller;
+
+#[cfg(target_os = "macos")]
+pub use kqueue::KqueuePoller;
 
 use crate::signal::Sigset;
 
