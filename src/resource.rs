@@ -1,9 +1,6 @@
 use std::io;
 
-#[cfg(all(
-    feature = "serde",
-    any(all(feature = "strum", feature = "strum_macros"), test)
-))]
+#[cfg(any(all(feature = "serde", feature = "strum"), test))]
 use std::str::FromStr;
 
 #[cfg(feature = "serde")]
@@ -23,7 +20,7 @@ type RawResourceType = libc::__rlimit_resource_t;
 type RawResourceType = Int;
 
 #[cfg_attr(
-    any(all(feature = "strum", feature = "strum_macros"), test),
+    any(feature = "strum", test),
     derive(
         strum_macros::Display,
         strum_macros::EnumString,
@@ -111,20 +108,14 @@ pub enum Resource {
     SIGPENDING = libc::RLIMIT_SIGPENDING as isize,
 }
 
-#[cfg(all(
-    feature = "serde",
-    any(all(feature = "strum", feature = "strum_macros"), test)
-))]
+#[cfg(any(all(feature = "serde", feature = "strum"), test))]
 impl serde::Serialize for Resource {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         serializer.serialize_str(&self.to_string().to_lowercase())
     }
 }
 
-#[cfg(all(
-    feature = "serde",
-    any(all(feature = "strum", feature = "strum_macros"), test)
-))]
+#[cfg(any(all(feature = "serde", feature = "strum"), test))]
 impl<'d> serde::Deserialize<'d> for Resource {
     fn deserialize<D: serde::Deserializer<'d>>(deserializer: D) -> Result<Self, D::Error> {
         Self::from_str(&String::deserialize(deserializer)?.to_uppercase())
@@ -428,7 +419,6 @@ pub fn nice_thresh_to_rlimit(nice_thresh: Int) -> Limit {
 mod tests {
     use super::*;
 
-    #[cfg(feature = "serde")]
     use serde_test::{
         assert_de_tokens, assert_de_tokens_error, assert_ser_tokens, assert_tokens, Token,
     };
@@ -462,7 +452,6 @@ mod tests {
         }
     }
 
-    #[cfg(feature = "serde")]
     #[test]
     fn test_resource_serde() {
         assert_ser_tokens(&Resource::NOFILE, &[Token::String("nofile")]);
@@ -479,7 +468,6 @@ mod tests {
         assert_de_tokens(&Resource::NOFILE, &[Token::String("NOFILE")]);
     }
 
-    #[cfg(feature = "serde")]
     #[test]
     fn test_limit_serde() {
         // A quick struct so we can use our custom serializer and deserializer

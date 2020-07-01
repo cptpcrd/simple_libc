@@ -5,18 +5,12 @@ use std::io;
 use std::iter::FromIterator;
 use std::ops::{BitAnd, BitOr, BitXor, Not, Sub};
 
-#[cfg(all(
-    feature = "serde",
-    any(all(feature = "strum", feature = "strum_macros"), test)
-))]
+#[cfg(any(all(feature = "serde", feature = "strum"), test))]
 use std::str::FromStr;
 
 #[cfg(feature = "serde")]
 use serde::de::Deserialize;
-#[cfg(all(
-    feature = "serde",
-    any(all(feature = "strum", feature = "strum_macros"), test)
-))]
+#[cfg(any(feature = "serde", test))]
 use serde::ser::SerializeSeq;
 
 use crate::constants;
@@ -27,208 +21,136 @@ use crate::types;
 use crate::{Int, UidT, Ulong};
 
 #[cfg_attr(
-    any(all(feature = "strum", feature = "strum_macros"), test),
+    any(feature = "strum", test),
     derive(strum_macros::Display, strum_macros::EnumString)
+)]
+#[cfg_attr(
+    any(feature = "serde", test),
+    derive(serde::Serialize, serde::Deserialize)
 )]
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
 #[repr(isize)]
 pub enum Cap {
     // POSIX
-    #[cfg_attr(
-        any(all(feature = "strum", feature = "strum_macros"), test),
-        strum(serialize = "CAP_CHOWN")
-    )]
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_CHOWN"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_CHOWN"))]
     Chown = constants::CAP_CHOWN,
-    #[cfg_attr(
-        any(all(feature = "strum", feature = "strum_macros"), test),
-        strum(serialize = "CAP_DAC_OVERRIDE")
-    )]
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_DAC_OVERRIDE"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_DAC_OVERRIDE"))]
     DacOverride = constants::CAP_DAC_OVERRIDE,
-    #[cfg_attr(
-        any(all(feature = "strum", feature = "strum_macros"), test),
-        strum(serialize = "CAP_DAC_READ_SEARCH")
-    )]
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_DAC_READ_SEARCH"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_DAC_READ_SEARCH"))]
     DacReadSearch = constants::CAP_DAC_READ_SEARCH,
-    #[cfg_attr(
-        any(all(feature = "strum", feature = "strum_macros"), test),
-        strum(serialize = "CAP_FOWNER")
-    )]
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_FOWNER"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_FOWNER"))]
     Fowner = constants::CAP_FOWNER,
-    #[cfg_attr(
-        any(all(feature = "strum", feature = "strum_macros"), test),
-        strum(serialize = "CAP_FSETID")
-    )]
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_FSETID"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_FSETID"))]
     Fsetid = constants::CAP_FSETID,
-    #[cfg_attr(
-        any(all(feature = "strum", feature = "strum_macros"), test),
-        strum(serialize = "CAP_KILL")
-    )]
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_KILL"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_KILL"))]
     Kill = constants::CAP_KILL,
-    #[cfg_attr(
-        any(all(feature = "strum", feature = "strum_macros"), test),
-        strum(serialize = "CAP_SETGID")
-    )]
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_SETGID"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_SETGID"))]
     Setgid = constants::CAP_SETGID,
-    #[cfg_attr(
-        any(all(feature = "strum", feature = "strum_macros"), test),
-        strum(serialize = "CAP_SETUID")
-    )]
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_SETUID"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_SETUID"))]
     Setuid = constants::CAP_SETUID,
 
     // Linux
-    #[cfg_attr(
-        any(all(feature = "strum", feature = "strum_macros"), test),
-        strum(serialize = "CAP_SETPCAP")
-    )]
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_SETPCAP"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_SETPCAP"))]
     Setpcap = constants::CAP_SETPCAP,
-    #[cfg_attr(
-        any(all(feature = "strum", feature = "strum_macros"), test),
-        strum(serialize = "CAP_LINUX_IMMUTABLE")
-    )]
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_LINUX_IMMUTABLE"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_LINUX_IMMUTABLE"))]
     LinuxImmutable = constants::CAP_LINUX_IMMUTABLE,
 
-    #[cfg_attr(
-        any(all(feature = "strum", feature = "strum_macros"), test),
-        strum(serialize = "CAP_NET_BIND_SERVICE")
-    )]
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_NET_BIND_SERVICE"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_NET_BIND_SERVICE"))]
     NetBindService = constants::CAP_NET_BIND_SERVICE,
-    #[cfg_attr(
-        any(all(feature = "strum", feature = "strum_macros"), test),
-        strum(serialize = "CAP_NET_BROADCAST")
-    )]
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_NET_BROADCAST"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_NET_BROADCAST"))]
     NetBroadcast = constants::CAP_NET_BROADCAST,
-    #[cfg_attr(
-        any(all(feature = "strum", feature = "strum_macros"), test),
-        strum(serialize = "CAP_NET_ADMIN")
-    )]
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_NET_ADMIN"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_NET_ADMIN"))]
     NetAdmin = constants::CAP_NET_ADMIN,
-    #[cfg_attr(
-        any(all(feature = "strum", feature = "strum_macros"), test),
-        strum(serialize = "CAP_NET_RAW")
-    )]
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_NET_RAW"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_NET_RAW"))]
     NetRaw = constants::CAP_NET_RAW,
 
-    #[cfg_attr(
-        any(all(feature = "strum", feature = "strum_macros"), test),
-        strum(serialize = "CAP_IPC_LOCK")
-    )]
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_IPC_LOCK"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_IPC_LOCK"))]
     IpcLock = constants::CAP_IPC_LOCK,
-    #[cfg_attr(
-        any(all(feature = "strum", feature = "strum_macros"), test),
-        strum(serialize = "CAP_IPC_OWNER")
-    )]
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_IPC_OWNER"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_IPC_OWNER"))]
     IpcOwner = constants::CAP_IPC_OWNER,
 
-    #[cfg_attr(
-        any(all(feature = "strum", feature = "strum_macros"), test),
-        strum(serialize = "CAP_SYS_MODULE")
-    )]
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_SYS_MODULE"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_SYS_MODULE"))]
     SysModule = constants::CAP_SYS_MODULE,
-    #[cfg_attr(
-        any(all(feature = "strum", feature = "strum_macros"), test),
-        strum(serialize = "CAP_SYS_RAWIO")
-    )]
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_SYS_RAWIO"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_SYS_RAWIO"))]
     SysRawio = constants::CAP_SYS_RAWIO,
-    #[cfg_attr(
-        any(all(feature = "strum", feature = "strum_macros"), test),
-        strum(serialize = "CAP_SYS_CHROOT")
-    )]
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_SYS_CHROOT"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_SYS_CHROOT"))]
     SysChroot = constants::CAP_SYS_CHROOT,
-    #[cfg_attr(
-        any(all(feature = "strum", feature = "strum_macros"), test),
-        strum(serialize = "CAP_SYS_PTRACE")
-    )]
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_SYS_PTRACE"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_SYS_PTRACE"))]
     SysPtrace = constants::CAP_SYS_PTRACE,
-    #[cfg_attr(
-        any(all(feature = "strum", feature = "strum_macros"), test),
-        strum(serialize = "CAP_SYS_PACCT")
-    )]
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_SYS_PACCT"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_SYS_PACCT"))]
     SysPacct = constants::CAP_SYS_PACCT,
-    #[cfg_attr(
-        any(all(feature = "strum", feature = "strum_macros"), test),
-        strum(serialize = "CAP_SYS_ADMIN")
-    )]
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_SYS_ADMIN"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_SYS_ADMIN"))]
     SysAdmin = constants::CAP_SYS_ADMIN,
-    #[cfg_attr(
-        any(all(feature = "strum", feature = "strum_macros"), test),
-        strum(serialize = "CAP_SYS_BOOT")
-    )]
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_SYS_BOOT"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_SYS_BOOT"))]
     SysBoot = constants::CAP_SYS_BOOT,
-    #[cfg_attr(
-        any(all(feature = "strum", feature = "strum_macros"), test),
-        strum(serialize = "CAP_SYS_NICE")
-    )]
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_SYS_NICE"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_SYS_NICE"))]
     SysNice = constants::CAP_SYS_NICE,
-    #[cfg_attr(
-        any(all(feature = "strum", feature = "strum_macros"), test),
-        strum(serialize = "CAP_SYS_RESOURCE")
-    )]
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_SYS_RESOURCE"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_SYS_RESOURCE"))]
     SysResource = constants::CAP_SYS_RESOURCE,
-    #[cfg_attr(
-        any(all(feature = "strum", feature = "strum_macros"), test),
-        strum(serialize = "CAP_SYS_TIME")
-    )]
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_SYS_TIME"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_SYS_TIME"))]
     SysTime = constants::CAP_SYS_TIME,
-    #[cfg_attr(
-        any(all(feature = "strum", feature = "strum_macros"), test),
-        strum(serialize = "CAP_SYS_TTY_CONFIG")
-    )]
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_SYS_TTY_CONFIG"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_SYS_TTY_CONFIG"))]
     SysTtyConfig = constants::CAP_SYS_TTY_CONFIG,
 
-    #[cfg_attr(
-        any(all(feature = "strum", feature = "strum_macros"), test),
-        strum(serialize = "CAP_MKNOD")
-    )]
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_MKNOD"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_MKNOD"))]
     Mknod = constants::CAP_MKNOD,
-    #[cfg_attr(
-        any(all(feature = "strum", feature = "strum_macros"), test),
-        strum(serialize = "CAP_LEASE")
-    )]
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_LEASE"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_LEASE"))]
     Lease = constants::CAP_LEASE,
-    #[cfg_attr(
-        any(all(feature = "strum", feature = "strum_macros"), test),
-        strum(serialize = "CAP_AUDIT_WRITE")
-    )]
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_AUDIT_WRITE"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_AUDIT_WRITE"))]
     AuditWrite = constants::CAP_AUDIT_WRITE,
-    #[cfg_attr(
-        any(all(feature = "strum", feature = "strum_macros"), test),
-        strum(serialize = "CAP_AUDIT_CONTROL")
-    )]
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_AUDIT_CONTROL"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_AUDIT_CONTROL"))]
     AuditControl = constants::CAP_AUDIT_CONTROL,
-    #[cfg_attr(
-        any(all(feature = "strum", feature = "strum_macros"), test),
-        strum(serialize = "CAP_SETFCAP")
-    )]
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_SETFCAP"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_SETFCAP"))]
     Setfcap = constants::CAP_SETFCAP,
-    #[cfg_attr(
-        any(all(feature = "strum", feature = "strum_macros"), test),
-        strum(serialize = "CAP_MAC_OVERRIDE")
-    )]
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_MAC_OVERRIDE"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_MAC_OVERRIDE"))]
     MacOverride = constants::CAP_MAC_OVERRIDE,
-    #[cfg_attr(
-        any(all(feature = "strum", feature = "strum_macros"), test),
-        strum(serialize = "CAP_MAC_ADMIN")
-    )]
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_MAC_ADMIN"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_MAC_ADMIN"))]
     MacAdmin = constants::CAP_MAC_ADMIN,
-    #[cfg_attr(
-        any(all(feature = "strum", feature = "strum_macros"), test),
-        strum(serialize = "CAP_SYSLOG")
-    )]
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_SYSLOG"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_SYSLOG"))]
     Syslog = constants::CAP_SYSLOG,
-    #[cfg_attr(
-        any(all(feature = "strum", feature = "strum_macros"), test),
-        strum(serialize = "CAP_WAKE_ALARM")
-    )]
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_WAKE_ALARM"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_WAKE_ALARM"))]
     WakeAlarm = constants::CAP_WAKE_ALARM,
-    #[cfg_attr(
-        any(all(feature = "strum", feature = "strum_macros"), test),
-        strum(serialize = "CAP_BLOCK_SUSPEND")
-    )]
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_BLOCK_SUSPEND"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_BLOCK_SUSPEND"))]
     BlockSuspend = constants::CAP_BLOCK_SUSPEND,
-    #[cfg_attr(
-        any(all(feature = "strum", feature = "strum_macros"), test),
-        strum(serialize = "CAP_AUDIT_READ")
-    )]
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_AUDIT_READ"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_AUDIT_READ"))]
     AuditRead = constants::CAP_AUDIT_READ,
 }
 
@@ -266,26 +188,6 @@ impl Cap {
         debug_assert!((self as isize) <= constants::CAP_MAX);
 
         (1 as u64) << (self as u64)
-    }
-}
-
-#[cfg(all(
-    feature = "serde",
-    any(all(feature = "strum", feature = "strum_macros"), test)
-))]
-impl serde::Serialize for Cap {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(&self.to_string())
-    }
-}
-
-#[cfg(all(
-    feature = "serde",
-    any(all(feature = "strum", feature = "strum_macros"), test)
-))]
-impl<'d> serde::Deserialize<'d> for Cap {
-    fn deserialize<D: serde::Deserializer<'d>>(deserializer: D) -> Result<Self, D::Error> {
-        Self::from_str(&String::deserialize(deserializer)?).map_err(serde::de::Error::custom)
     }
 }
 
@@ -494,7 +396,7 @@ impl fmt::Debug for CapSet {
 }
 
 #[allow(clippy::trivially_copy_pass_by_ref)]
-#[cfg(feature = "serde")]
+#[cfg(any(feature = "serde", test))]
 pub fn serialize_capset_raw<S: serde::Serializer>(
     set: &CapSet,
     serializer: S,
@@ -502,7 +404,7 @@ pub fn serialize_capset_raw<S: serde::Serializer>(
     serializer.serialize_u64(set.bits)
 }
 
-#[cfg(feature = "serde")]
+#[cfg(any(feature = "serde", test))]
 pub fn deserialize_capset_raw<'d, D: serde::Deserializer<'d>>(
     deserializer: D,
 ) -> Result<CapSet, D::Error> {
@@ -511,10 +413,7 @@ pub fn deserialize_capset_raw<'d, D: serde::Deserializer<'d>>(
 }
 
 #[allow(clippy::trivially_copy_pass_by_ref)]
-#[cfg(all(
-    feature = "serde",
-    any(all(feature = "strum", feature = "strum_macros"), test)
-))]
+#[cfg(any(feature = "serde", test))]
 pub fn serialize_capset_seq<S: serde::Serializer>(
     set: &CapSet,
     serializer: S,
@@ -534,10 +433,7 @@ pub fn serialize_capset_seq<S: serde::Serializer>(
     seq.end()
 }
 
-#[cfg(all(
-    feature = "serde",
-    any(all(feature = "strum", feature = "strum_macros"), test)
-))]
+#[cfg(any(all(feature = "serde", feature = "strum"), test))]
 pub fn deserialize_capset_seq<'d, D: serde::Deserializer<'d>>(
     deserializer: D,
 ) -> Result<CapSet, D::Error> {
@@ -1058,7 +954,7 @@ mod tests {
     #[cfg(feature = "serde")]
     #[test]
     fn test_cap_serde() {
-        assert_tokens(&Cap::Chown, &[Token::Str("CAP_CHOWN")]);
+        assert_tokens(&Cap::Chown, &[Token::UnitVariant { name: "Cap", variant: "CAP_CHOWN" }]);
     }
 
     #[test]
@@ -1237,7 +1133,6 @@ mod tests {
         assert_eq!(format!("{:?}", CapSet::from_iter(vec![Cap::Chown, Cap::Fowner])), "{Chown, Fowner}");
     }
 
-    #[cfg(feature = "serde")]
     #[test]
     fn test_capset_serde_seq() {
         // A quick struct so we can use our custom serializer and deserializer
@@ -1277,7 +1172,7 @@ mod tests {
                 },
                 Token::Str("set"),
                 Token::Seq { len: Some(1) },
-                Token::Str("CAP_CHOWN"),
+                Token::UnitVariant { name: "Cap", variant: "CAP_CHOWN" },
                 Token::SeqEnd,
                 Token::StructEnd,
             ],
@@ -1310,7 +1205,7 @@ mod tests {
                 Token::Str("set"),
                 Token::Seq { len: Some(2) },
                 Token::Str("!"),
-                Token::Str("CAP_CHOWN"),
+                Token::UnitVariant { name: "Cap", variant: "CAP_CHOWN" },
                 Token::SeqEnd,
                 Token::StructEnd,
             ],
@@ -1334,7 +1229,6 @@ mod tests {
         );
     }
 
-    #[cfg(feature = "serde")]
     #[test]
     fn test_capset_serde_raw() {
         #[derive(Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
