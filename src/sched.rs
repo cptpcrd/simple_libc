@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::io;
 use std::ops::{BitAnd, BitOr, BitXor};
 
@@ -96,12 +97,16 @@ impl PartialEq for CpuSet {
         let self_len = self.bits.len();
         let other_len = other.bits.len();
 
-        if self_len == other_len {
-            self.bits == other.bits
-        } else if self_len < other_len {
-            self.bits.as_slice() == &other.bits[..self_len] && other.bits[self_len..].iter().all(|x| *x == 0)
-        } else {
-            &self.bits[..other_len] == other.bits.as_slice() && self.bits[other_len..].iter().all(|x| *x == 0)
+        match self_len.cmp(&other_len) {
+            Ordering::Greater => {
+                &self.bits[..other_len] == other.bits.as_slice() && self.bits[other_len..].iter().all(|x| *x == 0)
+            }
+            Ordering::Less => {
+                self.bits.as_slice() == &other.bits[..self_len] && other.bits[self_len..].iter().all(|x| *x == 0)
+            }
+            Ordering::Equal => {
+                self.bits == other.bits
+            }
         }
     }
 }
