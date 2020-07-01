@@ -119,7 +119,7 @@ crate::attr_group! {
 crate::attr_group! {
     #![cfg(target_os = "netbsd")]
 
-    use crate::Int;
+    use crate::{Int, Uint};
 
     // USED by net/ucred.rs
     pub const LOCAL_PEEREID: Int = 3;
@@ -129,7 +129,7 @@ crate::attr_group! {
     pub const RLIMIT_AS: Int = 10;
     pub const RLIMIT_NTHR: Int = 11;
 
-    pub const PROC_CURPROC: Int = (!(1u32 << 31)) as Int;
+    pub const PROC_CURPROC: Int = (!((1 as Uint) << 31)) as Int;
 
     pub const PROC_PID_LIMIT: Int = 2;
     pub const PROC_PID_LIMIT_CPU: Int = libc::RLIMIT_CPU + 1;
