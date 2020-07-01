@@ -104,24 +104,33 @@ pub fn result_or_os_error<T>(res: T) -> io::Result<T> {
     }
 }
 
+pub fn is_raw(err: &io::Error, num: i32) -> bool {
+    err.raw_os_error() == Some(num)
+}
+
+#[inline]
 pub fn is_erange(err: &io::Error) -> bool {
-    err.raw_os_error() == Some(libc::ERANGE)
+    is_raw(err, libc::ERANGE)
 }
 
+#[inline]
 pub fn is_eintr(err: &io::Error) -> bool {
-    err.raw_os_error() == Some(libc::EINTR)
+    is_raw(err, libc::EINTR)
 }
 
+#[inline]
 pub fn is_eagain(err: &io::Error) -> bool {
-    err.raw_os_error() == Some(libc::EAGAIN)
+    is_raw(err, libc::EAGAIN)
 }
 
+#[inline]
 pub fn is_einval(err: &io::Error) -> bool {
-    err.raw_os_error() == Some(libc::EINVAL)
+    is_raw(err, libc::EINVAL)
 }
 
+#[inline]
 pub fn is_ewouldblock(err: &io::Error) -> bool {
-    err.raw_os_error() == Some(libc::EWOULDBLOCK)
+    is_raw(err, libc::EWOULDBLOCK)
 }
 
 #[deprecated(since = "0.5.0", note = "Please loop manually instead")]
@@ -249,6 +258,14 @@ mod tests {
 
     #[test]
     fn test_is_e() {
+        assert!(is_raw(&io::Error::from_raw_os_error(0), 0));
+        assert!(!is_raw(&io::Error::from_raw_os_error(0), libc::EINVAL));
+        assert!(!is_raw(&io::Error::from_raw_os_error(libc::EINVAL), 0));
+        assert!(is_raw(
+            &io::Error::from_raw_os_error(libc::EINVAL),
+            libc::EINVAL
+        ));
+
         assert!(!is_erange(&io::Error::from_raw_os_error(0)));
         assert!(!is_erange(&io::Error::from_raw_os_error(libc::EINVAL)));
         assert!(is_erange(&io::Error::from_raw_os_error(libc::ERANGE)));
