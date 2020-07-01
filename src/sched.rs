@@ -228,6 +228,7 @@ pub fn setaffinity(pid: PidT, cpuset: &CpuSet) -> io::Result<()> {
 }
 
 #[cfg(test)]
+#[allow(clippy::redundant_clone)]
 mod tests {
     use super::*;
     
