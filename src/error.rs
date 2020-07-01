@@ -58,14 +58,14 @@ where
 #[inline]
 pub fn convert_neg_ret<T>(ret: T) -> io::Result<T>
 where
-    T: Default + Ord + Copy,
+    T: MinusOneSigned + Default + Ord + Copy,
 {
     convert_neg(ret, ret)
 }
 
 pub fn convert_neg<T, U>(ret: T, res: U) -> io::Result<U>
 where
-    T: Default + Ord,
+    T: MinusOneSigned + Default + Ord,
 {
     if ret < T::default() {
         Err(io::Error::last_os_error())
@@ -77,14 +77,14 @@ where
 #[inline]
 pub fn convert_nzero_ret<T>(ret: T) -> io::Result<()>
 where
-    T: Default + Eq,
+    T: MinusOneSigned + Default + Eq,
 {
     convert_nzero(ret, ())
 }
 
 pub fn convert_nzero<T, U>(ret: T, res: U) -> io::Result<U>
 where
-    T: Default + Eq,
+    T: MinusOneSigned + Default + Eq,
 {
     if ret != T::default() {
         Err(io::Error::last_os_error())
