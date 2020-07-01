@@ -205,7 +205,7 @@ pub fn getaffinity(pid: PidT) -> io::Result<CpuSet> {
     loop {
         match getaffinity_raw(pid, cpuset.bits.as_mut_slice()) {
             Ok(()) => return Ok(cpuset),
-            Err(e) if e.raw_os_error() == Some(libc::EINVAL) => {
+            Err(e) if crate::error::is_einval(&e) => {
                 cpuset.resize(cpuset.max_ncpus() * 2);
             }
             Err(e) => return Err(e),
