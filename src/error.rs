@@ -11,6 +11,7 @@ use libc::__error as errno_mut_ptr;
 #[cfg(any(target_os = "netbsd", target_os = "openbsd"))]
 use libc::__errno as errno_mut_ptr;
 
+#[inline]
 pub fn set_errno_success() {
     unsafe {
         *errno_mut_ptr() = 0;

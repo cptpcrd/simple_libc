@@ -224,10 +224,12 @@ pub fn listxattr<P: AsRef<OsStr>>(path: P, follow_links: bool) -> io::Result<Vec
     listxattr_impl(Target::build_from_path(path, follow_links)?)
 }
 
+#[inline]
 pub fn flistxattr_raw(fd: Int, list: &mut [u8]) -> io::Result<usize> {
     Target::Fd(fd).listxattr(list)
 }
 
+#[inline]
 pub fn flistxattr(fd: Int) -> io::Result<Vec<OsString>> {
     listxattr_impl(Target::Fd(fd))
 }
