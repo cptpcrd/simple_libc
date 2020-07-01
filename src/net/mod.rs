@@ -135,7 +135,7 @@ pub unsafe fn getsockopt_raw<T: Sized>(
 
 /// Sets the value of the given socket option.
 ///
-/// This function is a simple wrapper around `libc::getsockopt()` that sets
+/// This function is a simple wrapper around `libc::setsockopt()` that sets
 /// the value of the socket option to the contents of a generic slice.
 ///
 /// # Safety
