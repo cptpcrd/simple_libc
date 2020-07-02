@@ -235,7 +235,7 @@ pub fn dup_inheritable(oldfd: Int) -> io::Result<Int> {
 }
 
 pub fn dup(oldfd: Int) -> io::Result<Int> {
-    fcntl::dupfd_cloexec(oldfd, 0)
+    fcntl::dupfd(oldfd, 0)
 }
 
 pub fn dup2_inheritable(oldfd: Int, newfd: Int) -> io::Result<Int> {

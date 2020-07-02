@@ -10,12 +10,12 @@ macro_rules! fcntl_raw {
 }
 
 #[inline]
-pub fn dupfd(fd: Int, min_fd: Int) -> io::Result<Int> {
+pub fn dupfd_inheritable(fd: Int, min_fd: Int) -> io::Result<Int> {
     unsafe { fcntl_raw!(fd, libc::F_DUPFD, min_fd) }
 }
 
 #[inline]
-pub fn dupfd_cloexec(fd: Int, min_fd: Int) -> io::Result<Int> {
+pub fn dupfd(fd: Int, min_fd: Int) -> io::Result<Int> {
     unsafe { fcntl_raw!(fd, libc::F_DUPFD_CLOEXEC, min_fd) }
 }
 
@@ -101,13 +101,13 @@ mod tests {
     fn test_dupfd() {
         let f = std::fs::File::open("/dev/null").unwrap();
 
-        let f2 = dupfd(f.as_raw_fd(), 0).unwrap();
+        let f2 = dupfd_inheritable(f.as_raw_fd(), 0).unwrap();
         assert!(is_inheritable(f2).unwrap());
         unsafe {
             crate::close_fd(f2).unwrap();
         }
 
-        let f2 = dupfd_cloexec(f.as_raw_fd(), 0).unwrap();
+        let f2 = dupfd(f.as_raw_fd(), 0).unwrap();
         assert!(!is_inheritable(f2).unwrap());
         unsafe {
             crate::close_fd(f2).unwrap();
