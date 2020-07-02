@@ -59,6 +59,7 @@ attr_group! {
     pub mod inotify;
     pub mod ioprio;
     pub mod namespace;
+    pub mod openat2;
     pub mod prctl;
     pub mod sched;
     pub mod signalfd;
