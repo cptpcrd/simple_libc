@@ -437,8 +437,8 @@ pub fn setdomainname<N: AsRef<ffi::OsStr>>(name: N) -> io::Result<()> {
 }
 
 #[cfg(target_os = "linux")]
-pub fn getdomainname_raw(name_vec: &mut Vec<Char>) -> io::Result<()> {
-    error::convert_nzero_ret(unsafe { libc::getdomainname(name_vec.as_mut_ptr(), name_vec.len()) })
+pub fn getdomainname_raw(name_slice: &mut [Char]) -> io::Result<()> {
+    error::convert_nzero_ret(unsafe { libc::getdomainname(name_slice.as_mut_ptr(), name_slice.len()) })
 }
 
 #[cfg(target_os = "linux")]
