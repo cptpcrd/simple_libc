@@ -593,6 +593,38 @@ mod tests {
                 vec![],
             ),
         );
+
+        // Just check if they're ready for writing
+        assert_eq!(
+            select_simple(
+                &[],
+                &[w1.as_raw_fd(), w2.as_raw_fd()],
+                &[],
+                timeout_0,
+            )
+            .unwrap(),
+            (
+                vec![],
+                vec![w1.as_raw_fd(), w2.as_raw_fd()],
+                vec![],
+            ),
+        );
+
+        // No timeout
+        assert_eq!(
+            select_simple(
+                &[],
+                &[w1.as_raw_fd(), w2.as_raw_fd()],
+                &[],
+                None,
+            )
+            .unwrap(),
+            (
+                vec![],
+                vec![w1.as_raw_fd(), w2.as_raw_fd()],
+                vec![],
+            ),
+        );
     }
 
     #[test]
@@ -635,6 +667,40 @@ mod tests {
             .unwrap(),
             (
                 vec![r1.as_raw_fd(), r2.as_raw_fd()],
+                vec![w1.as_raw_fd(), w2.as_raw_fd()],
+                vec![],
+            ),
+        );
+
+        // Just check if they're ready for writing
+        assert_eq!(
+            pselect_simple(
+                &[],
+                &[w1.as_raw_fd(), w2.as_raw_fd()],
+                &[],
+                timeout_0,
+                None,
+            )
+            .unwrap(),
+            (
+                vec![],
+                vec![w1.as_raw_fd(), w2.as_raw_fd()],
+                vec![],
+            ),
+        );
+
+        // No timeout
+        assert_eq!(
+            pselect_simple(
+                &[],
+                &[w1.as_raw_fd(), w2.as_raw_fd()],
+                &[],
+                None,
+                None,
+            )
+            .unwrap(),
+            (
+                vec![],
                 vec![w1.as_raw_fd(), w2.as_raw_fd()],
                 vec![],
             ),
