@@ -240,7 +240,7 @@ pub fn prlimit(
 ///
 /// This function will accept pid=0 to refer to the current process. However, on some
 /// platforms this may result in a fallback to `getrlimit()`/`setrlimit()`.
-#[cfg(any(target_os = "linux", target_os = "netbsd"))]
+#[cfg(any(target_os = "linux", target_os = "netbsd", target_os = "freebsd"))]
 #[inline]
 pub fn proc_rlimit(
     pid: crate::PidT,
@@ -260,6 +260,59 @@ pub fn proc_rlimit(
     }
 
     res
+}
+
+#[cfg(target_os = "freebsd")]
+fn proc_rlimit_impl(
+    pid: crate::PidT,
+    resource: Resource,
+    new_limits: Option<(Limit, Limit)>,
+) -> io::Result<(Limit, Limit)> {
+    let (new_rlim_ptr, new_rlim_size) = if let Some(lims) = new_limits {
+        (
+            &libc::rlimit {
+                rlim_cur: lims.0,
+                rlim_max: lims.1,
+            } as *const libc::rlimit,
+            std::mem::size_of::<libc::rlimit>(),
+        )
+    } else {
+        (std::ptr::null(), 0)
+    };
+
+    let mut old_rlim = libc::rlimit {
+        rlim_cur: 0,
+        rlim_max: 0,
+    };
+
+    // Construct the MIB path
+    let mib = [
+        libc::CTL_KERN,
+        libc::KERN_PROC,
+        libc::KERN_PROC_RLIMIT,
+        pid as Int,
+        resource as Int,
+    ];
+
+    let mut nbytes = std::mem::size_of::<libc::rlimit>();
+
+    crate::error::convert_nzero_ret(unsafe {
+        libc::sysctl(
+            mib.as_ptr(),
+            mib.len() as crate::Uint,
+            &mut old_rlim as *mut libc::rlimit as *mut libc::c_void,
+            &mut nbytes,
+            new_rlim_ptr as *const libc::c_void,
+            new_rlim_size,
+        )
+    })?;
+
+    // Sanity check
+    if nbytes != std::mem::size_of::<libc::rlimit>() {
+        return Err(io::Error::from_raw_os_error(libc::EINVAL));
+    }
+
+    Ok((old_rlim.rlim_cur, old_rlim.rlim_max))
 }
 
 #[cfg(target_os = "netbsd")]
@@ -442,7 +495,7 @@ mod tests {
         }
     }
 
-    #[cfg(any(target_os = "linux", target_os = "netbsd"))]
+    #[cfg(any(target_os = "linux", target_os = "netbsd", target_os = "freebsd"))]
     #[test]
     fn test_proc_rlimit() {
         for res in Resource::iter() {
