@@ -693,6 +693,7 @@ mod tests {
         {
             let umask = try_get_umask(0).unwrap();
             assert_eq!(umask, getset_umask(umask));
+            assert_eq!(umask, try_get_umask(getpid()).unwrap());
         }
 
         #[cfg(not(any(target_os = "linux", target_os = "freebsd")))]
@@ -702,5 +703,10 @@ mod tests {
                 Some(libc::ENOSYS)
             );
         }
+
+        assert_eq!(
+            try_get_umask(-1).unwrap_err().raw_os_error(),
+            Some(libc::EINVAL)
+        );
     }
 }
