@@ -326,6 +326,7 @@ impl Iterator for GroupIter {
 }
 
 impl Drop for GroupIter {
+    #[inline]
     fn drop(&mut self) {
         unsafe {
             libc::endgrent();

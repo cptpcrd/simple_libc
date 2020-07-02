@@ -31,6 +31,7 @@ pub struct PollFd {
 }
 
 impl PollFd {
+    #[inline]
     pub const fn new(fd: Int, events: Events) -> Self {
         Self {
             fd,

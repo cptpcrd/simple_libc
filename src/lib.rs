@@ -234,6 +234,7 @@ pub fn dup_inheritable(oldfd: Int) -> io::Result<Int> {
     error::convert_neg_ret(unsafe { libc::dup(oldfd) })
 }
 
+#[inline]
 pub fn dup(oldfd: Int) -> io::Result<Int> {
     fcntl::dupfd(oldfd, 0)
 }

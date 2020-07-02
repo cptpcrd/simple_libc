@@ -52,12 +52,14 @@ impl SignalFd {
 }
 
 impl AsRawFd for SignalFd {
+    #[inline]
     fn as_raw_fd(&self) -> libc::c_int {
         self.fd
     }
 }
 
 impl Drop for SignalFd {
+    #[inline]
     fn drop(&mut self) {
         unsafe {
             libc::close(self.fd);

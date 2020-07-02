@@ -383,6 +383,7 @@ impl Iterator for PasswdIter {
 }
 
 impl Drop for PasswdIter {
+    #[inline]
     fn drop(&mut self) {
         unsafe {
             libc::endpwent();

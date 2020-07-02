@@ -17,18 +17,22 @@ fn sigmask(how: Int, set: Option<&Sigset>) -> io::Result<Sigset> {
     }
 }
 
+#[inline]
 pub fn getmask() -> io::Result<Sigset> {
     sigmask(0, None)
 }
 
+#[inline]
 pub fn setmask(set: &Sigset) -> io::Result<Sigset> {
     sigmask(libc::SIG_SETMASK, Some(set))
 }
 
+#[inline]
 pub fn block(set: &Sigset) -> io::Result<Sigset> {
     sigmask(libc::SIG_BLOCK, Some(set))
 }
 
+#[inline]
 pub fn unblock(set: &Sigset) -> io::Result<Sigset> {
     sigmask(libc::SIG_UNBLOCK, Some(set))
 }
