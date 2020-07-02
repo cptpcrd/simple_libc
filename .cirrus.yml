@@ -10,7 +10,7 @@ task:
         FREEBSD_VERSION: 12.1
         FREEBSD_IMAGE: freebsd-12-1
     - env:
-        FREEBSD_VERSION: 12.1 stable
+        FREEBSD_VERSION: 12.1 STABLE
         FREEBSD_IMAGE: freebsd-12-1-snap
     # - env:
     #     FREEBSD_VERSION: 13.0
