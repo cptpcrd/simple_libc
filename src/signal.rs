@@ -176,7 +176,7 @@ mod tests {
 
     #[test]
     fn test_sigset() {
-        let mut set = Sigset::empty();
+        let mut set = Sigset::default();
         assert!(!set.ismember(SIGTERM).unwrap());
         set.fill();
         assert!(set.ismember(SIGTERM).unwrap());
@@ -185,6 +185,8 @@ mod tests {
         assert!(!set.ismember(SIGTERM).unwrap());
         set.add(SIGTERM).unwrap();
         assert!(set.ismember(SIGTERM).unwrap());
+        set.del(SIGTERM).unwrap();
+        assert!(!set.ismember(SIGTERM).unwrap());
 
         set = Sigset::full();
         assert!(set.ismember(SIGTERM).unwrap());
