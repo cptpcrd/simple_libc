@@ -511,19 +511,36 @@ mod tests {
             );
         })
         .unwrap_or_else(|_| {
-            assert_tokens(
-                &SerializeLimit { limit: 1 },
-                &[
-                    Token::Struct {
-                        name: "SerializeLimit",
-                        len: 1,
-                    },
-                    Token::Str("limit"),
-                    Token::Some,
-                    Token::U32(1),
-                    Token::StructEnd,
-                ],
-            );
+            std::panic::catch_unwind(|| {
+                assert_tokens(
+                    &SerializeLimit { limit: 1 },
+                    &[
+                        Token::Struct {
+                            name: "SerializeLimit",
+                            len: 1,
+                        },
+                        Token::Str("limit"),
+                        Token::Some,
+                        Token::I64(1),
+                        Token::StructEnd,
+                    ],
+                );
+            })
+            .unwrap_or_else(|_| {
+                assert_tokens(
+                    &SerializeLimit { limit: 1 },
+                    &[
+                        Token::Struct {
+                            name: "SerializeLimit",
+                            len: 1,
+                        },
+                        Token::Str("limit"),
+                        Token::Some,
+                        Token::U32(1),
+                        Token::StructEnd,
+                    ],
+                );
+            });
         });
     }
 
