@@ -18,7 +18,7 @@ use crate::error;
 use crate::externs;
 use crate::types;
 
-use crate::{Int, UidT, Ulong};
+use crate::{Int, PidT, UidT, Ulong};
 
 #[cfg_attr(
     any(feature = "strum", test),
@@ -507,10 +507,10 @@ impl CapState {
         Self::get_for_pid(0)
     }
 
-    pub fn get_for_pid(pid: Int) -> io::Result<Self> {
+    pub fn get_for_pid(pid: PidT) -> io::Result<Self> {
         let mut header = types::cap_user_header_t {
             version: constants::_LINUX_CAPABILITY_VERSION_3,
-            pid,
+            pid: pid as Int,
         };
 
         let mut raw_dat = [types::cap_user_data_t {
