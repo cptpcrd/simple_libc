@@ -887,7 +887,7 @@ pub mod secbits {
     }
 }
 
-pub fn with_effective_capset<T, F: FnOnce() -> T>(capset: CapSet, f: F) -> io::Result<T> {
+pub fn with_effective_capset<T, F: FnOnce() -> T>(capset: CapSet, f: F) -> io::Result<(T, io::Result<()>)> {
     let orig_state = CapState::get_current()?;
 
     let mut new_state = orig_state;
@@ -896,12 +896,12 @@ pub fn with_effective_capset<T, F: FnOnce() -> T>(capset: CapSet, f: F) -> io::R
 
     let retval = f();
 
-    orig_state.set_current()?;
+    let after_res = orig_state.set_current();
 
-    Ok(retval)
+    Ok((retval, after_res))
 }
 
-pub fn with_effective_cap<T, F: FnOnce() -> T>(cap: Cap, f: F) -> io::Result<T> {
+pub fn with_effective_cap<T, F: FnOnce() -> T>(cap: Cap, f: F) -> io::Result<(T, io::Result<()>)> {
     let orig_state = CapState::get_current()?;
 
     let mut new_state = orig_state;
@@ -910,9 +910,9 @@ pub fn with_effective_cap<T, F: FnOnce() -> T>(cap: Cap, f: F) -> io::Result<T> 
 
     let retval = f();
 
-    orig_state.set_current()?;
+    let after_res = orig_state.set_current();
 
-    Ok(retval)
+    Ok((retval, after_res))
 }
 
 #[cfg(test)]
