@@ -463,6 +463,10 @@ pub fn setsid() -> io::Result<PidT> {
     crate::error::convert_neg_ret(unsafe { libc::setsid() })
 }
 
+pub fn getset_umask(new_mask: u32) -> u32 {
+    unsafe { libc::umask(new_mask as libc::mode_t) as u32 }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
