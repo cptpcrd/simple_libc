@@ -467,6 +467,107 @@ pub fn getset_umask(new_mask: u32) -> u32 {
     unsafe { libc::umask(new_mask as libc::mode_t) as u32 }
 }
 
+/// Attempt to get the umask for the processs with the given PID (0 indicates
+/// the current process) without changing it. This may not succeed.
+///
+/// # Errors
+///
+/// - If `pid < 0`, EINVAL will be returned.
+/// - If `pid` does not name a valid process, ESRCH will be returned.
+/// - If this functionality is not available on the current platform,
+///   ENOSYS will be returned.
+/// - Other errors, such as EACCES, may be returned depending on the
+///   platform.
+///
+/// Note that on some platforms ENOSYS may be returned for some values but not
+/// others. For example, it may be possible to determine the current process's
+/// umask but not other processes' umasks; in this case, ENOSYS will be
+/// returned if `pid` is not either 0 or the current process's PID.
+///
+/// # Platform-specific information
+///
+/// - On Linux, this looks at the "Umask" field of `/proc/<pid>/status`.
+/// - On FreeBSD, this calls `sysctl()`.
+pub fn try_get_umask(pid: PidT) -> io::Result<u32> {
+    if pid < 0 {
+        return Err(io::Error::from_raw_os_error(libc::EINVAL));
+    }
+
+    #[cfg(target_os = "linux")]
+    let res = {
+        use std::io::BufRead;
+
+        let stat_path = Path::new("/proc/")
+            .join(if pid == 0 {
+                "self".to_string()
+            } else {
+                pid.to_string()
+            })
+            .join("status");
+
+        let mut umask = None;
+
+        match std::fs::File::open(stat_path) {
+            Ok(f) => {
+                let mut reader = io::BufReader::new(f);
+                let mut line = String::new();
+
+                while reader.read_line(&mut line)? > 0 {
+                    if line.starts_with("Umask:") {
+                        if let Ok(val) = u32::from_str_radix(line[6..].trim(), 8) {
+                            umask = Some(val);
+                            break;
+                        }
+                    }
+
+                    line.clear();
+                }
+            }
+            Err(e) if crate::error::is_raw(&e, libc::ENOENT) => {
+                return Err(io::Error::from_raw_os_error(libc::ESRCH))
+            }
+            Err(e) => return Err(e),
+        }
+
+        if let Some(val) = umask {
+            Ok(val)
+        } else {
+            Err(io::Error::from_raw_os_error(libc::EINVAL))
+        }
+    };
+
+    #[cfg(target_os = "freebsd")]
+    let res = {
+        let mib = [libc::CTL_KERN, libc::KERN_PROC, libc::KERN_PROC_UMASK, pid];
+
+        let mut umask: crate::Ushort = 0;
+
+        let mut umask_size: usize = std::mem::size_of::<crate::Ushort>();
+
+        crate::error::convert_nzero_ret(unsafe {
+            libc::sysctl(
+                mib.as_ptr(),
+                mib.len() as crate::Uint,
+                &mut umask as *mut crate::Ushort as *mut libc::c_void,
+                &mut umask_size,
+                std::ptr::null(),
+                0,
+            )
+        })?;
+
+        if umask_size != std::mem::size_of::<crate::Ushort>() {
+            return Err(io::Error::from_raw_os_error(libc::EINVAL));
+        }
+
+        Ok(umask as u32)
+    };
+
+    #[cfg(not(any(target_os = "linux", target_os = "freebsd")))]
+    let res = Err(io::Error::from_raw_os_error(libc::ENOSYS));
+
+    res
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -584,5 +685,22 @@ mod tests {
         groups = vec![1, 2, 0, 0];
         build_grouplist_inplace(0, &mut groups);
         assert_eq!(groups, vec![0, 2, 1, 0]);
+    }
+
+    #[test]
+    fn test_umask() {
+        #[cfg(any(target_os = "linux", target_os = "freebsd"))]
+        {
+            let umask = try_get_umask(0).unwrap();
+            assert_eq!(umask, getset_umask(umask));
+        }
+
+        #[cfg(not(any(target_os = "linux", target_os = "freebsd")))]
+        {
+            assert_eq!(
+                try_get_umask(0).unwrap_err().raw_os_error(),
+                Some(libc::ENOSYS)
+            );
+        }
     }
 }
