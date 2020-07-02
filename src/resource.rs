@@ -240,7 +240,12 @@ pub fn prlimit(
 ///
 /// This function will accept pid=0 to refer to the current process. However, on some
 /// platforms this may result in a fallback to `getrlimit()`/`setrlimit()`.
-#[cfg(any(target_os = "linux", target_os = "netbsd", target_os = "freebsd"))]
+#[cfg(any(
+    target_os = "linux",
+    target_os = "netbsd",
+    target_os = "freebsd",
+    target_os = "dragonfly"
+))]
 #[inline]
 pub fn proc_rlimit(
     pid: crate::PidT,
@@ -325,6 +330,89 @@ fn proc_rlimit_impl(
     }
 
     Ok((old_rlim.rlim_cur, old_rlim.rlim_max))
+}
+
+#[cfg(target_os = "dragonfly")]
+fn proc_rlimit_impl(
+    pid: crate::PidT,
+    resource: Resource,
+    new_limits: Option<(Limit, Limit)>,
+) -> io::Result<(Limit, Limit)> {
+    use std::io::BufRead;
+
+    if let Some(lims) = new_limits {
+        if pid == 0 || pid == crate::process::getpid() {
+            // Fall back on getrlimit() and setrlimit()
+            let old_lims = getrlimit(resource)?;
+            setrlimit(resource, lims)?;
+            return Ok(old_lims);
+        } else {
+            // Can't set rlimits for other processes
+            return Err(io::Error::from_raw_os_error(libc::ENOSYS));
+        }
+    }
+
+    let prefix = match resource {
+        Resource::CPU => "cpu ",
+        Resource::FSIZE => "fsize ",
+        Resource::DATA => "data ",
+        Resource::STACK => "stack ",
+        Resource::CORE => "core ",
+        Resource::RSS => "rss ",
+        Resource::MEMLOCK => "memlock ",
+        Resource::NPROC => "nproc ",
+        Resource::NOFILE => "nofile ",
+        Resource::SBSIZE => "sbsize ",
+        Resource::AS => "vmem ",
+        Resource::POSIXLOCKS => "posixlock ",
+    };
+
+    let rlim_path = std::path::Path::new("/proc/")
+        .join(if pid == 0 {
+            "curproc".to_string()
+        } else {
+            pid.to_string()
+        })
+        .join("rlimit");
+
+    fn parse_rlim_str(lim_str: &str) -> Option<Limit> {
+        if lim_str == "-1" {
+            Some(LIMIT_INFINITY)
+        } else {
+            lim_str.parse().ok()
+        }
+    }
+
+    match std::fs::File::open(rlim_path) {
+        Ok(f) => {
+            let mut reader = io::BufReader::new(f);
+            let mut line = String::new();
+
+            while reader.read_line(&mut line)? > 0 {
+                if line.starts_with(prefix) {
+                    let remainder = line[..prefix.len()].trim();
+                    if let Some(index) = remainder.find(' ') {
+                        let (cur_lim_str, max_lim_str) = remainder.split_at(index);
+                        let max_lim_str = &max_lim_str[1..];
+
+                        if let Some(cur_lim) = parse_rlim_str(cur_lim_str) {
+                            if let Some(max_lim) = parse_rlim_str(max_lim_str) {
+                                return Ok((cur_lim, max_lim));
+                            }
+                        }
+                    }
+                }
+
+                line.clear()
+            }
+
+            Err(io::Error::from_raw_os_error(libc::EINVAL))
+        }
+        Err(e) if crate::error::is_raw(&e, libc::ENOENT) => {
+            Err(io::Error::from_raw_os_error(libc::ESRCH))
+        }
+        Err(e) => Err(e),
+    }
 }
 
 #[cfg(target_os = "netbsd")]
@@ -507,7 +595,12 @@ mod tests {
         }
     }
 
-    #[cfg(any(target_os = "linux", target_os = "netbsd", target_os = "freebsd"))]
+    #[cfg(any(
+        target_os = "linux",
+        target_os = "netbsd",
+        target_os = "freebsd",
+        target_os = "dragonfly"
+    ))]
     #[test]
     fn test_proc_rlimit() {
         for res in Resource::iter() {
