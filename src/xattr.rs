@@ -242,12 +242,17 @@ mod tests {
 
     #[test]
     fn test_listxattr() {
+        let mut buf: Vec<u8> = vec![0; 1024];
+
         let current_exe = std::env::current_exe().unwrap();
 
-        listxattr(&current_exe, false).unwrap();
-        listxattr(&current_exe, true).unwrap();
+        assert_eq!(listxattr(&current_exe, false).unwrap(), Vec::<OsString>::new());
+        assert_eq!(listxattr_raw(&current_exe, &mut buf, false).unwrap(), 0);
+        assert_eq!(listxattr(&current_exe, true).unwrap(), Vec::<OsString>::new());
+        assert_eq!(listxattr_raw(&current_exe, &mut buf, true).unwrap(), 0);
 
         let f = fs::File::open(&current_exe).unwrap();
-        flistxattr(f.as_raw_fd()).unwrap();
+        assert_eq!(flistxattr(f.as_raw_fd()).unwrap(), Vec::<OsString>::new());
+        assert_eq!(flistxattr_raw(f.as_raw_fd(), &mut buf).unwrap(), 0);
     }
 }
