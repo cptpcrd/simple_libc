@@ -375,8 +375,8 @@ type SetHostnameSize = Int;
     target_os = "dragonfly",
     target_os = "macos",
 ))]
-pub fn sethostname(name: &ffi::OsString) -> io::Result<()> {
-    let name_vec: Vec<Char> = name.clone().into_vec().iter().map(|&x| x as Char).collect();
+pub fn sethostname<N: AsRef<ffi::OsStr>>(name: N) -> io::Result<()> {
+    let name_vec: Vec<Char> = name.as_ref().as_bytes().iter().map(|&x| x as Char).collect();
     error::convert_nzero_ret(unsafe {
         libc::sethostname(name_vec.as_ptr(), name_vec.len() as SetHostnameSize)
     })
@@ -431,8 +431,8 @@ pub fn gethostname() -> io::Result<ffi::OsString> {
 }
 
 #[cfg(target_os = "linux")]
-pub fn setdomainname(name: &ffi::OsString) -> io::Result<()> {
-    let name_vec: Vec<Char> = name.clone().into_vec().iter().map(|&x| x as Char).collect();
+pub fn setdomainname<N: AsRef<ffi::OsStr>>(name: N) -> io::Result<()> {
+    let name_vec: Vec<Char> = name.as_ref().as_bytes().iter().map(|&x| x as Char).collect();
     error::convert_nzero_ret(unsafe { libc::setdomainname(name_vec.as_ptr(), name_vec.len()) })
 }
 
