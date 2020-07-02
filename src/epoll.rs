@@ -349,5 +349,17 @@ mod tests {
         );
         assert_eq!(events[0].data, w2.as_raw_fd() as u64);
         assert_eq!(events[0].events, Events::IN);
+
+        // Now test wait_raw(), and also omit the timeout so we
+        // can cover that case too.
+        let mut raw_events = [RawEvent::default(); 3];
+        assert_eq!(
+            poller
+                .wait_raw(&mut raw_events, None)
+                .unwrap(),
+            1,
+        );
+        assert_eq!({raw_events[0].data}, w2.as_raw_fd() as u64);
+        assert_eq!({raw_events[0].events}, Events::IN);
     }
 }
