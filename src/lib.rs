@@ -282,8 +282,10 @@ pub fn dup2(oldfd: Int, newfd: Int) -> io::Result<Int> {
         fd = dup2_inheritable(oldfd, newfd)?;
 
         if let Err(e) = fcntl::set_inheritable(fd, false) {
-            unsafe {
-                libc::close(fd);
+            if fd != oldfd {
+                unsafe {
+                    libc::close(fd);
+                }
             }
 
             return Err(e);
