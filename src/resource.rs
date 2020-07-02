@@ -264,10 +264,14 @@ pub fn proc_rlimit(
 
 #[cfg(target_os = "freebsd")]
 fn proc_rlimit_impl(
-    pid: crate::PidT,
+    mut pid: crate::PidT,
     resource: Resource,
     new_limits: Option<(Limit, Limit)>,
 ) -> io::Result<(Limit, Limit)> {
+    if pid == 0 {
+        pid = crate::process::getpid();
+    }
+
     let (new_rlim_ptr, new_rlim_size) = if let Some(lims) = new_limits {
         (
             &libc::rlimit {
@@ -296,7 +300,7 @@ fn proc_rlimit_impl(
 
     let mut nbytes = std::mem::size_of::<libc::rlimit>();
 
-    crate::error::convert_nzero_ret(unsafe {
+    if let Err(e) = crate::error::convert_nzero_ret(unsafe {
         libc::sysctl(
             mib.as_ptr(),
             mib.len() as crate::Uint,
@@ -305,7 +309,15 @@ fn proc_rlimit_impl(
             new_rlim_ptr as *const libc::c_void,
             new_rlim_size,
         )
-    })?;
+    }) {
+        // ENOENT means the node doesn't exist. Probably this means the process
+        // doesn't exist, so we return ESRCH instead.
+        return Err(if e.raw_os_error() == Some(libc::ENOENT) {
+            io::Error::from_raw_os_error(libc::ESRCH)
+        } else {
+            e
+        });
+    }
 
     // Sanity check
     if nbytes != std::mem::size_of::<libc::rlimit>() {
