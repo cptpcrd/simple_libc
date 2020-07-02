@@ -6,6 +6,8 @@ use crate::{GidT, Int, SocklenT, UidT};
 
 #[derive(Debug, Clone, Eq, Hash, PartialEq)]
 pub struct Xucred {
+    /// Note: Only FreeBSD 13+ passes the PID. On FreeBSD 12 and earlier,
+    /// this will always be 0.
     #[cfg(target_os = "freebsd")]
     pub pid: crate::PidT,
     pub uid: UidT,
@@ -67,6 +69,15 @@ mod tests {
 
     use crate::process;
 
+    #[cfg(target_os = "freebsd")]
+    fn get_expected_pid() -> crate::PidT {
+        if super::super::has_cr_pid().unwrap() {
+            process::getpid()
+        } else {
+            0
+        }
+    }
+
     #[test]
     fn test_get_xucred() {
         let (a, b) = UnixStream::pair().unwrap();
@@ -82,7 +93,7 @@ mod tests {
         assert_eq!(acred.groups, groups);
 
         #[cfg(target_os = "freebsd")]
-        assert_eq!(acred.pid, process::getpid());
+        assert_eq!(acred.pid, get_expected_pid());
 
         let mut bcred = get_xucred(&b).unwrap();
         assert_eq!(bcred.uid, process::geteuid());
@@ -92,6 +103,6 @@ mod tests {
         assert_eq!(bcred.groups, groups);
 
         #[cfg(target_os = "freebsd")]
-        assert_eq!(acred.pid, process::getpid());
+        assert_eq!(bcred.pid, get_expected_pid());
     }
 }

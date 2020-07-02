@@ -221,6 +221,22 @@ pub fn get_unix_stream_raw_peername(sock: &UnixStream) -> io::Result<OsString> {
     get_unix_raw_peername(sock.as_raw_fd())
 }
 
+#[cfg(target_os = "freebsd")]
+#[allow(dead_code)]
+fn has_cr_pid() -> io::Result<bool> {
+    let release = crate::uname()?.release;
+
+    // Only FreeBSD 13+ sets cr_pid to a nonzero value
+
+    let release_major_str = release.to_str().unwrap().split('.').next().unwrap();
+
+    if let Ok(release_major) = release_major_str.parse::<i32>() {
+        Ok(release_major >= 13)
+    } else {
+        Ok(false)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -271,13 +287,30 @@ mod tests {
         let (a, b) = UnixStream::pair().unwrap();
 
         let (apid, auid, agid) = get_peer_pid_ids(&a).unwrap();
-        assert_eq!(apid, process::getpid());
+        assert_eq!(apid, get_expected_pid());
         assert_eq!(auid, process::getuid());
         assert_eq!(agid, process::getgid());
 
         let (bpid, buid, bgid) = get_peer_pid_ids(&b).unwrap();
-        assert_eq!(bpid, process::getpid());
+        assert_eq!(bpid, get_expected_pid());
         assert_eq!(buid, process::getuid());
         assert_eq!(bgid, process::getgid());
+    }
+
+    #[allow(clippy::needless_return)]
+    fn get_expected_pid() -> crate::PidT {
+        #[cfg(target_os = "freebsd")]
+        {
+            return if has_cr_pid().unwrap() {
+                process::getpid()
+            } else {
+                0
+            };
+        }
+
+        #[cfg(not(target_os = "freebsd"))]
+        {
+            return process::getpid();
+        }
     }
 }
