@@ -596,34 +596,14 @@ mod tests {
 
         // Just check if they're ready for writing
         assert_eq!(
-            select_simple(
-                &[],
-                &[w1.as_raw_fd(), w2.as_raw_fd()],
-                &[],
-                timeout_0,
-            )
-            .unwrap(),
-            (
-                vec![],
-                vec![w1.as_raw_fd(), w2.as_raw_fd()],
-                vec![],
-            ),
+            select_simple(&[], &[w1.as_raw_fd(), w2.as_raw_fd()], &[], timeout_0,).unwrap(),
+            (vec![], vec![w1.as_raw_fd(), w2.as_raw_fd()], vec![],),
         );
 
         // No timeout
         assert_eq!(
-            select_simple(
-                &[],
-                &[w1.as_raw_fd(), w2.as_raw_fd()],
-                &[],
-                None,
-            )
-            .unwrap(),
-            (
-                vec![],
-                vec![w1.as_raw_fd(), w2.as_raw_fd()],
-                vec![],
-            ),
+            select_simple(&[], &[w1.as_raw_fd(), w2.as_raw_fd()], &[], None,).unwrap(),
+            (vec![], vec![w1.as_raw_fd(), w2.as_raw_fd()], vec![],),
         );
     }
 
@@ -674,36 +654,14 @@ mod tests {
 
         // Just check if they're ready for writing
         assert_eq!(
-            pselect_simple(
-                &[],
-                &[w1.as_raw_fd(), w2.as_raw_fd()],
-                &[],
-                timeout_0,
-                None,
-            )
-            .unwrap(),
-            (
-                vec![],
-                vec![w1.as_raw_fd(), w2.as_raw_fd()],
-                vec![],
-            ),
+            pselect_simple(&[], &[w1.as_raw_fd(), w2.as_raw_fd()], &[], timeout_0, None,).unwrap(),
+            (vec![], vec![w1.as_raw_fd(), w2.as_raw_fd()], vec![],),
         );
 
         // No timeout
         assert_eq!(
-            pselect_simple(
-                &[],
-                &[w1.as_raw_fd(), w2.as_raw_fd()],
-                &[],
-                None,
-                None,
-            )
-            .unwrap(),
-            (
-                vec![],
-                vec![w1.as_raw_fd(), w2.as_raw_fd()],
-                vec![],
-            ),
+            pselect_simple(&[], &[w1.as_raw_fd(), w2.as_raw_fd()], &[], None, None,).unwrap(),
+            (vec![], vec![w1.as_raw_fd(), w2.as_raw_fd()], vec![],),
         );
     }
 }
