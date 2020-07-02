@@ -64,6 +64,13 @@ mod tests {
     }
 
     #[test]
+    fn test_get_cur_pgrp_user() {
+        // Make sure we can get the value
+        get(Target::ProcGroup(0)).unwrap();
+        get(Target::User(0)).unwrap();
+    }
+
+    #[test]
     fn test_set() {
         set(Target::Process(0), get(Target::Process(0)).unwrap()).unwrap();
     }
