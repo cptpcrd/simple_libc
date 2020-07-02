@@ -347,7 +347,7 @@ mod tests {
                 .unwrap(),
             1,
         );
-        assert_eq!(events[1].data, w2.as_raw_fd() as u64);
-        assert_eq!(events[1].events, Events::IN);
+        assert_eq!(events[0].data, w2.as_raw_fd() as u64);
+        assert_eq!(events[0].events, Events::IN);
     }
 }
