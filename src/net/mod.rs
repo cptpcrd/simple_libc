@@ -297,6 +297,12 @@ mod tests {
         assert_eq!(bgid, process::getgid());
     }
 
+    #[cfg(any(
+        target_os = "linux",
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "freebsd",
+    ))]
     #[allow(clippy::needless_return)]
     fn get_expected_pid() -> crate::PidT {
         #[cfg(target_os = "freebsd")]
