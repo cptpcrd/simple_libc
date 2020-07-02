@@ -130,6 +130,12 @@ impl Target {
 fn getxattr_impl(target: Target, name: &CStr) -> io::Result<Vec<u8>> {
     let mut buf = Vec::new();
     let init_size = target.getxattr(&name, &mut buf)?;
+
+    if init_size == 0 {
+        // Empty
+        return Ok(buf);
+    }
+
     buf.resize(init_size, 0);
 
     loop {
@@ -182,6 +188,12 @@ pub fn fgetxattr<N: AsRef<OsStr>>(fd: Int, name: N) -> io::Result<Vec<u8>> {
 fn listxattr_impl(target: Target) -> io::Result<Vec<OsString>> {
     let mut c_list = Vec::new();
     let init_size = target.listxattr(&mut c_list)?;
+
+    if init_size == 0 {
+        // Empty
+        return Ok(Vec::new());
+    }
+
     c_list.resize(init_size, 0);
 
     loop {
