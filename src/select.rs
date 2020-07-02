@@ -325,6 +325,42 @@ mod tests {
     }
 
     #[test]
+    fn test_fdset_from_iter() {
+        let mut fdset = FdSet::empty();
+        assert_eq!(FdSet::from_iter([].iter().copied()), fdset);
+
+        fdset.add(0);
+        assert_eq!(FdSet::from_iter([0].iter().copied()), fdset);
+
+        fdset.add(5);
+        assert_eq!(FdSet::from_iter([0, 5].iter().copied()), fdset);
+    }
+
+    #[test]
+    fn test_build_fdset() {
+        let mut fdset = FdSet::empty();
+        assert_eq!(build_fdset([].iter().copied()), (fdset, 0));
+
+        fdset.add(0);
+        assert_eq!(build_fdset([0].iter().copied()), (fdset, 1));
+
+        fdset.add(5);
+        assert_eq!(build_fdset([0, 5].iter().copied()), (fdset, 6));
+    }
+
+    #[test]
+    fn test_build_fdset_slice() {
+        let mut fdset = FdSet::empty();
+        assert_eq!(build_fdset_slice(&[]), (fdset, 0));
+
+        fdset.add(0);
+        assert_eq!(build_fdset_slice(&[0]), (fdset, 1));
+
+        fdset.add(5);
+        assert_eq!(build_fdset_slice(&[0, 5]), (fdset, 6));
+    }
+
+    #[test]
     fn test_select() {
         let timeout_0 = Some(Duration::from_secs(0));
 
