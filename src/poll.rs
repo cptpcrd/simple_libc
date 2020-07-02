@@ -127,11 +127,7 @@ mod tests {
         let (r2, mut w2) = crate::pipe().unwrap();
 
         let mut fds = [
-            PollFd {
-                fd: r1.as_raw_fd(),
-                events: Events::IN,
-                revents: Events::empty(),
-            },
+            PollFd::new(r1.as_raw_fd(), Events::IN),
             PollFd {
                 fd: r2.as_raw_fd(),
                 events: Events::IN,
@@ -151,6 +147,13 @@ mod tests {
         // Now make sure reading two files works
         w2.write_all(b"a").unwrap();
         assert_eq!(poll(&mut fds, Some(Duration::from_secs(0))).unwrap(), 2);
+        assert_eq!(fds[0].fd, r1.as_raw_fd());
+        assert_eq!(fds[0].revents, Events::IN);
+        assert_eq!(fds[1].fd, r2.as_raw_fd());
+        assert_eq!(fds[1].revents, Events::IN);
+
+        // Now try without a timeout
+        assert_eq!(poll(&mut fds, None).unwrap(), 2);
         assert_eq!(fds[0].fd, r1.as_raw_fd());
         assert_eq!(fds[0].revents, Events::IN);
         assert_eq!(fds[1].fd, r2.as_raw_fd());
@@ -203,6 +206,13 @@ mod tests {
             ppoll(&mut fds, Some(Duration::from_secs(0)), None).unwrap(),
             2,
         );
+        assert_eq!(fds[0].fd, r1.as_raw_fd());
+        assert_eq!(fds[0].revents, Events::IN);
+        assert_eq!(fds[1].fd, r2.as_raw_fd());
+        assert_eq!(fds[1].revents, Events::IN);
+
+        // Now try without a timeout
+        assert_eq!(ppoll(&mut fds, None, None).unwrap(), 2);
         assert_eq!(fds[0].fd, r1.as_raw_fd());
         assert_eq!(fds[0].revents, Events::IN);
         assert_eq!(fds[1].fd, r2.as_raw_fd());
