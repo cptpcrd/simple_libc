@@ -377,7 +377,12 @@ type SetHostnameSize = Int;
     target_os = "macos",
 ))]
 pub fn sethostname<N: AsRef<ffi::OsStr>>(name: N) -> io::Result<()> {
-    let name_vec: Vec<Char> = name.as_ref().as_bytes().iter().map(|&x| x as Char).collect();
+    let name_vec: Vec<Char> = name
+        .as_ref()
+        .as_bytes()
+        .iter()
+        .map(|&x| x as Char)
+        .collect();
     error::convert_nzero_ret(unsafe {
         libc::sethostname(name_vec.as_ptr(), name_vec.len() as SetHostnameSize)
     })
@@ -433,13 +438,20 @@ pub fn gethostname() -> io::Result<ffi::OsString> {
 
 #[cfg(target_os = "linux")]
 pub fn setdomainname<N: AsRef<ffi::OsStr>>(name: N) -> io::Result<()> {
-    let name_vec: Vec<Char> = name.as_ref().as_bytes().iter().map(|&x| x as Char).collect();
+    let name_vec: Vec<Char> = name
+        .as_ref()
+        .as_bytes()
+        .iter()
+        .map(|&x| x as Char)
+        .collect();
     error::convert_nzero_ret(unsafe { libc::setdomainname(name_vec.as_ptr(), name_vec.len()) })
 }
 
 #[cfg(target_os = "linux")]
 pub fn getdomainname_raw(name_slice: &mut [Char]) -> io::Result<()> {
-    error::convert_nzero_ret(unsafe { libc::getdomainname(name_slice.as_mut_ptr(), name_slice.len()) })
+    error::convert_nzero_ret(unsafe {
+        libc::getdomainname(name_slice.as_mut_ptr(), name_slice.len())
+    })
 }
 
 #[cfg(target_os = "linux")]
