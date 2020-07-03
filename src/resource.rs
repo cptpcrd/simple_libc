@@ -606,10 +606,16 @@ mod tests {
     ))]
     #[test]
     fn test_proc_rlimit() {
+        let pid = crate::process::getpid();
+
         for res in Resource::iter() {
             let limits = proc_rlimit(0, res, None).unwrap();
+
             assert_eq!(proc_rlimit(0, res, Some(limits)).unwrap(), limits);
             assert_eq!(proc_rlimit(0, res, None).unwrap(), limits);
+
+            assert_eq!(proc_rlimit(pid, res, Some(limits)).unwrap(), limits);
+            assert_eq!(proc_rlimit(pid, res, None).unwrap(), limits);
         }
     }
 
