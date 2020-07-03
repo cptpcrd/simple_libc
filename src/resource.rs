@@ -277,14 +277,17 @@ fn proc_rlimit_impl(
         pid = crate::process::getpid();
     }
 
-    let (new_rlim_ptr, new_rlim_size) = if let Some(lims) = new_limits {
-        (
-            &libc::rlimit {
-                rlim_cur: lims.0,
-                rlim_max: lims.1,
-            } as *const libc::rlimit,
-            std::mem::size_of::<libc::rlimit>(),
-        )
+    let new_rlim_opt = if let Some(lims) = new_limits {
+        Some(libc::rlimit {
+            rlim_cur: lims.0,
+            rlim_max: lims.1,
+        })
+    } else {
+        None
+    };
+
+    let (new_rlim_ptr, new_rlim_size) = if let Some(ref rlim) = new_rlim_opt {
+        (rlim as *const libc::rlimit, std::mem::size_of::<libc::rlimit>())
     } else {
         (std::ptr::null(), 0)
     };
