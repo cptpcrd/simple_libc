@@ -287,7 +287,10 @@ fn proc_rlimit_impl(
     };
 
     let (new_rlim_ptr, new_rlim_size) = if let Some(ref rlim) = new_rlim_opt {
-        (rlim as *const libc::rlimit, std::mem::size_of::<libc::rlimit>())
+        (
+            rlim as *const libc::rlimit,
+            std::mem::size_of::<libc::rlimit>(),
+        )
     } else {
         (std::ptr::null(), 0)
     };
