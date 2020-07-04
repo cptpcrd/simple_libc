@@ -433,7 +433,7 @@ pub fn chdir<P: AsRef<Path>>(path: P) -> io::Result<()> {
 /// If an error occurred, the Result returned represents the error encountered.
 /// Otherwise, the Ok value of the Result is 0 in the child, and the child's PID
 /// in the parent.
-pub fn fork() -> io::Result<Int> {
+pub fn fork() -> io::Result<PidT> {
     crate::error::convert_neg_ret(unsafe { libc::fork() })
 }
 
