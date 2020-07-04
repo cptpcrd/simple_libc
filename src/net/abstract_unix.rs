@@ -1,4 +1,4 @@
-use std::ffi::{OsStr, OsString};
+use std::ffi::OsStr;
 use std::io;
 use std::os::unix::net::{UnixListener, UnixStream};
 use std::os::unix::prelude::*;
@@ -43,7 +43,7 @@ fn build_abstract_addr(name: &OsStr) -> io::Result<(libc::sockaddr_un, SocklenT)
     Ok((addr, addrlen))
 }
 
-pub fn unix_stream_abstract_bind(name: &OsStr) -> io::Result<UnixListener> {
+fn unix_stream_abstract_bind_impl(name: &OsStr) -> io::Result<UnixListener> {
     let fd = crate::error::convert_neg_ret(unsafe {
         libc::socket(libc::AF_UNIX, libc::SOCK_STREAM | libc::SOCK_CLOEXEC, 0)
     })?;
@@ -63,7 +63,7 @@ pub fn unix_stream_abstract_bind(name: &OsStr) -> io::Result<UnixListener> {
     Ok(unsafe { UnixListener::from_raw_fd(fd) })
 }
 
-pub fn unix_stream_abstract_connect(name: &OsStr) -> io::Result<UnixStream> {
+fn unix_stream_abstract_connect_impl(name: &OsStr) -> io::Result<UnixStream> {
     let fd = crate::error::convert_neg_ret(unsafe {
         libc::socket(libc::AF_UNIX, libc::SOCK_STREAM | libc::SOCK_CLOEXEC, 0)
     })?;
@@ -81,6 +81,14 @@ pub fn unix_stream_abstract_connect(name: &OsStr) -> io::Result<UnixStream> {
     Ok(unsafe { UnixStream::from_raw_fd(fd) })
 }
 
+pub fn unix_stream_abstract_bind<N: AsRef<OsStr>>(name: N) -> io::Result<UnixListener> {
+    unix_stream_abstract_bind_impl(name.as_ref())
+}
+
+pub fn unix_stream_abstract_connect<N: AsRef<OsStr>>(name: N) -> io::Result<UnixStream> {
+    unix_stream_abstract_connect_impl(name.as_ref())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -89,6 +97,7 @@ mod tests {
         get_unix_listener_raw_sockname, get_unix_stream_raw_peername, get_unix_stream_raw_sockname,
     };
 
+    use std::ffi::OsString;
     use std::io::{Read, Write};
 
     use getrandom::getrandom;
