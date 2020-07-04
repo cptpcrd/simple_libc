@@ -723,7 +723,6 @@ mod tests {
                 Some(libc::ENOTSUP)
             );
 
-
             assert_eq!(
                 try_get_umask(-1).unwrap_err().raw_os_error(),
                 Some(libc::ENOTSUP)
