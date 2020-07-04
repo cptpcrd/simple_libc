@@ -45,6 +45,17 @@ extern "C" {
     pub fn setresgid(rgid: libc::gid_t, egid: libc::gid_t, sgid: libc::gid_t) -> libc::c_int;
 }
 
+#[cfg(any(
+    target_os = "freebsd",
+    target_os = "openbsd",
+    target_os = "netbsd",
+    target_os = "dragonfly",
+    target_os = "macos",
+))]
+extern "C" {
+    pub fn issetugid() -> libc::c_int;
+}
+
 #[cfg(target_os = "linux")]
 extern "C" {
     pub fn capget(
@@ -59,4 +70,6 @@ extern "C" {
 
     pub fn __libc_current_sigrtmin() -> libc::c_int;
     pub fn __libc_current_sigrtmax() -> libc::c_int;
+
+    pub fn getauxval(t: libc::c_ulong) -> libc::c_ulong;
 }

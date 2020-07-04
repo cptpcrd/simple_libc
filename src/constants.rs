@@ -6,6 +6,10 @@ crate::attr_group! {
 
     use crate::{Int, Ulong};
 
+    // BEGIN USED by process.rs
+    pub const AT_SECURE: Ulong = 23;
+    // END USED by process.rs
+
     // BEGIN USED BY process/capabilities.rs
 
     pub const SECBIT_KEEP_CAPS: Ulong = 0x10;

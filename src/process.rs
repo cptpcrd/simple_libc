@@ -586,6 +586,61 @@ pub fn try_get_umask(pid: PidT) -> io::Result<u32> {
     res
 }
 
+/// Check if the current environment in which the process is running demands
+/// "secure execution".
+///
+/// *WARNING: The semantics of this function vary across platforms. On some platforms,
+/// if the process changes its real/effective/saved UID/GID, this function may start
+/// reporting `true`. As a result, it is strongly recommended to call this function
+/// once, as soon as the process is started, and then use that result to make decisions
+/// later.*
+///
+/// On Linux, this checks `getauxval(AT_SECURE)`, which the kernel usually sets to mean
+/// that the program is set-UID, is set-GID, or has file capabilities set. On the BSDs
+/// and macOS, this checks `issetugid()`.
+///
+/// If anything goes wrong (though it shouldn't; these functions are designed not to
+/// fail!), this function checks the current real/effective UID and GID, and returns
+/// true if `ruid != euid || rgid != egid`.
+#[allow(unreachable_code)]
+pub fn requires_secure_execution() -> bool {
+    #[cfg(target_os = "linux")]
+    {
+        crate::error::set_errno_success();
+        let res = unsafe { externs::getauxval(crate::constants::AT_SECURE) };
+
+        if res == 0 {
+            // On error, getauxval() returns 0 and sets errno to ENOENT.
+            // This *should* never happen, but let's be sure that wasn't
+            // what happened.
+            if io::Error::last_os_error().raw_os_error() == Some(0) {
+                // Success
+                return false;
+            }
+        } else {
+            // res != 0
+            return true;
+        }
+    }
+
+    #[cfg(any(
+        target_os = "freebsd",
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "dragonfly",
+        target_os = "macos",
+    ))]
+    return unsafe { externs::issetugid() } != 0;
+
+    let (ruid, euid) = getreuid();
+    if ruid != euid {
+        return true;
+    }
+
+    let (rgid, egid) = getregid();
+    rgid != egid
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -726,5 +781,10 @@ mod tests {
             try_get_umask(-1).unwrap_err().raw_os_error(),
             Some(libc::EINVAL)
         );
+    }
+
+    #[test]
+    fn test_requires_secure_execution() {
+        assert_eq!(requires_secure_execution(), false);
     }
 }
