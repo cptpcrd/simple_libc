@@ -560,7 +560,7 @@ pub fn try_get_umask(pid: PidT) -> io::Result<u32> {
         if let Some(val) = umask {
             Ok(val)
         } else {
-            Err(io::Error::from_raw_os_error(libc::EINVAL))
+            Err(io::Error::from_raw_os_error(libc::ENOSYS))
         }
     };
 
