@@ -531,6 +531,48 @@ fn bytes_to_osstring<'a, T: IntoIterator<Item = &'a Char>>(bytes: T) -> ffi::OsS
     )
 }
 
+#[cfg(any(
+    target_os = "macos",
+    target_os = "openbsd",
+    target_os = "netbsd",
+    target_os = "freebsd",
+    target_os = "dragonfly",
+))]
+pub unsafe fn sysctl_raw<T>(
+    mib: &mut [Int],
+    old_data: Option<&mut [T]>,
+    new_data: Option<&mut [T]>,
+) -> io::Result<usize> {
+    let (old_ptr, mut old_len) = if let Some(old_data_slice) = old_data {
+        (
+            old_data_slice.as_mut_ptr(),
+            old_data_slice.len() * std::mem::size_of::<T>(),
+        )
+    } else {
+        (std::ptr::null_mut(), 0)
+    };
+
+    let (new_ptr, new_len) = if let Some(new_data_slice) = new_data {
+        (
+            new_data_slice.as_mut_ptr(),
+            new_data_slice.len() * std::mem::size_of::<T>(),
+        )
+    } else {
+        (std::ptr::null_mut(), 0)
+    };
+
+    crate::error::convert_nzero_ret(libc::sysctl(
+        mib.as_mut_ptr(),
+        mib.len() as Uint,
+        old_ptr as *mut libc::c_void,
+        &mut old_len,
+        new_ptr as *mut libc::c_void,
+        new_len,
+    ))?;
+
+    Ok(old_len)
+}
+
 #[cfg(test)]
 mod tests {
     use std::io::{Read, Write};
