@@ -538,6 +538,29 @@ fn bytes_to_osstring<'a, T: IntoIterator<Item = &'a Char>>(bytes: T) -> ffi::OsS
     target_os = "freebsd",
     target_os = "dragonfly",
 ))]
+/// Get/set the value of the given sysctl.
+///
+/// This function is a simple wrapper around `libc::sysctl()`.
+///
+/// `mib` should be a reference to a slice specifying a "Management Information
+/// Base"-style name. See OS-specific documentation for details.
+///
+/// If `old_data` or `new_data` is `None`, `NULL` will be passed for `oldp` or
+/// `newp`, respectively. Otherwise, the given slice will be passed.
+///
+/// In all cases, the return value is the value of `oldlenp` after the `sysctl()`
+/// call.
+///
+/// # Safety
+///
+/// 1. This function has no way to verify that a slice with elements of type
+///    `T` is the correct format for representing the value of the given sysctl.
+/// 2. No checking is performed for partial reads that could lead to partially
+///    filled out data in the `old_data` slice.
+///
+/// If it can be verified that neither of these is the case (the data structure
+/// is correct for the given option AND the amount of data read is correct for
+/// the given structure), then this function should be safe to use.
 pub unsafe fn sysctl_raw<T>(
     mib: &mut [Int],
     old_data: Option<&mut [T]>,
