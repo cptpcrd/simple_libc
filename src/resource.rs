@@ -277,7 +277,7 @@ fn proc_rlimit_impl(
         pid = crate::process::getpid();
     }
 
-    let new_rlim_opt = if let Some(lims) = new_limits {
+    let mut new_rlim_opt = if let Some(lims) = new_limits {
         Some(libc::rlimit {
             rlim_cur: lims.0,
             rlim_max: lims.1,
@@ -286,13 +286,10 @@ fn proc_rlimit_impl(
         None
     };
 
-    let (new_rlim_ptr, new_rlim_size) = if let Some(ref rlim) = new_rlim_opt {
-        (
-            rlim as *const libc::rlimit,
-            std::mem::size_of::<libc::rlimit>(),
-        )
+    let new_rlim_slice_opt = if let Some(ref mut rlim) = new_rlim_opt {
+        Some(std::slice::from_mut(&mut *rlim))
     } else {
-        (std::ptr::null(), 0)
+        None
     };
 
     let mut old_rlim = libc::rlimit {
@@ -301,7 +298,7 @@ fn proc_rlimit_impl(
     };
 
     // Construct the MIB path
-    let mib = [
+    let mut mib = [
         libc::CTL_KERN,
         libc::KERN_PROC,
         libc::KERN_PROC_RLIMIT,
@@ -309,26 +306,24 @@ fn proc_rlimit_impl(
         resource as Int,
     ];
 
-    let mut nbytes = std::mem::size_of::<libc::rlimit>();
-
-    if let Err(e) = crate::error::convert_nzero_ret(unsafe {
-        libc::sysctl(
-            mib.as_ptr(),
-            mib.len() as crate::Uint,
-            &mut old_rlim as *mut libc::rlimit as *mut libc::c_void,
-            &mut nbytes,
-            new_rlim_ptr as *const libc::c_void,
-            new_rlim_size,
+    let nbytes = match unsafe {
+        crate::sysctl_raw(
+            &mut mib,
+            Some(std::slice::from_mut(&mut old_rlim)),
+            new_rlim_slice_opt,
         )
-    }) {
-        // ENOENT means the node doesn't exist. Probably this means the process
-        // doesn't exist, so we return ESRCH instead.
-        return Err(if e.raw_os_error() == Some(libc::ENOENT) {
-            io::Error::from_raw_os_error(libc::ESRCH)
-        } else {
-            e
-        });
-    }
+    } {
+        Ok(n) => n,
+        Err(e) => {
+            // ENOENT means the node doesn't exist. Probably this means the process
+            // doesn't exist, so we return ESRCH instead.
+            return Err(if e.raw_os_error() == Some(libc::ENOENT) {
+                io::Error::from_raw_os_error(libc::ESRCH)
+            } else {
+                e
+            });
+        }
+    };
 
     // Sanity check
     if nbytes != std::mem::size_of::<libc::rlimit>() {
@@ -486,14 +481,14 @@ fn proc_rlimit_impl(
 fn proc_limit_getset(
     pid: crate::PidT,
     resource: Resource,
-    new_limit: Option<Limit>,
+    mut new_limit: Option<Limit>,
     hard: bool,
 ) -> io::Result<Limit> {
     // Extract the pointer to the new limit
-    let (new_lim_ptr, new_lim_len) = if let Some(ref new_lim) = new_limit {
-        (new_lim as *const Limit, std::mem::size_of::<Limit>())
+    let new_lim_slice_opt = if let Some(ref mut new_lim) = new_limit {
+        Some(std::slice::from_mut(new_lim))
     } else {
-        (std::ptr::null(), 0)
+        None
     };
 
     // Get the raw value for representing the resource.
@@ -513,7 +508,7 @@ fn proc_limit_getset(
     };
 
     // Construct the MIB path
-    let mib = [
+    let mut mib = [
         libc::CTL_PROC,
         if pid == 0 {
             constants::PROC_CURPROC
@@ -529,28 +524,26 @@ fn proc_limit_getset(
         },
     ];
 
-    let mut nbytes = std::mem::size_of::<Limit>();
     let mut old_lim: Limit = LIMIT_INFINITY;
 
-    // Try to actually get/set the limit
-    if let Err(e) = crate::error::convert_ret(unsafe {
-        libc::sysctl(
-            mib.as_ptr(),
-            mib.len() as crate::Uint,
-            &mut old_lim as *mut Limit as *mut libc::c_void,
-            &mut nbytes,
-            new_lim_ptr as *const libc::c_void,
-            new_lim_len,
+    let nbytes = match unsafe {
+        crate::sysctl_raw(
+            &mut mib,
+            Some(std::slice::from_mut(&mut old_lim)),
+            new_lim_slice_opt,
         )
-    }) {
-        // ENOENT means the node doesn't exist. Probably this means the process
-        // doesn't exist, so we return ESRCH instead.
-        return Err(if e.raw_os_error() == Some(libc::ENOENT) {
-            io::Error::from_raw_os_error(libc::ESRCH)
-        } else {
-            e
-        });
-    }
+    } {
+        Ok(n) => n,
+        Err(e) => {
+            // ENOENT means the node doesn't exist. Probably this means the process
+            // doesn't exist, so we return ESRCH instead.
+            return Err(if e.raw_os_error() == Some(libc::ENOENT) {
+                io::Error::from_raw_os_error(libc::ESRCH)
+            } else {
+                e
+            });
+        }
+    };
 
     // Sanity check
     if nbytes != std::mem::size_of::<Limit>() {
