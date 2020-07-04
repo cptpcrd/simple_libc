@@ -454,7 +454,6 @@ pub fn getset_umask(new_mask: u32) -> u32 {
 ///
 /// # Errors
 ///
-/// - If `pid < 0`, EINVAL will be returned.
 /// - If `pid` does not name a valid process, ESRCH will be returned.
 /// - If this functionality is not available on the current platform,
 ///   ENOSYS will be returned.
@@ -471,10 +470,6 @@ pub fn getset_umask(new_mask: u32) -> u32 {
 /// - On Linux, this looks at the "Umask" field of `/proc/<pid>/status`.
 /// - On FreeBSD, this calls `sysctl()`.
 pub fn try_get_umask(pid: PidT) -> io::Result<u32> {
-    if pid < 0 {
-        return Err(io::Error::from_raw_os_error(libc::EINVAL));
-    }
-
     #[cfg(target_os = "linux")]
     let res = {
         use std::io::BufRead;
@@ -721,6 +716,11 @@ mod tests {
             let umask = try_get_umask(0).unwrap();
             assert_eq!(umask, getset_umask(umask));
             assert_eq!(umask, try_get_umask(getpid()).unwrap());
+
+            assert_eq!(
+                try_get_umask(-1).unwrap_err().raw_os_error(),
+                Some(libc::ESRCH)
+            );
         }
 
         #[cfg(not(any(target_os = "linux", target_os = "freebsd")))]
@@ -729,12 +729,13 @@ mod tests {
                 try_get_umask(0).unwrap_err().raw_os_error(),
                 Some(libc::ENOSYS)
             );
-        }
 
-        assert_eq!(
-            try_get_umask(-1).unwrap_err().raw_os_error(),
-            Some(libc::EINVAL)
-        );
+
+            assert_eq!(
+                try_get_umask(-1).unwrap_err().raw_os_error(),
+                Some(libc::ENOSYS)
+            );
+        }
     }
 
     #[test]
