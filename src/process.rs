@@ -482,8 +482,6 @@ pub fn try_get_umask(pid: PidT) -> io::Result<u32> {
             })
             .join("status");
 
-        let mut umask = None;
-
         match std::fs::File::open(stat_path) {
             Ok(f) => {
                 let mut reader = io::BufReader::new(f);
@@ -492,8 +490,7 @@ pub fn try_get_umask(pid: PidT) -> io::Result<u32> {
                 while reader.read_line(&mut line)? > 0 {
                     if line.starts_with("Umask:") {
                         if let Ok(val) = u32::from_str_radix(line[6..].trim(), 8) {
-                            umask = Some(val);
-                            break;
+                            return Ok(val);
                         }
                     }
 
@@ -506,11 +503,7 @@ pub fn try_get_umask(pid: PidT) -> io::Result<u32> {
             Err(e) => return Err(e),
         }
 
-        if let Some(val) = umask {
-            Ok(val)
-        } else {
-            Err(io::Error::from_raw_os_error(libc::ENOSYS))
-        }
+        Err(io::Error::from_raw_os_error(libc::ENOSYS))
     };
 
     #[cfg(target_os = "freebsd")]
