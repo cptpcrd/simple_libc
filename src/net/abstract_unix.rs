@@ -118,15 +118,17 @@ mod tests {
         // Generate a name by taking "SIMPLE_LIBC" and adding some random bytes
         let mut name_vec = OsString::from("SIMPLE_LIBC").into_vec();
         let old_len = name_vec.len();
-        name_vec.resize(old_len + 10, 0);
+        name_vec.resize(old_len + 11, 0);
 
-        getrandom(&mut name_vec[old_len..]).unwrap();
+        // We omit the last element so that the `if *item == 0` case
+        // below gets executed consistently and the coverage doesn't
+        // vary between runs.
+        getrandom(&mut name_vec[old_len..old_len + 10]).unwrap();
 
         // Replace any NULL bytes
-        #[allow(clippy::needless_range_loop)]
-        for i in 1..(name_vec.len()) {
-            if name_vec[i] == 0 {
-                name_vec[i] = 1;
+        for item in name_vec.iter_mut().skip(1) {
+            if *item == 0 {
+                *item = 1;
             }
         }
 
