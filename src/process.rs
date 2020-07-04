@@ -449,7 +449,7 @@ pub fn getset_umask(new_mask: u32) -> u32 {
     unsafe { libc::umask(new_mask as libc::mode_t) as u32 }
 }
 
-/// Attempt to get the umask for the processs with the given PID (0 indicates
+/// Attempt to get the umask for the process with the given PID (0 indicates
 /// the current process) without changing it. This may not succeed.
 ///
 /// # Errors
