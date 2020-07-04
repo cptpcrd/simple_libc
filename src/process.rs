@@ -538,22 +538,12 @@ pub fn try_get_umask(pid: PidT) -> io::Result<u32> {
 
     #[cfg(target_os = "freebsd")]
     let res = {
-        let mib = [libc::CTL_KERN, libc::KERN_PROC, libc::KERN_PROC_UMASK, pid];
+        let mut mib = [libc::CTL_KERN, libc::KERN_PROC, libc::KERN_PROC_UMASK, pid];
 
         let mut umask: crate::Ushort = 0;
 
-        let mut umask_size: usize = std::mem::size_of::<crate::Ushort>();
-
-        crate::error::convert_nzero_ret(unsafe {
-            libc::sysctl(
-                mib.as_ptr(),
-                mib.len() as crate::Uint,
-                &mut umask as *mut crate::Ushort as *mut libc::c_void,
-                &mut umask_size,
-                std::ptr::null(),
-                0,
-            )
-        })?;
+        let umask_size =
+            unsafe { crate::sysctl_raw(&mut mib, Some(std::slice::from_mut(&mut umask)), None) }?;
 
         if umask_size != std::mem::size_of::<crate::Ushort>() {
             return Err(io::Error::from_raw_os_error(libc::EINVAL));
