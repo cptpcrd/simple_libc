@@ -456,13 +456,13 @@ pub fn getset_umask(new_mask: u32) -> u32 {
 ///
 /// - If `pid` does not name a valid process, ESRCH will be returned.
 /// - If this functionality is not available on the current platform,
-///   ENOSYS will be returned.
+///   ENOTSUP will be returned.
 /// - Other errors, such as EACCES, may be returned depending on the
 ///   platform.
 ///
-/// Note that on some platforms ENOSYS may be returned for some values but not
+/// Note that on some platforms ENOTSUP may be returned for some values but not
 /// others. For example, it may be possible to determine the current process's
-/// umask but not other processes' umasks; in this case, ENOSYS will be
+/// umask but not other processes' umasks; in this case, ENOTSUP will be
 /// returned if `pid` is not either 0 or the current process's PID.
 ///
 /// # Platform-specific information
@@ -503,7 +503,7 @@ pub fn try_get_umask(pid: PidT) -> io::Result<u32> {
             Err(e) => return Err(e),
         }
 
-        Err(io::Error::from_raw_os_error(libc::ENOSYS))
+        Err(io::Error::from_raw_os_error(libc::ENOTSUP))
     };
 
     #[cfg(target_os = "freebsd")]
@@ -523,7 +523,7 @@ pub fn try_get_umask(pid: PidT) -> io::Result<u32> {
     };
 
     #[cfg(not(any(target_os = "linux", target_os = "freebsd")))]
-    let res = Err(io::Error::from_raw_os_error(libc::ENOSYS));
+    let res = Err(io::Error::from_raw_os_error(libc::ENOTSUP));
 
     res
 }
@@ -720,13 +720,13 @@ mod tests {
         {
             assert_eq!(
                 try_get_umask(0).unwrap_err().raw_os_error(),
-                Some(libc::ENOSYS)
+                Some(libc::ENOTSUP)
             );
 
 
             assert_eq!(
                 try_get_umask(-1).unwrap_err().raw_os_error(),
-                Some(libc::ENOSYS)
+                Some(libc::ENOTSUP)
             );
         }
     }
