@@ -223,7 +223,7 @@ pub fn prlimit(
 }
 
 /// A generic version of Linux's `prlimit()` that is also implemented for some other
-/// platforms. (WARNING: the semantics may vary.)
+/// platforms. (WARNING: the semantics vary slightly.)
 ///
 /// Note that this function provides fewer guarantees than Linux's `prlimit()`. Namely:
 ///
@@ -240,8 +240,7 @@ pub fn prlimit(
 ///    across platforms, though an attempt is made to standardize them on
 ///    `prlimit()`-like errors.
 ///
-/// This function will accept pid=0 to refer to the current process. However, on some
-/// platforms this may result in a fallback to `getrlimit()`/`setrlimit()`.
+/// This function will accept pid=0 to refer to the current process.
 #[cfg(any(
     target_os = "linux",
     target_os = "netbsd",
