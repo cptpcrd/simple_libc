@@ -227,8 +227,10 @@ pub fn prlimit(
 ///
 /// Note that this function provides fewer guarantees than Linux's `prlimit()`. Namely:
 ///
-/// 1. On some platforms, it may not be possible to set new process limits for other
-///    processes. In that case, an `ENOSYS` error will be returned.
+/// 1. On some platforms, it may only be possible to *get* resource limits for other
+///    processes, not set new ones. In that case, an `ENOTSUP` error will be returned if
+///    a) new limits are passed and b) the `pid` is not either 0 or the current process's
+///    PID.
 /// 2. Getting the original limits and setting the new limits, as well as
 ///    getting/setting the soft limit and getting/setting the hard limit, may be
 ///    performed as separate operations. Besides the implications of this for performance
@@ -349,7 +351,7 @@ fn proc_rlimit_impl(
             return Ok(old_lims);
         } else {
             // Can't set rlimits for other processes
-            return Err(io::Error::from_raw_os_error(libc::ENOSYS));
+            return Err(io::Error::from_raw_os_error(libc::ENOTSUP));
         }
     }
 
