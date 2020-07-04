@@ -262,6 +262,16 @@ pub fn setreuid(ruid: UidT, euid: UidT) -> io::Result<()> {
     crate::error::convert_nzero_ret(unsafe { externs::setreuid(ruid, euid) })
 }
 
+/// Optionally set the real and effective UIDs of the current process.
+///
+/// The `setreuid()` C function allows specifying `(uid_t)-1` for the new
+/// real/effective UIDs to indicate that the corresponding UID should
+/// remain unchanged. However, `uid_t` is usually unsigned, and because of
+/// the way Rust handles casting integers this can make it difficult to
+/// reliably get the value of `(uid_t)-1`.
+///
+/// This wrapper around `setreuid()` makes it easy to specify this special
+/// value, by simply passing `None` for the corresponding UID.
 pub fn setreuid2(ruid: Option<UidT>, euid: Option<UidT>) -> io::Result<()> {
     setreuid(
         ruid.unwrap_or_else(minus_one_either),
@@ -281,6 +291,12 @@ pub fn setregid(rgid: GidT, egid: GidT) -> io::Result<()> {
     crate::error::convert_nzero_ret(unsafe { externs::setregid(rgid, egid) })
 }
 
+/// Optionally set the real and effective GIDs of the current process.
+///
+/// See the documentation of [`setreuid2`] for an explanation of why this
+/// is useful.
+///
+/// [`setreuid2`]: ./fn.setreuid2.html
 pub fn setregid2(rgid: Option<GidT>, egid: Option<GidT>) -> io::Result<()> {
     setregid(
         rgid.unwrap_or_else(minus_one_either),
@@ -361,6 +377,12 @@ crate::attr_group! {
         })
     }
 
+    /// Optionally set the real, effective, and saved UIDs of the current process.
+    ///
+    /// See the documentation of [`setreuid2`] for an explanation of why this
+    /// is useful.
+    ///
+    /// [`setreuid2`]: ./fn.setreuid2.html
     pub fn setresuid2(ruid: Option<UidT>, euid: Option<UidT>, suid: Option<UidT>) -> io::Result<()> {
         setresuid(
             ruid.unwrap_or_else(minus_one_either),
@@ -375,6 +397,12 @@ crate::attr_group! {
         })
     }
 
+    /// Optionally set the real, effective, and saved GIDs of the current process.
+    ///
+    /// See the documentation of [`setreuid2`] for an explanation of why this
+    /// is useful.
+    ///
+    /// [`setreuid2`]: ./fn.setreuid2.html
     pub fn setresgid2(rgid: Option<GidT>, egid: Option<GidT>, sgid: Option<GidT>) -> io::Result<()> {
         setresgid(
             rgid.unwrap_or_else(minus_one_either),
