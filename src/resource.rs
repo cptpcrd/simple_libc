@@ -298,7 +298,7 @@ fn proc_rlimit_impl(
     };
 
     // Construct the MIB path
-    let mut mib = [
+    let mib = [
         libc::CTL_KERN,
         libc::KERN_PROC,
         libc::KERN_PROC_RLIMIT,
@@ -308,7 +308,7 @@ fn proc_rlimit_impl(
 
     let nbytes = match unsafe {
         crate::sysctl_raw(
-            &mut mib,
+            &mib,
             Some(std::slice::from_mut(&mut old_rlim)),
             new_rlim_slice_opt,
         )
@@ -508,7 +508,7 @@ fn proc_limit_getset(
     };
 
     // Construct the MIB path
-    let mut mib = [
+    let mib = [
         libc::CTL_PROC,
         if pid == 0 {
             constants::PROC_CURPROC
@@ -528,7 +528,7 @@ fn proc_limit_getset(
 
     let nbytes = match unsafe {
         crate::sysctl_raw(
-            &mut mib,
+            &mib,
             Some(std::slice::from_mut(&mut old_lim)),
             new_lim_slice_opt,
         )

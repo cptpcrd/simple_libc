@@ -562,10 +562,17 @@ fn bytes_to_osstring<'a, T: IntoIterator<Item = &'a Char>>(bytes: T) -> ffi::OsS
 /// is correct for the given option AND the amount of data read is correct for
 /// the given structure), then this function should be safe to use.
 pub unsafe fn sysctl_raw<T>(
-    mib: &mut [Int],
+    mib: &[Int],
     old_data: Option<&mut [T]>,
     new_data: Option<&mut [T]>,
 ) -> io::Result<usize> {
+    #[cfg(target_os = "macos")]
+    let mut mib = Vec::from(mib);
+    #[cfg(target_os = "macos")]
+    let mib_ptr = mib.as_mut_ptr();
+    #[cfg(not(target_os = "macos"))]
+    let mib_ptr = mib.as_ptr();
+
     let (old_ptr, mut old_len) = if let Some(old_data_slice) = old_data {
         (
             old_data_slice.as_mut_ptr(),
@@ -585,7 +592,7 @@ pub unsafe fn sysctl_raw<T>(
     };
 
     crate::error::convert_nzero_ret(libc::sysctl(
-        mib.as_mut_ptr(),
+        mib_ptr,
         mib.len() as Uint,
         old_ptr as *mut libc::c_void,
         &mut old_len,
