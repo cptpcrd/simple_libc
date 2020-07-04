@@ -5,10 +5,11 @@ use std::os::unix::prelude::*;
 
 use crate::SocklenT;
 
-fn build_abstract_addr(mut name: &OsStr) -> io::Result<(libc::sockaddr_un, SocklenT)> {
+fn build_abstract_addr(name: &OsStr) -> io::Result<(libc::sockaddr_un, SocklenT)> {
     // Allow a leading NULL, but just ignore it since we add our own NULL anyway.
-    if !name.is_empty() && name.as_bytes()[0] == 0 {
-        name = OsStr::from_bytes(&name.as_bytes()[1..]);
+    let mut name = name.as_bytes();
+    if !name.is_empty() && name[0] == 0 {
+        name = &name[1..];
     }
 
     let mut addr = libc::sockaddr_un {
@@ -16,6 +17,7 @@ fn build_abstract_addr(mut name: &OsStr) -> io::Result<(libc::sockaddr_un, Sockl
         sun_path: unsafe { std::mem::zeroed() },
     };
 
+    // + 2 -- 1 for the leading null byte and 1 for the trailing null byte
     if name.len() + 2 > addr.sun_path.len() {
         return Err(io::Error::new(
             io::ErrorKind::InvalidInput,
@@ -23,9 +25,7 @@ fn build_abstract_addr(mut name: &OsStr) -> io::Result<(libc::sockaddr_un, Sockl
         ));
     }
 
-    let name_vec = OsString::from(name).into_vec();
-
-    for (i, ch) in name_vec.iter().enumerate() {
+    for (ch, addr_dest) in name.iter().zip(addr.sun_path.iter_mut().skip(1)) {
         let ch = *ch;
 
         if ch == 0 {
@@ -35,10 +35,10 @@ fn build_abstract_addr(mut name: &OsStr) -> io::Result<(libc::sockaddr_un, Sockl
             ));
         }
 
-        addr.sun_path[i + 1] = ch as libc::c_char;
+        *addr_dest = ch as libc::c_char;
     }
 
-    let addrlen = (std::mem::size_of::<libc::sa_family_t>() + name_vec.len() + 1) as SocklenT;
+    let addrlen = (std::mem::size_of::<libc::sa_family_t>() + name.len() + 1) as SocklenT;
 
     Ok((addr, addrlen))
 }
