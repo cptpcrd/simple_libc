@@ -846,27 +846,6 @@ pub mod secbits {
 
             const NO_CAP_AMBIENT_RAISE = constants::SECBIT_NO_CAP_AMBIENT_RAISE;
             const NO_CAP_AMBIENT_RAISE_LOCKED = constants::SECBIT_NO_CAP_AMBIENT_RAISE_LOCKED;
-
-
-            #[deprecated(since = "0.5.0", note = "The SECBIT_ prefix has been removed")]
-            const SECBIT_KEEP_CAPS = constants::SECBIT_KEEP_CAPS;
-            #[deprecated(since = "0.5.0", note = "The SECBIT_ prefix has been removed")]
-            const SECBIT_KEEP_CAPS_LOCKED = constants::SECBIT_KEEP_CAPS_LOCKED;
-
-            #[deprecated(since = "0.5.0", note = "The SECBIT_ prefix has been removed")]
-            const SECBIT_NO_SETUID_FIXUP = constants::SECBIT_NO_SETUID_FIXUP;
-            #[deprecated(since = "0.5.0", note = "The SECBIT_ prefix has been removed")]
-            const SECBIT_NO_SETUID_FIXUP_LOCKED = constants::SECBIT_NO_SETUID_FIXUP_LOCKED;
-
-            #[deprecated(since = "0.5.0", note = "The SECBIT_ prefix has been removed")]
-            const SECBIT_NOROOT = constants::SECBIT_NOROOT;
-            #[deprecated(since = "0.5.0", note = "The SECBIT_ prefix has been removed")]
-            const SECBIT_NOROOT_LOCKED = constants::SECBIT_NOROOT_LOCKED;
-
-            #[deprecated(since = "0.5.0", note = "The SECBIT_ prefix has been removed")]
-            const SECBIT_NO_CAP_AMBIENT_RAISE = constants::SECBIT_NO_CAP_AMBIENT_RAISE;
-            #[deprecated(since = "0.5.0", note = "The SECBIT_ prefix has been removed")]
-            const SECBIT_NO_CAP_AMBIENT_RAISE_LOCKED = constants::SECBIT_NO_CAP_AMBIENT_RAISE_LOCKED;
         }
     }
 

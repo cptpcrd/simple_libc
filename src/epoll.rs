@@ -128,12 +128,6 @@ impl Epoll {
         Ok(Self { fd })
     }
 
-    #[deprecated(since = "0.5.0", note = "Use `as_raw_fd()` instead")]
-    #[inline]
-    pub fn fd(&self) -> Int {
-        self.as_raw_fd()
-    }
-
     fn ctl(&mut self, op: CtlOp, fd: Int, events: Events, data: u64) -> io::Result<()> {
         let mut ep_event = libc::epoll_event {
             events: events.bits as u32,
@@ -288,10 +282,6 @@ mod tests {
         let mut events = [Event::default(); 3];
 
         assert_eq!(poller.fd, poller.as_raw_fd());
-        #[allow(deprecated)]
-        {
-            assert_eq!(poller.fd(), poller.as_raw_fd());
-        }
 
         let (r1, mut w1) = crate::pipe().unwrap();
         let (r2, mut w2) = crate::pipe().unwrap();

@@ -134,27 +134,6 @@ pub fn is_ewouldblock(err: &io::Error) -> bool {
     is_raw(err, libc::EWOULDBLOCK)
 }
 
-#[deprecated(since = "0.5.0", note = "Please loop manually instead")]
-pub fn while_erange<F: FnMut(i32) -> io::Result<T>, T>(
-    mut callback: F,
-    max_n: i32,
-) -> io::Result<T> {
-    let mut i = 0;
-
-    loop {
-        match callback(i) {
-            Ok(t) => return Ok(t),
-            Err(e) => {
-                if i >= max_n || !is_erange(&e) {
-                    return Err(e);
-                }
-            }
-        };
-
-        i += 1;
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -288,46 +267,6 @@ mod tests {
         assert!(!is_eintr(&io::Error::from_raw_os_error(0)));
         assert!(!is_eintr(&io::Error::from_raw_os_error(libc::ERANGE)));
         assert!(is_eintr(&io::Error::from_raw_os_error(libc::EINTR)));
-    }
-
-    #[test]
-    #[allow(deprecated)]
-    fn test_while_erange() {
-        while_erange(
-            |i| match i {
-                0 => Err(io::Error::from_raw_os_error(libc::ERANGE)),
-                1 => Ok(()),
-                _ => panic!(),
-            },
-            10,
-        )
-        .unwrap();
-
-        while_erange(
-            |i| match i {
-                0 => Err(io::Error::from_raw_os_error(libc::ERANGE)),
-                1 => Ok(()),
-                _ => panic!(),
-            },
-            10,
-        )
-        .unwrap();
-
-        assert_eq!(
-            while_erange(
-                |i| -> io::Result<()> {
-                    match i {
-                        0 => Err(io::Error::from_raw_os_error(libc::ERANGE)),
-                        1 => Err(io::Error::from_raw_os_error(libc::ERANGE)),
-                        _ => panic!(),
-                    }
-                },
-                1
-            )
-            .unwrap_err()
-            .raw_os_error(),
-            Some(libc::ERANGE),
-        );
     }
 
     #[test]

@@ -11,9 +11,6 @@ use crate::{GidT, Int, SocklenT, UidT};
 
 #[cfg(target_os = "linux")]
 pub mod abstract_unix;
-#[cfg(target_os = "linux")]
-#[deprecated(since = "0.5.0", note = "Moved into the 'abstract_unix' submodule")]
-pub use abstract_unix::{unix_stream_abstract_bind, unix_stream_abstract_connect};
 
 #[cfg(any(target_os = "linux", target_os = "openbsd", target_os = "netbsd"))]
 pub mod ucred;
@@ -23,10 +20,6 @@ pub mod sockcred;
 
 #[cfg(any(target_os = "macos", target_os = "freebsd", target_os = "dragonfly"))]
 pub mod xucred;
-
-#[cfg(any(target_os = "linux", target_os = "openbsd"))]
-#[deprecated(since = "0.5.0", note = "Moved into the 'ucred' submodule")]
-pub use ucred::{get_ucred, get_ucred_raw, Ucred};
 
 #[cfg(any(
     target_os = "macos",

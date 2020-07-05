@@ -4,8 +4,6 @@ use std::io::BufRead;
 use std::os::unix::prelude::*;
 use std::str::FromStr;
 
-use lazy_static::lazy_static;
-
 use crate::{GidT, Int};
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
@@ -16,27 +14,7 @@ pub struct Group {
     pub members: Vec<ffi::OsString>,
 }
 
-lazy_static! {
-    static ref GROUP_LIST_MUTEX: std::sync::Mutex<i8> = std::sync::Mutex::new(0);
-}
-
 impl Group {
-    /// List all the system group entries.
-    ///
-    /// This function simply locks a global lock and calls `list_single_thread()`. It
-    /// is deprecated because it is impossible to confirm that this lock guarantees no
-    /// conflicting function calls (for example, another library could make a call to
-    /// a C function that calls `setgrent()`, or to `setgrent()` itself).
-    #[deprecated(
-        since = "0.5.0",
-        note = "Use list_single_thread() and lock manually instead"
-    )]
-    pub fn list() -> io::Result<Vec<Self>> {
-        let _lock = GROUP_LIST_MUTEX.lock();
-
-        unsafe { Self::list_single_thread() }
-    }
-
     /// List all the system group entries.
     ///
     /// This calls `iter_single_thread()` and collects the yielded values.
@@ -362,10 +340,6 @@ mod tests {
         let groups = unsafe { Group::list_single_thread() }.unwrap();
         assert_ne!(groups, vec![]);
 
-        #[allow(deprecated)]
-        let groups2 = Group::list().unwrap();
-        assert_eq!(groups, groups2);
-
         let err;
         unsafe {
             let mut group_iter = Group::iter_single_thread_dangerous();
@@ -386,12 +360,7 @@ mod tests {
             .unwrap()
             .unwrap();
 
-        let user_groups = unsafe { passwd.list_groups_single_thread() }.unwrap();
-
-        #[allow(deprecated)]
-        let user_groups2 = passwd.list_groups().unwrap();
-
-        assert_eq!(user_groups, user_groups2);
+        unsafe { passwd.list_groups_single_thread() }.unwrap();
     }
 
     #[test]

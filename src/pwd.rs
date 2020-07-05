@@ -4,8 +4,6 @@ use std::io::BufRead;
 use std::os::unix::prelude::*;
 use std::str::FromStr;
 
-use lazy_static::lazy_static;
-
 use crate::{GidT, Int, UidT};
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
@@ -19,27 +17,7 @@ pub struct Passwd {
     pub shell: ffi::OsString,
 }
 
-lazy_static! {
-    static ref PASSWD_LIST_MUTEX: std::sync::Mutex<i8> = std::sync::Mutex::new(0);
-}
-
 impl Passwd {
-    /// List all the system password entries.
-    ///
-    /// This function simply locks a global lock and calls `list_single_thread()`. It
-    /// is deprecated because it is impossible to confirm that this lock guarantees no
-    /// conflicting function calls (for example, another library could make a call to
-    /// a C function that calls `setpwent()`, or to `setpwent()` itself).
-    #[deprecated(
-        since = "0.5.0",
-        note = "Use list_single_thread() and lock manually instead"
-    )]
-    pub fn list() -> io::Result<Vec<Self>> {
-        let _lock = PASSWD_LIST_MUTEX.lock();
-
-        unsafe { Self::list_single_thread() }
-    }
-
     /// List all the system password entries.
     ///
     /// This calls `iter_single_thread()` and collects the yielded values.
@@ -255,31 +233,6 @@ impl Passwd {
 
     /// List all of the given user's supplementary groups.
     ///
-    /// This function calls `grp::Group::list()` to get the initial group list;
-    /// refer to that function for details regarding why this is deprecated.
-    #[deprecated(
-        since = "0.5.0",
-        note = "Use list_groups_single_thread() and lock manually instead"
-    )]
-    pub fn list_groups(&self) -> io::Result<Vec<crate::grp::Group>> {
-        #[allow(deprecated)]
-        let mut groups = crate::grp::Group::list()?;
-
-        groups.retain(|group| {
-            for mem in &group.members {
-                if mem == &self.name {
-                    return true;
-                }
-            }
-
-            false
-        });
-
-        Ok(groups)
-    }
-
-    /// List all of the given user's supplementary groups.
-    ///
     /// # Safety
     ///
     /// This function calls `grp::Group::list_single_thread()` to get the
@@ -416,10 +369,6 @@ mod tests {
 
         let passwds = unsafe { Passwd::list_single_thread() }.unwrap();
         assert_ne!(passwds, vec![]);
-
-        #[allow(deprecated)]
-        let passwds2 = Passwd::list().unwrap();
-        assert_eq!(passwds, passwds2);
 
         let err;
         unsafe {
