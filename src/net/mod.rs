@@ -314,17 +314,13 @@ mod tests {
     #[allow(clippy::needless_return)]
     fn get_expected_pid() -> crate::PidT {
         #[cfg(target_os = "freebsd")]
-        {
-            return if has_cr_pid().unwrap() {
-                process::getpid()
-            } else {
-                0
-            };
-        }
+        return if has_cr_pid().unwrap() {
+            process::getpid()
+        } else {
+            0
+        };
 
         #[cfg(not(target_os = "freebsd"))]
-        {
-            return process::getpid();
-        }
+        return process::getpid();
     }
 }

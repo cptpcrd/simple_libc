@@ -248,24 +248,17 @@ pub fn prlimit(
     target_os = "dragonfly"
 ))]
 #[inline]
+#[allow(clippy::needless_return)]
 pub fn proc_rlimit(
     pid: crate::PidT,
     resource: Resource,
     new_limits: Option<(Limit, Limit)>,
 ) -> io::Result<(Limit, Limit)> {
-    let res;
-
     #[cfg(target_os = "linux")]
-    {
-        res = prlimit(pid, resource, new_limits);
-    }
+    return prlimit(pid, resource, new_limits);
 
     #[cfg(not(target_os = "linux"))]
-    {
-        res = proc_rlimit_impl(pid, resource, new_limits);
-    }
-
-    res
+    return proc_rlimit_impl(pid, resource, new_limits);
 }
 
 #[cfg(target_os = "freebsd")]

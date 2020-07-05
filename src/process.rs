@@ -469,9 +469,10 @@ pub fn getset_umask(new_mask: u32) -> u32 {
 ///
 /// - On Linux, this looks at the "Umask" field of `/proc/<pid>/status`.
 /// - On FreeBSD, this calls `sysctl()`.
+#[allow(clippy::needless_return)]
 pub fn try_get_umask(pid: PidT) -> io::Result<u32> {
     #[cfg(target_os = "linux")]
-    let res = {
+    {
         use std::io::BufRead;
 
         let stat_path = Path::new("/proc/")
@@ -503,11 +504,11 @@ pub fn try_get_umask(pid: PidT) -> io::Result<u32> {
             Err(e) => return Err(e),
         }
 
-        Err(io::Error::from_raw_os_error(libc::ENOTSUP))
-    };
+        return Err(io::Error::from_raw_os_error(libc::ENOTSUP));
+    }
 
     #[cfg(target_os = "freebsd")]
-    let res = {
+    {
         let mib = [
             libc::CTL_KERN,
             libc::KERN_PROC,
@@ -524,13 +525,11 @@ pub fn try_get_umask(pid: PidT) -> io::Result<u32> {
             return Err(io::Error::from_raw_os_error(libc::EINVAL));
         }
 
-        Ok(umask as u32)
-    };
+        return Ok(umask as u32);
+    }
 
     #[cfg(not(any(target_os = "linux", target_os = "freebsd")))]
-    let res = Err(io::Error::from_raw_os_error(libc::ENOTSUP));
-
-    res
+    return Err(io::Error::from_raw_os_error(libc::ENOTSUP));
 }
 
 /// Check if the current environment in which the process is running demands
