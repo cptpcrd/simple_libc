@@ -149,12 +149,12 @@ pub fn getallgroups() -> io::Result<Vec<GidT>> {
 
     let (rgid, egid) = getregid();
 
-    groups.retain(|&x| x != rgid && x != egid);
+    if !groups.contains(&rgid) {
+        groups.push(rgid);
+    }
 
-    if rgid == egid {
-        groups.insert(0, egid);
-    } else {
-        groups.splice(0..0, [rgid, egid].iter().cloned());
+    if egid != rgid && !groups.contains(&egid) {
+        groups.push(egid);
     }
 
     Ok(groups)
