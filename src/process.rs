@@ -549,7 +549,6 @@ pub fn try_get_umask(pid: PidT) -> io::Result<u32> {
 /// If anything goes wrong (though it shouldn't; these functions are designed not to
 /// fail!), this function checks the current real/effective UID and GID, and returns
 /// true if `ruid != euid || rgid != egid`.
-#[allow(unreachable_code)]
 pub fn requires_secure_execution() -> bool {
     #[cfg(target_os = "linux")]
     {
@@ -577,7 +576,11 @@ pub fn requires_secure_execution() -> bool {
         target_os = "dragonfly",
         target_os = "macos",
     ))]
-    return unsafe { externs::issetugid() } != 0;
+    match unsafe { externs::issetugid() } {
+        0 => return false,
+        1 => return true,
+        _ => (),
+    }
 
     let (ruid, euid) = getreuid();
     if ruid != euid {
