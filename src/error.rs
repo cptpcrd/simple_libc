@@ -333,5 +333,6 @@ mod tests {
     #[test]
     fn test_set_errno_success() {
         set_errno_success();
+        assert_eq!(io::Error::last_os_error().raw_os_error(), Some(0));
     }
 }
