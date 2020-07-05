@@ -63,19 +63,22 @@ pub fn sig_from_name(name: &str) -> Option<Int> {
     SIGNALS_BY_NAME.get(name).copied()
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "freebsd", target_os = "netbsd"))]
+#[allow(clippy::needless_return)]
 pub fn get_rtsig_minmax() -> io::Result<(Int, Int)> {
-    let res = unsafe {
+    #[cfg(target_os = "linux")]
+    return Ok(unsafe {
         (
             crate::externs::__libc_current_sigrtmin(),
             crate::externs::__libc_current_sigrtmax(),
         )
-    };
+    });
 
-    Ok(res)
+    #[cfg(not(target_os = "linux"))]
+    return Ok((crate::constants::SIGRTMIN, crate::constants::SIGRTMAX));
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "freebsd", target_os = "netbsd"))]
 pub fn get_rtsig_range() -> io::Result<std::ops::RangeInclusive<Int>> {
     let (sigrtmin, sigrtmax) = get_rtsig_minmax()?;
     Ok(sigrtmin..=sigrtmax)
@@ -192,7 +195,7 @@ mod tests {
         assert!(set.ismember(SIGTERM).unwrap());
     }
 
-    #[cfg(target_os = "linux")]
+    #[cfg(any(target_os = "linux", target_os = "freebsd", target_os = "netbsd"))]
     #[test]
     fn test_get_rtsig_minmax_range() {
         get_rtsig_minmax().unwrap();

@@ -159,6 +159,20 @@ crate::attr_group! {
     pub const RB_POWERDOWN: Int = 0x0808;
     pub const RB_NOSYNC: Int = 0x0004;
     // END USED by power.rs
+
+    // BEGIN USED by signal.rs
+    pub const SIGRTMIN: Int = 33;
+    pub const SIGRTMAX: Int = 63;
+    // END USED by signal.rs
+}
+
+crate::attr_group! {
+    #![cfg(target_os = "freebsd")]
+
+    // BEGIN USED by signal.rs
+    pub const SIGRTMIN: Int = 65;
+    pub const SIGRTMAX: Int = 126;
+    // END USED by signal.rs
 }
 
 crate::attr_group! {
