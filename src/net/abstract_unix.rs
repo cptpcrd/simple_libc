@@ -25,6 +25,9 @@ fn build_abstract_addr(name: &OsStr) -> io::Result<(libc::sockaddr_un, SocklenT)
         ));
     }
 
+    // We don't actually have to add the leading or trailing nulls because we
+    // zero out the field at the start.
+
     for (ch, addr_dest) in name.iter().zip(addr.sun_path.iter_mut().skip(1)) {
         let ch = *ch;
 
