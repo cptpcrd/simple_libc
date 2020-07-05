@@ -68,10 +68,12 @@ pub fn getegid() -> GidT {
 ///    returned.
 ///
 /// In most cases, the `getgroups()` wrapper should be preferred.
-pub fn getgroups_raw(groups: &mut [GidT]) -> io::Result<Int> {
-    crate::error::convert_neg_ret(unsafe {
+pub fn getgroups_raw(groups: &mut [GidT]) -> io::Result<usize> {
+    let n = crate::error::convert_neg_ret(unsafe {
         libc::getgroups(groups.len() as Int, groups.as_mut_ptr())
-    })
+    })?;
+
+    Ok(n as usize)
 }
 
 /// Returns a vector containing the current supplementary group IDs.
@@ -93,17 +95,17 @@ pub fn getgroups() -> io::Result<Vec<GidT>> {
     }
 
     // Expand the vector to fit
-    groups.resize(init_ngroups as usize, 0);
+    groups.resize(init_ngroups, 0);
 
     loop {
         match getgroups_raw(&mut groups) {
             Ok(ngroups) => {
-                if ngroups as usize <= groups.len() {
+                if ngroups <= groups.len() {
                     // We got a value, and it's smaller than the length of the vector,
                     // so it makes sense.
                     // Shrink the vector to fit and return.
 
-                    groups.resize(ngroups as usize, 0);
+                    groups.resize(ngroups, 0);
                     groups.shrink_to_fit();
                     return Ok(groups);
                 }
