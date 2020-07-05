@@ -346,7 +346,9 @@ fn proc_rlimit_impl(
         if pid == 0 || pid == crate::process::getpid() {
             // Fall back on getrlimit() and setrlimit()
             let old_lims = getrlimit(resource)?;
+
             setrlimit(resource, lims)?;
+
             return Ok(old_lims);
         } else {
             // Can't set rlimits for other processes
@@ -393,6 +395,7 @@ fn proc_rlimit_impl(
             while reader.read_line(&mut line)? > 0 {
                 if line.starts_with(prefix) {
                     let remainder = line[..prefix.len()].trim();
+
                     if let Some(index) = remainder.find(' ') {
                         let (cur_lim_str, max_lim_str) = remainder.split_at(index);
                         let max_lim_str = &max_lim_str[1..];
@@ -405,7 +408,7 @@ fn proc_rlimit_impl(
                     }
                 }
 
-                line.clear()
+                line.clear();
             }
 
             Err(io::Error::from_raw_os_error(libc::EINVAL))
