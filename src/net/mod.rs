@@ -175,6 +175,10 @@ fn get_unix_raw_sockname(sockfd: Int) -> io::Result<OsString> {
         )
     })?;
 
+    if addr.sun_family != libc::AF_UNIX as libc::sa_family_t {
+        return Err(io::Error::from_raw_os_error(libc::EAFNOSUPPORT));
+    }
+
     let len = addrlen as usize - std::mem::size_of::<libc::sa_family_t>();
 
     Ok(OsString::from_vec(
@@ -198,6 +202,10 @@ fn get_unix_raw_peername(sockfd: Int) -> io::Result<OsString> {
             &mut addrlen,
         )
     })?;
+
+    if addr.sun_family != libc::AF_UNIX as libc::sa_family_t {
+        return Err(io::Error::from_raw_os_error(libc::EAFNOSUPPORT));
+    }
 
     let len = addrlen as usize - std::mem::size_of::<libc::sa_family_t>();
 
