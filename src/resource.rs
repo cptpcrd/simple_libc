@@ -614,6 +614,13 @@ mod tests {
             assert_eq!(proc_rlimit(pid, res, Some(limits)).unwrap(), limits);
             assert_eq!(proc_rlimit(pid, res, None).unwrap(), limits);
         }
+
+        assert_eq!(
+            proc_rlimit(-1, Resource::DATA, None)
+                .unwrap_err()
+                .raw_os_error(),
+            Some(libc::ESRCH),
+        );
     }
 
     #[test]
