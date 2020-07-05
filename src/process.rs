@@ -469,6 +469,7 @@ pub fn getset_umask(new_mask: u32) -> u32 {
 ///
 /// - On Linux, this looks at the "Umask" field of `/proc/<pid>/status`.
 /// - On FreeBSD, this calls `sysctl()`.
+#[allow(unused_variables)]
 #[allow(clippy::needless_return)]
 pub fn try_get_umask(pid: PidT) -> io::Result<u32> {
     #[cfg(target_os = "linux")]
