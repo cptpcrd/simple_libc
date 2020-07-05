@@ -652,8 +652,17 @@ mod tests {
         groups2.dedup();
         assert_eq!(groups, groups2);
 
-        // Just check for success
-        getallgroups().unwrap();
+        let allgroups = getallgroups().unwrap();
+
+        let (rgid, egid) = getregid();
+
+        for gid in allgroups.iter() {
+            assert!(*gid == rgid || *gid == egid || groups.contains(&gid));
+        }
+
+        for gid in groups.iter() {
+            assert!(allgroups.contains(&gid));
+        }
     }
 
     #[test]
