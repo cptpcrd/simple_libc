@@ -508,7 +508,12 @@ pub fn try_get_umask(pid: PidT) -> io::Result<u32> {
 
     #[cfg(target_os = "freebsd")]
     let res = {
-        let mib = [libc::CTL_KERN, libc::KERN_PROC, libc::KERN_PROC_UMASK, pid];
+        let mib = [
+            libc::CTL_KERN,
+            libc::KERN_PROC,
+            libc::KERN_PROC_UMASK,
+            pid as Int,
+        ];
 
         let mut umask: crate::Ushort = 0;
 
