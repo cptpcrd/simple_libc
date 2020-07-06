@@ -24,6 +24,16 @@ pub fn getppid() -> PidT {
     unsafe { libc::getppid() }
 }
 
+#[inline]
+pub fn getpgid(pid: PidT) -> io::Result<PidT> {
+    crate::error::convert_neg_ret(unsafe { libc::getpgid(pid) })
+}
+
+#[inline]
+pub fn getpgrp() -> PidT {
+    unsafe { libc::getpgrp() }
+}
+
 /// Returns the current real user ID.
 #[inline]
 pub fn getuid() -> UidT {
@@ -752,5 +762,15 @@ mod tests {
     #[test]
     fn test_requires_secure_execution() {
         assert_eq!(requires_secure_execution(), false);
+    }
+
+    #[test]
+    fn test_pgid() {
+        assert_eq!(getpgid(1).unwrap(), 1);
+
+        let cur_pgid = getpgrp();
+
+        assert_eq!(getpgid(0).unwrap(), cur_pgid);
+        assert_eq!(getpgid(getpid()).unwrap(), cur_pgid);
     }
 }
