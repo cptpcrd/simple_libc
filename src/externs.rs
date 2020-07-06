@@ -72,6 +72,4 @@ extern "C" {
     pub fn __libc_current_sigrtmax() -> libc::c_int;
 
     pub fn getauxval(t: libc::c_ulong) -> libc::c_ulong;
-
-    pub fn gettid() -> libc::pid_t;
 }

@@ -16,7 +16,7 @@ pub fn getpid() -> PidT {
 #[cfg(target_os = "linux")]
 #[inline]
 pub fn gettid() -> PidT {
-    unsafe { externs::gettid() as PidT }
+    unsafe { libc::syscall(libc::SYS_gettid) as PidT }
 }
 
 #[inline]
