@@ -102,6 +102,39 @@ pub fn get_peer_pid_ids(sock: &UnixStream) -> io::Result<(crate::PidT, UidT, Gid
     get_peer_pid_ids_raw(sock.as_raw_fd())
 }
 
+/// Same as `try_get_peer_pid_ids()`, but operates on a socket given its file descriptor.
+#[allow(clippy::needless_return)]
+pub fn try_get_peer_pid_ids_raw(sock: &UnixStream) -> io::Result<(crate::PidT, UidT, GidT)> {
+    #[cfg(any(
+        target_os = "linux",
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "freebsd",
+    ))]
+    return get_peer_pid_ids(sock);
+
+    #[cfg(not(any(
+        target_os = "linux",
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "freebsd",
+    )))]
+    {
+        let (uid, gid) = get_peer_ids(sock)?;
+        return Ok((0, uid, gid))
+    }
+}
+
+/// Get the UID and GID of the peer connected to the given Unix stream socket, and attempt
+/// to get its PID as well.
+///
+/// If it is not possible to retrieve the PID on the current platform, it will be returned
+/// as 0. On some platforms, this is always true; hence, the need for implementations to
+/// check for that value is even greater than it is for `get_peer_pid_ids()`.
+pub fn try_get_peer_pid_ids(sock: &UnixStream) -> io::Result<(crate::PidT, UidT, GidT)> {
+    try_get_peer_pid_ids_raw(sock.as_raw_fd())
+}
+
 /// Obtain the value of the given socket option.
 ///
 /// This function is a simple wrapper around `libc::getsockopt()` that reads
