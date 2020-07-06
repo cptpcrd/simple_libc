@@ -188,3 +188,15 @@ crate::attr_group! {
     pub const RB_NOSYNC: Int = 0x0004;
     // END USED by power.rs
 }
+
+crate::attr_group! {
+    #![cfg(target_os = "dragonfly")]
+
+    pub const XU_NGROUPS: crate::Int = 16;
+}
+
+crate::attr_group! {
+    #![cfg(target_os = "macos")]
+
+    pub const XU_NGROUPS: crate::Int = 16;
+}

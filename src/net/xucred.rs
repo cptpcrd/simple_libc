@@ -24,6 +24,11 @@ type RawXucred = crate::types::xucred;
 #[cfg(not(any(target_os = "dragonfly", target_os = "freebsd")))]
 type RawXucred = libc::xucred;
 
+#[cfg(target_os = "freebsd")]
+const XU_NGROUPS: usize = libc::XU_NGROUPS as usize;
+#[cfg(not(target_os = "freebsd"))]
+const XU_NGROUPS: usize = crate::constants::XU_NGROUPS as usize;
+
 pub fn get_xucred_raw(sockfd: Int) -> io::Result<Xucred> {
     let mut raw_xucred: RawXucred = unsafe { std::mem::zeroed() };
 
@@ -39,10 +44,15 @@ pub fn get_xucred_raw(sockfd: Int) -> io::Result<Xucred> {
     }?;
 
     // We want to make sure that 1) the length matches, 2) the version number
-    // matches, and 3) we have at least one GID to pull out as the primary GID.
+    // matches, 3) we have at least one GID to pull out as the primary GID, and
+    // 4) cr_ngroups isn't greater than XU_NGROUPS.
+    //
+    // Most of this is just paranoid sanity checks that should never actually
+    // happen.
     if len != std::mem::size_of::<RawXucred>() as SocklenT
         || raw_xucred.cr_version != libc::XUCRED_VERSION
         || raw_xucred.cr_ngroups < 1
+        || raw_xucred.cr_ngroups as usize > XU_NGROUPS
     {
         return Err(io::Error::from_raw_os_error(libc::EINVAL));
     }

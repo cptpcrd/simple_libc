@@ -27,7 +27,7 @@ crate::attr_group! {
         pub cr_version: Uint,
         pub cr_uid: UidT,
         pub cr_ngroups: Short,
-        pub cr_groups: [GidT; 16],
+        pub cr_groups: [GidT; crate::constants::XU_NGROUPS as usize],
         _cr_unused1: *mut libc::c_void,
     }
 }
