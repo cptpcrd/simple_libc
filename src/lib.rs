@@ -527,13 +527,6 @@ fn bytes_to_osstring<'a, T: IntoIterator<Item = &'a Char>>(bytes: T) -> ffi::OsS
     )
 }
 
-#[cfg(any(
-    target_os = "macos",
-    target_os = "openbsd",
-    target_os = "netbsd",
-    target_os = "freebsd",
-    target_os = "dragonfly",
-))]
 /// Get/set the value of the given sysctl.
 ///
 /// This function is a simple wrapper around `libc::sysctl()`.
@@ -557,6 +550,13 @@ fn bytes_to_osstring<'a, T: IntoIterator<Item = &'a Char>>(bytes: T) -> ffi::OsS
 /// If it can be verified that neither of these is the case (the data structure
 /// is correct for the given option AND the amount of data read is correct for
 /// the given structure), then this function should be safe to use.
+#[cfg(any(
+    target_os = "macos",
+    target_os = "openbsd",
+    target_os = "netbsd",
+    target_os = "freebsd",
+    target_os = "dragonfly",
+))]
 pub unsafe fn sysctl_raw<T>(
     mib: &[Int],
     old_data: Option<&mut [T]>,
