@@ -104,14 +104,14 @@ pub fn get_peer_pid_ids(sock: &UnixStream) -> io::Result<(crate::PidT, UidT, Gid
 
 /// Same as `try_get_peer_pid_ids()`, but operates on a socket given its file descriptor.
 #[allow(clippy::needless_return)]
-pub fn try_get_peer_pid_ids_raw(sock: &UnixStream) -> io::Result<(crate::PidT, UidT, GidT)> {
+pub fn try_get_peer_pid_ids_raw(sockfd: Int) -> io::Result<(crate::PidT, UidT, GidT)> {
     #[cfg(any(
         target_os = "linux",
         target_os = "openbsd",
         target_os = "netbsd",
         target_os = "freebsd",
     ))]
-    return get_peer_pid_ids(sock);
+    return get_peer_pid_ids_raw(sockfd);
 
     #[cfg(not(any(
         target_os = "linux",
@@ -120,8 +120,8 @@ pub fn try_get_peer_pid_ids_raw(sock: &UnixStream) -> io::Result<(crate::PidT, U
         target_os = "freebsd",
     )))]
     {
-        let (uid, gid) = get_peer_ids(sock)?;
-        return Ok((0, uid, gid))
+        let (uid, gid) = get_peer_ids_raw(sockfd)?;
+        return Ok((0, uid, gid));
     }
 }
 
