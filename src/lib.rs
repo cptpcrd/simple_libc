@@ -353,8 +353,10 @@ pub fn killpg(pgid: PidT, sig: Int) -> io::Result<()> {
 }
 
 #[cfg(target_os = "linux")]
-pub fn tgkill(tgid: Int, tid: Int, sig: Int) -> io::Result<()> {
-    error::convert_nzero_ret(unsafe { libc::syscall(libc::SYS_tgkill, tgid, tid, sig) })
+pub fn tgkill(tgid: PidT, tid: PidT, sig: Int) -> io::Result<()> {
+    error::convert_nzero_ret(unsafe {
+        libc::syscall(libc::SYS_tgkill, tgid as Int, tid as Int, sig)
+    })
 }
 
 #[cfg(any(target_os = "linux", target_os = "openbsd", target_os = "netbsd"))]
