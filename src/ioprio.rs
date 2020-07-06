@@ -161,6 +161,12 @@ mod tests {
     }
 
     #[test]
+    fn test_get_cur_pgrp_user() {
+        get(Target::ProcGroup(0)).unwrap();
+        get(Target::User(0)).unwrap();
+    }
+
+    #[test]
     fn test_get_set() {
         let prio = get(Target::Process(0)).unwrap();
         set(Target::Process(0), prio).unwrap();
