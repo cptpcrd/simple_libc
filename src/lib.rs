@@ -249,8 +249,12 @@ pub fn dup2_inheritable(oldfd: Int, newfd: Int) -> io::Result<Int> {
     }
 }
 
+#[allow(clippy::needless_return)]
 pub fn dup2(oldfd: Int, newfd: Int) -> io::Result<Int> {
-    let fd;
+    if oldfd == newfd {
+        fcntl::set_inheritable(newfd, false)?;
+        return Ok(newfd);
+    }
 
     #[cfg(any(
         target_os = "linux",
@@ -260,17 +264,7 @@ pub fn dup2(oldfd: Int, newfd: Int) -> io::Result<Int> {
         target_os = "dragonfly",
     ))]
     {
-        if oldfd == newfd {
-            // dup3() fails if oldfd == newfd.
-            // Since we're emulating dup2(), let's just ignore this.
-            fd = newfd;
-
-            // However, let's match the behavior of the alternate dup2()-based
-            // code below and make the file descriptor non-inheritable.
-            fcntl::set_inheritable(fd, false)?;
-        } else {
-            fd = dup3(oldfd, newfd, libc::O_CLOEXEC)?;
-        }
+        return dup3(oldfd, newfd, libc::O_CLOEXEC);
     }
 
     #[cfg(not(any(
@@ -281,7 +275,7 @@ pub fn dup2(oldfd: Int, newfd: Int) -> io::Result<Int> {
         target_os = "dragonfly",
     )))]
     {
-        fd = dup2_inheritable(oldfd, newfd)?;
+        let fd = dup2_inheritable(oldfd, newfd)?;
 
         if let Err(e) = fcntl::set_inheritable(fd, false) {
             if fd != oldfd {
@@ -292,9 +286,9 @@ pub fn dup2(oldfd: Int, newfd: Int) -> io::Result<Int> {
 
             return Err(e);
         }
-    }
 
-    Ok(fd)
+        return Ok(fd);
+    }
 }
 
 #[cfg(any(
