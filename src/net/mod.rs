@@ -64,6 +64,7 @@ pub fn get_peer_ids(sock: &UnixStream) -> io::Result<(UidT, GidT)> {
     get_peer_ids_raw(sock.as_raw_fd())
 }
 
+/// Same as `get_peer_pid_ids()`, but operates on a socket given its file descriptor.
 #[cfg(any(
     target_os = "linux",
     target_os = "openbsd",
@@ -80,6 +81,17 @@ pub fn get_peer_pid_ids_raw(sockfd: Int) -> io::Result<(crate::PidT, UidT, GidT)
     Ok((cred.pid, cred.uid, cred.gid))
 }
 
+/// Get the PID, UID, and GID of the peer connected to the given Unix stream socket.
+/// (Note: the PID might not be available.)
+///
+/// # PID
+///
+/// The PID might not be available on certain versions of some platforms; in this
+/// case, 0 will be returned. For example, this is true on versions of FreeBSD
+/// prior to version 13.
+///
+/// Callers should always check for the returned PID to be 0 and handle that case
+/// accordingly.
 #[cfg(any(
     target_os = "linux",
     target_os = "openbsd",
