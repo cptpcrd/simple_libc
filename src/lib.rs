@@ -661,6 +661,23 @@ mod tests {
     }
 
     #[test]
+    fn test_kill() {
+        for &target in [
+            KillSpec::Pid(process::getpid()),
+            KillSpec::Pgid(process::getpgrp()),
+            KillSpec::CurPgrp,
+            KillSpec::All,
+        ].iter() {
+            kill(target, 0).unwrap();
+        }
+    }
+
+    #[test]
+    fn test_killpg() {
+        killpg(process::getpgrp(), 0).unwrap();
+    }
+
+    #[test]
     fn test_pipe_inheritable() {
         let (mut r, mut w) = pipe_inheritable().unwrap();
 
