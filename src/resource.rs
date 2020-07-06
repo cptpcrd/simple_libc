@@ -604,6 +604,8 @@ mod tests {
         for res in Resource::iter() {
             let limits = proc_rlimit(0, res, None).unwrap();
 
+            assert_eq!(getrlimit(res).unwrap(), limits);
+
             assert_eq!(proc_rlimit(0, res, Some(limits)).unwrap(), limits);
             assert_eq!(proc_rlimit(0, res, None).unwrap(), limits);
 
