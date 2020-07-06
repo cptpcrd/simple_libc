@@ -125,8 +125,7 @@ mod tests {
         assert_eq!(err.kind(), io::ErrorKind::InvalidInput);
     }
 
-    #[test]
-    fn test_abstract_unix_stream() {
+    fn generate_random_abstract_addr() -> OsString {
         // Generate a name by taking "SIMPLE_LIBC" and adding some random bytes
         let mut name_vec = OsString::from("SIMPLE_LIBC").into_vec();
         let old_len = name_vec.len();
@@ -144,7 +143,12 @@ mod tests {
             }
         }
 
-        let name = OsString::from_vec(name_vec);
+        OsString::from_vec(name_vec)
+    }
+
+    #[test]
+    fn test_abstract_unix_stream() {
+        let name = generate_random_abstract_addr();
 
         let listener = unix_stream_abstract_bind(&name).unwrap();
 
@@ -187,5 +191,34 @@ mod tests {
         remote.write_all(&[0, 1, 2, 3]).unwrap();
         assert_eq!(client.read(&mut data).unwrap(), 4);
         assert_eq!(data[..4], [0, 1, 2, 3]);
+    }
+
+    #[test]
+    fn test_abstract_unix_bad_bind_connect() {
+        let name = generate_random_abstract_addr();
+
+        // Connect to non-existent address
+        assert_eq!(
+            unix_stream_abstract_connect(&name).unwrap_err().raw_os_error(),
+            Some(libc::ECONNREFUSED),
+        );
+
+        // Bind to the address
+        let listener = unix_stream_abstract_bind(&name).unwrap();
+
+        // Re-bind
+        assert_eq!(
+            unix_stream_abstract_bind(&name).unwrap_err().raw_os_error(),
+            Some(libc::EADDRINUSE),
+        );
+
+        // Close the listener
+        drop(listener);
+
+        // Connect to non-existent address
+        assert_eq!(
+            unix_stream_abstract_connect(&name).unwrap_err().raw_os_error(),
+            Some(libc::ECONNREFUSED),
+        );
     }
 }
