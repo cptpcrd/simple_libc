@@ -316,4 +316,38 @@ mod tests {
         #[cfg(not(target_os = "freebsd"))]
         return process::getpid();
     }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn test_non_unix_peer_sock_name() {
+        let listener = std::net::TcpListener::bind(("127.0.0.1", 0)).unwrap();
+        let client_sock = std::net::TcpStream::connect(listener.local_addr().unwrap()).unwrap();
+        let server_cli = listener.accept().unwrap().0;
+
+        assert_eq!(
+            get_unix_raw_sockname(client_sock.as_raw_fd())
+                .unwrap_err()
+                .raw_os_error(),
+            Some(libc::EAFNOSUPPORT)
+        );
+        assert_eq!(
+            get_unix_raw_peername(client_sock.as_raw_fd())
+                .unwrap_err()
+                .raw_os_error(),
+            Some(libc::EAFNOSUPPORT)
+        );
+
+        assert_eq!(
+            get_unix_raw_sockname(server_cli.as_raw_fd())
+                .unwrap_err()
+                .raw_os_error(),
+            Some(libc::EAFNOSUPPORT)
+        );
+        assert_eq!(
+            get_unix_raw_peername(server_cli.as_raw_fd())
+                .unwrap_err()
+                .raw_os_error(),
+            Some(libc::EAFNOSUPPORT)
+        );
+    }
 }
