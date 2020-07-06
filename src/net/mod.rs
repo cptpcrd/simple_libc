@@ -343,12 +343,21 @@ mod tests {
         assert_eq!(bgid, process::getgid());
     }
 
-    #[cfg(any(
-        target_os = "linux",
-        target_os = "openbsd",
-        target_os = "netbsd",
-        target_os = "freebsd",
-    ))]
+    #[test]
+    fn test_try_get_peer_pid_ids() {
+        let (a, b) = UnixStream::pair().unwrap();
+
+        let (apid, auid, agid) = try_get_peer_pid_ids(&a).unwrap();
+        assert_eq!(apid, get_expected_pid());
+        assert_eq!(auid, process::getuid());
+        assert_eq!(agid, process::getgid());
+
+        let (bpid, buid, bgid) = try_get_peer_pid_ids(&b).unwrap();
+        assert_eq!(bpid, get_expected_pid());
+        assert_eq!(buid, process::getuid());
+        assert_eq!(bgid, process::getgid());
+    }
+
     #[allow(clippy::needless_return)]
     fn get_expected_pid() -> crate::PidT {
         #[cfg(target_os = "freebsd")]
@@ -358,8 +367,16 @@ mod tests {
             0
         };
 
-        #[cfg(not(target_os = "freebsd"))]
+        #[cfg(any(target_os = "linux", target_os = "openbsd", target_os = "netbsd"))]
         return process::getpid();
+
+        #[cfg(not(any(
+            target_os = "linux",
+            target_os = "openbsd",
+            target_os = "netbsd",
+            target_os = "freebsd",
+        )))]
+        return 0;
     }
 
     #[cfg(target_os = "linux")]
