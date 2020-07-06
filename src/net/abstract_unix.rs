@@ -109,6 +109,7 @@ mod tests {
     fn test_build_abstract_addr() {
         build_abstract_addr(&OsString::from_vec(vec![0, 1])).unwrap();
         build_abstract_addr(&OsString::from_vec(vec![1])).unwrap();
+        build_abstract_addr(&OsString::from_vec(vec![])).unwrap();
 
         build_abstract_addr(&OsString::from_vec([1].repeat(106))).unwrap();
 
@@ -144,6 +145,21 @@ mod tests {
         }
 
         OsString::from_vec(name_vec)
+    }
+
+    #[test]
+    fn test_bind_connect_bad_address() {
+        let err = unix_stream_abstract_bind(&OsString::from_vec(vec![0, 1, 0])).unwrap_err();
+        assert_eq!(err.kind(), io::ErrorKind::InvalidInput);
+
+        let err = unix_stream_abstract_bind(&OsString::from_vec(vec![1; 107])).unwrap_err();
+        assert_eq!(err.kind(), io::ErrorKind::InvalidInput);
+
+        let err = unix_stream_abstract_connect(&OsString::from_vec(vec![0, 1, 0])).unwrap_err();
+        assert_eq!(err.kind(), io::ErrorKind::InvalidInput);
+
+        let err = unix_stream_abstract_connect(&OsString::from_vec(vec![1; 107])).unwrap_err();
+        assert_eq!(err.kind(), io::ErrorKind::InvalidInput);
     }
 
     #[test]
