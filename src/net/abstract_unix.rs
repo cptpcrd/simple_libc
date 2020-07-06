@@ -199,7 +199,9 @@ mod tests {
 
         // Connect to non-existent address
         assert_eq!(
-            unix_stream_abstract_connect(&name).unwrap_err().raw_os_error(),
+            unix_stream_abstract_connect(&name)
+                .unwrap_err()
+                .raw_os_error(),
             Some(libc::ECONNREFUSED),
         );
 
@@ -217,7 +219,9 @@ mod tests {
 
         // Connect to non-existent address
         assert_eq!(
-            unix_stream_abstract_connect(&name).unwrap_err().raw_os_error(),
+            unix_stream_abstract_connect(&name)
+                .unwrap_err()
+                .raw_os_error(),
             Some(libc::ECONNREFUSED),
         );
     }
