@@ -683,7 +683,7 @@ pub fn get_no_new_privs() -> io::Result<bool> {
 
 #[inline]
 pub fn set_no_new_privs() -> io::Result<()> {
-    unsafe { prctl(libc::PR_GET_NO_NEW_PRIVS, 1, 0, 0, 0) }?;
+    unsafe { prctl(libc::PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) }?;
 
     Ok(())
 }
