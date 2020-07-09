@@ -411,14 +411,5 @@ mod tests {
                 .raw_os_error(),
             Some(libc::EAFNOSUPPORT)
         );
-
-        assert_eq!(
-            get_unix_raw_sockname(0).unwrap_err().raw_os_error(),
-            Some(libc::ENOTSOCK)
-        );
-        assert_eq!(
-            get_unix_raw_peername(0).unwrap_err().raw_os_error(),
-            Some(libc::ENOTSOCK)
-        );
     }
 }
