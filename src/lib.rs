@@ -667,7 +667,9 @@ mod tests {
             KillSpec::Pgid(process::getpgrp()),
             KillSpec::CurPgrp,
             KillSpec::All,
-        ].iter() {
+        ]
+        .iter()
+        {
             kill(target, 0).unwrap();
         }
     }
