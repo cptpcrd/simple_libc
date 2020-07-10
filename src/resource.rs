@@ -387,7 +387,7 @@ fn proc_rlimit_impl(
 
             while reader.read_line(&mut line)? > 0 {
                 if line.starts_with(prefix) {
-                    let remainder = line[..prefix.len()].trim();
+                    let remainder = line[prefix.len()..].trim();
 
                     if let Some(index) = remainder.find(' ') {
                         let (cur_lim_str, max_lim_str) = remainder.split_at(index);
