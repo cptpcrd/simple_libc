@@ -6,7 +6,7 @@ use std::path::Path;
 
 use crate::externs;
 use crate::internal::minus_one_either;
-use crate::{GidT, Int, PidT, UidT};
+use crate::{ClockT, GidT, Int, PidT, UidT};
 
 #[inline]
 pub fn getpid() -> PidT {
@@ -607,6 +607,23 @@ pub fn requires_secure_execution() -> bool {
     rgid != egid
 }
 
+pub fn times() -> io::Result<(libc::tms, ClockT)> {
+    let mut times = libc::tms {
+        tms_utime: 0,
+        tms_stime: 0,
+        tms_cutime: 0,
+        tms_cstime: 0,
+    };
+
+    let real_ticks = unsafe { libc::times(&mut times) };
+
+    if real_ticks == crate::internal::minus_one_either() {
+        Err(io::Error::last_os_error())
+    } else {
+        Ok((times, real_ticks))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -783,5 +800,10 @@ mod tests {
         assert_eq!(getsid(1).unwrap(), 1);
 
         assert_eq!(getsid(0).unwrap(), getsid(getpid()).unwrap());
+    }
+
+    #[test]
+    fn test_times() {
+        times().unwrap();
     }
 }

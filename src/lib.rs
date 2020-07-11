@@ -91,6 +91,8 @@ pub type GidT = libc::gid_t;
 pub type OffT = libc::off_t;
 pub type SocklenT = libc::socklen_t;
 
+pub type ClockT = libc::clock_t;
+
 #[cfg(target_os = "linux")]
 pub type Off64T = libc::off64_t;
 
