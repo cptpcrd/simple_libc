@@ -87,7 +87,7 @@ pub fn waitpid(
 }
 
 crate::attr_group! {
-    #[cfg(any(
+    #![cfg(any(
         target_os = "linux",
         target_os = "netbsd",
         target_os = "freebsd",
