@@ -7,7 +7,7 @@ use std::ffi::OsString;
 #[cfg(target_os = "linux")]
 use std::os::unix::net::UnixListener;
 
-use crate::{GidT, Int, SocklenT, UidT};
+use crate::{GidT, Int, PidT, SocklenT, UidT};
 
 #[cfg(target_os = "linux")]
 pub mod abstract_unix;
@@ -71,7 +71,7 @@ pub fn get_peer_ids(sock: &UnixStream) -> io::Result<(UidT, GidT)> {
     target_os = "netbsd",
     target_os = "freebsd",
 ))]
-pub fn get_peer_pid_ids_raw(sockfd: Int) -> io::Result<(crate::PidT, UidT, GidT)> {
+pub fn get_peer_pid_ids_raw(sockfd: Int) -> io::Result<(PidT, UidT, GidT)> {
     #[cfg(any(target_os = "linux", target_os = "openbsd", target_os = "netbsd"))]
     let cred = ucred::get_ucred_raw(sockfd)?;
 
@@ -98,13 +98,13 @@ pub fn get_peer_pid_ids_raw(sockfd: Int) -> io::Result<(crate::PidT, UidT, GidT)
     target_os = "netbsd",
     target_os = "freebsd",
 ))]
-pub fn get_peer_pid_ids(sock: &UnixStream) -> io::Result<(crate::PidT, UidT, GidT)> {
+pub fn get_peer_pid_ids(sock: &UnixStream) -> io::Result<(PidT, UidT, GidT)> {
     get_peer_pid_ids_raw(sock.as_raw_fd())
 }
 
 /// Same as `try_get_peer_pid_ids()`, but operates on a socket given its file descriptor.
 #[allow(clippy::needless_return)]
-pub fn try_get_peer_pid_ids_raw(sockfd: Int) -> io::Result<(crate::PidT, UidT, GidT)> {
+pub fn try_get_peer_pid_ids_raw(sockfd: Int) -> io::Result<(PidT, UidT, GidT)> {
     #[cfg(any(
         target_os = "linux",
         target_os = "openbsd",
@@ -131,7 +131,7 @@ pub fn try_get_peer_pid_ids_raw(sockfd: Int) -> io::Result<(crate::PidT, UidT, G
 /// If it is not possible to retrieve the PID on the current platform, it will be returned
 /// as 0. On some platforms, this is always true; hence, the need for implementations to
 /// check for that value is even greater than it is for `get_peer_pid_ids()`.
-pub fn try_get_peer_pid_ids(sock: &UnixStream) -> io::Result<(crate::PidT, UidT, GidT)> {
+pub fn try_get_peer_pid_ids(sock: &UnixStream) -> io::Result<(PidT, UidT, GidT)> {
     try_get_peer_pid_ids_raw(sock.as_raw_fd())
 }
 
@@ -359,7 +359,7 @@ mod tests {
     }
 
     #[allow(clippy::needless_return)]
-    fn get_expected_pid() -> crate::PidT {
+    fn get_expected_pid() -> PidT {
         #[cfg(target_os = "freebsd")]
         return if has_cr_pid().unwrap() {
             process::getpid()
