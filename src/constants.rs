@@ -106,6 +106,15 @@ crate::attr_group! {
     pub const IOPRIO_CLASS_SHIFT: u8 = 13;
     pub const IOPRIO_PRIO_MASK: Int = (1 << IOPRIO_CLASS_SHIFT) - 1;
     // END USED BY ioprio.rs
+
+    // BEGIN USED BY wait.rs
+    pub const CLD_EXITED: Int = 1;
+    pub const CLD_KILLED: Int = 2;
+    pub const CLD_DUMPED: Int = 3;
+    pub const CLD_TRAPPED: Int = 4;
+    pub const CLD_STOPPED: Int = 5;
+    pub const CLD_CONTINUED: Int = 6;
+    // END USED BY wait.rs
 }
 
 crate::attr_group! {
@@ -164,6 +173,15 @@ crate::attr_group! {
     pub const SIGRTMIN: Int = 33;
     pub const SIGRTMAX: Int = 63;
     // END USED by signal.rs
+
+    // BEGIN USED BY wait.rs
+    pub const CLD_EXITED: Int = 1;
+    pub const CLD_KILLED: Int = 2;
+    pub const CLD_DUMPED: Int = 3;
+    pub const CLD_TRAPPED: Int = 4;
+    pub const CLD_STOPPED: Int = 5;
+    pub const CLD_CONTINUED: Int = 6;
+    // END USED BY wait.rs
 }
 
 crate::attr_group! {
@@ -173,6 +191,15 @@ crate::attr_group! {
     pub const SIGRTMIN: Int = 65;
     pub const SIGRTMAX: Int = 126;
     // END USED by signal.rs
+
+    // BEGIN USED BY wait.rs
+    pub const CLD_EXITED: Int = 1;
+    pub const CLD_KILLED: Int = 2;
+    pub const CLD_DUMPED: Int = 3;
+    pub const CLD_TRAPPED: Int = 4;
+    pub const CLD_STOPPED: Int = 5;
+    pub const CLD_CONTINUED: Int = 6;
+    // END USED BY wait.rs
 }
 
 crate::attr_group! {
@@ -193,6 +220,15 @@ crate::attr_group! {
     #![cfg(target_os = "dragonfly")]
 
     pub const XU_NGROUPS: crate::Int = 16;
+
+    // BEGIN USED BY wait.rs
+    pub const CLD_EXITED: Int = 1;
+    pub const CLD_KILLED: Int = 2;
+    pub const CLD_DUMPED: Int = 3;
+    pub const CLD_TRAPPED: Int = 4;
+    pub const CLD_STOPPED: Int = 5;
+    pub const CLD_CONTINUED: Int = 6;
+    // END USED BY wait.rs
 }
 
 crate::attr_group! {

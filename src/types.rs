@@ -14,6 +14,18 @@ crate::attr_group! {
         pub permitted: u32,
         pub inheritable: u32,
     }
+
+    #[repr(C)]
+    pub struct waitpid_siginfo {
+        _pad1: libc::c_int,
+        _pad2: libc::c_int,
+        _pad3: libc::c_int,
+        #[cfg(target_pointer_width = "64")]
+        _pad4: libc::c_int,
+        pub si_pid: libc::pid_t,
+        pub si_uid: libc::uid_t,
+        pub si_status: libc::c_int,
+    }
 }
 
 crate::attr_group! {
@@ -72,5 +84,17 @@ crate::attr_group! {
         pub pid: PidT,
         pub uid: UidT,
         pub gid: GidT,
+    }
+
+    #[repr(C)]
+    pub struct waitpid_siginfo {
+        _pad1: libc::c_int,
+        _pad2: libc::c_int,
+        _pad3: libc::c_int,
+        #[cfg(target_pointer_width = "64")]
+        _pad4: libc::c_int,
+        pub si_pid: libc::pid_t,
+        pub si_uid: libc::uid_t,
+        pub si_status: libc::c_int,
     }
 }

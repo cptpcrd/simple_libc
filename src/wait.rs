@@ -2,7 +2,7 @@ use std::io;
 
 use bitflags::bitflags;
 
-use crate::{Int, PidT};
+use crate::{IdT, Int, PidT};
 
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
 pub enum ProcStatus {
@@ -84,4 +84,98 @@ pub fn waitpid(
         0 => None,
         _ => Some((pid, ProcStatus::from_raw_status(status))),
     })
+}
+
+crate::attr_group! {
+    #[cfg(any(
+        target_os = "linux",
+        target_os = "netbsd",
+        target_os = "freebsd",
+        target_os = "dragonfly",
+    ))]
+
+    use crate::constants;
+    use crate::UidT;
+
+    #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
+    pub enum WaitidSpec {
+        Pid(PidT),
+        Pgid(PidT),
+        Any,
+    }
+
+    bitflags! {
+        #[derive(Default)]
+        pub struct WaitidOptions: Int {
+            const CONTINUED = libc::WCONTINUED;
+            const EXITED = libc::WEXITED;
+            const NOHANG = libc::WNOHANG;
+            const NOWAIT = libc::WNOWAIT;
+            const WSTOPPED = libc::WSTOPPED;
+        }
+    }
+
+    #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
+    pub enum WaitidStatus {
+        Exited(Int),
+        Killed(Int),
+        Dumped(Int),
+        Stopped,
+        Trapped,
+        Continued,
+    }
+
+    #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
+    pub struct WaitidInfo {
+        pub pid: PidT,
+        pub uid: UidT,
+        pub status: WaitidStatus,
+    }
+
+    pub fn waitid(
+        spec: WaitidSpec,
+        options: WaitidOptions,
+    ) -> io::Result<Option<WaitidInfo>> {
+        let mut raw_info: libc::siginfo_t = unsafe { std::mem::zeroed() };
+
+        let (idtype, id) = match spec {
+            WaitidSpec::Pid(pid) => (libc::P_PID, pid as IdT),
+            WaitidSpec::Pgid(pgid) => (libc::P_PGID, pgid as IdT),
+            WaitidSpec::Any => (libc::P_ALL, 0),
+        };
+
+        crate::error::convert_nzero_ret(unsafe {
+            libc::waitid(idtype, id, &mut raw_info, options.bits())
+        })?;
+
+        // On FreeBSD and DragonflyBSD, the siginfo_t struct defined in the libc crate
+        // exposes the si_pid/si_uid/si_status fields.
+        #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
+        let wait_info = &raw_info;
+        // On Linux/NetBSD, we have to pull them out with the help of a special struct.
+        #[cfg(any(target_os = "linux", target_os = "netbsd"))]
+        let wait_info = unsafe {
+            &*(&raw_info as *const libc::siginfo_t as *const crate::types::waitpid_siginfo)
+        };
+
+        if raw_info.si_signo == libc::SIGCHLD && wait_info.si_pid != 0 {
+            let status = match raw_info.si_code {
+                constants::CLD_EXITED => WaitidStatus::Exited(wait_info.si_status),
+                constants::CLD_KILLED => WaitidStatus::Killed(wait_info.si_status),
+                constants::CLD_DUMPED => WaitidStatus::Dumped(wait_info.si_status),
+                constants::CLD_STOPPED => WaitidStatus::Stopped,
+                constants::CLD_TRAPPED => WaitidStatus::Trapped,
+                constants::CLD_CONTINUED => WaitidStatus::Continued,
+                _ => return Err(io::Error::from_raw_os_error(libc::EINVAL)),
+            };
+
+            Ok(Some(WaitidInfo {
+                pid: wait_info.si_pid,
+                uid: wait_info.si_uid,
+                status,
+            }))
+        } else {
+            Ok(None)
+        }
+    }
 }
