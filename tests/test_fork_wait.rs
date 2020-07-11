@@ -18,15 +18,20 @@ fn test_fork_waitpid() {
     }
 }
 
+#[cfg(any(
+    target_os = "linux",
+    target_os = "netbsd",
+    target_os = "freebsd",
+    target_os = "dragonfly",
+))]
 #[test]
 fn test_fork_waitid() {
     match fork().unwrap() {
         0 => std::process::exit(1),
         pid => {
-            let info =
-                wait::waitid(wait::WaitidSpec::Pid(pid), wait::WaitidOptions::EXITED)
-                    .unwrap()
-                    .unwrap();
+            let info = wait::waitid(wait::WaitidSpec::Pid(pid), wait::WaitidOptions::EXITED)
+                .unwrap()
+                .unwrap();
 
             assert_eq!(info.pid, pid);
             assert_eq!(info.uid, simple_libc::process::getuid());
