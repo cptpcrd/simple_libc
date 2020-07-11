@@ -235,7 +235,7 @@ pub fn prlimit(
 ///    performed as separate operations. Besides the implications of this for performance
 ///    and creation of race conditions, if new limits are passed but an error is
 ///    returned, the soft and/or hard limits may or may not have been changed.
-/// 4. The exact errors returned for different error conditions may vary slightly
+/// 3. The exact errors returned for different error conditions may vary slightly
 ///    across platforms, though an attempt is made to standardize them on
 ///    `prlimit()`-like errors.
 ///

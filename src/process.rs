@@ -549,9 +549,9 @@ pub fn try_get_umask(pid: PidT) -> io::Result<u32> {
 ///
 /// *WARNING: The semantics of this function vary across platforms. On some platforms,
 /// if the process changes its real/effective/saved UID/GID, this function may start
-/// reporting `true`. As a result, it is strongly recommended to call this function
-/// once, as soon as the process is started, and then use that result to make decisions
-/// later.*
+/// returning different answers. As a result, it is strongly recommended to call this
+/// function once, as soon as the process is started, and then use that result to make
+/// decisions later.*
 ///
 /// On Linux, this checks `getauxval(AT_SECURE)`, which the kernel usually sets to mean
 /// that the program is set-UID, is set-GID, or has file capabilities set. On the BSDs
