@@ -687,6 +687,30 @@ pub fn ttyname(fd: Int) -> io::Result<ffi::OsString> {
     }
 }
 
+pub fn openpty_raw(
+    mut termp: Option<libc::termios>,
+    mut winp: Option<libc::winsize>,
+) -> io::Result<(Int, Int)> {
+    let mut master = 0;
+    let mut slave = 0;
+
+    let termp = match termp.as_mut() {
+        Some(t) => t,
+        None => std::ptr::null_mut(),
+    };
+
+    let winp = match winp.as_mut() {
+        Some(t) => t,
+        None => std::ptr::null_mut(),
+    };
+
+    error::convert_nzero_ret(unsafe {
+        libc::openpty(&mut master, &mut slave, std::ptr::null_mut(), termp, winp)
+    })?;
+
+    Ok((master, slave))
+}
+
 #[cfg(test)]
 mod tests {
     use std::io::{Read, Write};
@@ -909,20 +933,7 @@ mod tests {
         drop(f);
 
         // Open a PTY and check
-        let mut pty_master = 0;
-        let mut pty_slave = 0;
-        assert_eq!(
-            unsafe {
-                libc::openpty(
-                    &mut pty_master,
-                    &mut pty_slave,
-                    std::ptr::null_mut(),
-                    std::ptr::null(),
-                    std::ptr::null(),
-                )
-            },
-            0,
-        );
+        let (pty_master, pty_slave) = openpty_raw(None, None).unwrap();
 
         assert!(isatty(pty_master).unwrap());
         assert!(isatty(pty_slave).unwrap());
