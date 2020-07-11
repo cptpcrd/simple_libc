@@ -272,7 +272,6 @@ pub fn setregid2(rgid: Option<GidT>, egid: Option<GidT>) -> io::Result<()> {
 
 #[cfg(target_os = "linux")]
 type SetGroupsSize = crate::SizeT;
-
 #[cfg(any(
     target_os = "openbsd",
     target_os = "netbsd",

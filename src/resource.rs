@@ -15,7 +15,6 @@ use crate::constants;
 // Work around GNU not implementing the POSIX standard correctly
 #[cfg(all(target_os = "linux", any(target_env = "", target_env = "gnu")))]
 type RawResourceType = libc::__rlimit_resource_t;
-
 #[cfg(not(all(target_os = "linux", any(target_env = "", target_env = "gnu"))))]
 type RawResourceType = Int;
 

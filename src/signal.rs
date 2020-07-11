@@ -14,8 +14,7 @@ use crate::Int;
 
 pub fn can_catch(sig: Int) -> bool {
     match sig {
-        SIGKILL => false,
-        SIGSTOP => false,
+        SIGKILL | SIGSTOP => false,
         _ => true,
     }
 }
@@ -26,6 +25,7 @@ fn get_signal_name_map() -> &'static HashMap<&'static str, Int> {
 
     INIT.call_once(|| {
         let mut m = HashMap::new();
+
         m.insert("SIGABRT", SIGABRT);
         m.insert("SIGALRM", SIGALRM);
         m.insert("SIGBUS", SIGBUS);

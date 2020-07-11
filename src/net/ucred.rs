@@ -14,10 +14,8 @@ use crate::{Int, SocklenT};
 
 #[cfg(target_os = "linux")]
 pub type Ucred = libc::ucred;
-
 #[cfg(target_os = "openbsd")]
 pub type Ucred = libc::sockpeercred;
-
 #[cfg(target_os = "netbsd")]
 pub type Ucred = crate::types::unpcbid;
 
