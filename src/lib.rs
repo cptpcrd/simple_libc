@@ -388,6 +388,14 @@ pub fn sethostname<N: AsRef<ffi::OsStr>>(name: N) -> io::Result<()> {
     })
 }
 
+pub fn gethostid() -> Long {
+    unsafe { externs::gethostid() }
+}
+
+pub fn sethostid(hostid: Long) -> io::Result<()> {
+    error::convert_nzero_ret(unsafe { externs::sethostid(hostid) })
+}
+
 /// Attempts to read the current system hostname into the given slice.
 ///
 /// The result is null-terminated. Behavior in the case that the vector
@@ -876,5 +884,10 @@ mod tests {
 
         assert_eq!(isatty(-1).unwrap_err().raw_os_error(), Some(libc::EBADF));
         assert_eq!(ttyname(-1).unwrap_err().raw_os_error(), Some(libc::EBADF));
+    }
+
+    #[test]
+    fn test_gethostid() {
+        gethostid();
     }
 }

@@ -8,6 +8,9 @@ extern "C" {
     pub fn setreuid(ruid: libc::uid_t, euid: libc::uid_t) -> libc::c_int;
     pub fn setregid(rgid: libc::gid_t, egid: libc::gid_t) -> libc::c_int;
 
+    pub fn gethostid() -> libc::c_long;
+    pub fn sethostid(hostid: libc::c_long) -> libc::c_int;
+
     #[cfg(any(target_os = "freebsd", target_os = "openbsd", target_os = "dragonfly"))]
     pub fn reboot(howto: libc::c_int) -> libc::c_int;
 
