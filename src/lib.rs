@@ -602,6 +602,51 @@ pub unsafe fn sysctl_raw<T>(
     Ok(old_len)
 }
 
+/// Returns whether the file with the given file descriptor is a terminal.
+///
+/// Note: This wrapper maps the `ENOTTY` error returned by the underlying
+/// C function to the `false` return value. However, other errors (such as
+/// `EBADF`) may still occur.
+pub fn isatty(fd: Int) -> io::Result<bool> {
+    if unsafe { libc::isatty(fd) } == 1 {
+        Ok(true)
+    } else {
+        let e = io::Error::last_os_error();
+
+        if error::is_raw(&e, libc::ENOTTY) {
+            Ok(false)
+        } else {
+            Err(e)
+        }
+    }
+}
+
+/// Find the path name of the terminal connected to the given file descriptor.
+pub fn ttyname(fd: Int) -> io::Result<ffi::OsString> {
+    let mut buf = Vec::new();
+    buf.resize(
+        constrain(sysconf(libc::_SC_TTY_NAME_MAX).unwrap_or(255), 64, 1024) as usize,
+        0,
+    );
+
+    loop {
+        match unsafe { libc::ttyname_r(fd, buf.as_mut_ptr() as *mut Char, buf.len()) } {
+            0 => {
+                // Find the terminating null and shrink it down
+                if let Some(index) = buf.iter().position(|&x| x == 0) {
+                    buf.resize(index, 0);
+                }
+
+                buf.shrink_to_fit();
+
+                return Ok(ffi::OsString::from_vec(buf));
+            }
+            libc::ERANGE => buf.resize(buf.len() * 2, 0),
+            errno => return Err(io::Error::from_raw_os_error(errno)),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::io::{Read, Write};
@@ -810,5 +855,26 @@ mod tests {
             sysconf(libc::_SC_NGROUPS_MAX),
             sysconf_raw(libc::_SC_NGROUPS_MAX).ok(),
         );
+    }
+
+    #[test]
+    fn test_tty() {
+        let f = fs::File::open(std::env::current_exe().unwrap()).unwrap();
+        assert!(!isatty(f.as_raw_fd()).unwrap());
+        assert_eq!(
+            ttyname(f.as_raw_fd()).unwrap_err().raw_os_error(),
+            Some(libc::ENOTTY),
+        );
+        drop(f);
+
+        let f = fs::File::open("/dev/tty").unwrap();
+        assert!(isatty(f.as_raw_fd()).unwrap());
+        assert_eq!(
+            ttyname(f.as_raw_fd()).unwrap(),
+            ffi::OsString::from("/dev/tty"),
+        );
+
+        assert_eq!(isatty(-1).unwrap_err().raw_os_error(), Some(libc::EBADF));
+        assert_eq!(ttyname(-1).unwrap_err().raw_os_error(), Some(libc::EBADF));
     }
 }
