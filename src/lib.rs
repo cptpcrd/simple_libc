@@ -899,6 +899,7 @@ mod tests {
 
     #[test]
     fn test_tty() {
+        // Open a regular file and check
         let f = fs::File::open(std::env::current_exe().unwrap()).unwrap();
         assert!(!isatty(f.as_raw_fd()).unwrap());
         assert_eq!(
@@ -907,6 +908,33 @@ mod tests {
         );
         drop(f);
 
+        // Open a PTY and check
+        let mut pty_master = 0;
+        let mut pty_slave = 0;
+        assert_eq!(
+            unsafe {
+                libc::openpty(
+                    &mut pty_master,
+                    &mut pty_slave,
+                    std::ptr::null_mut(),
+                    std::ptr::null(),
+                    std::ptr::null(),
+                )
+            },
+            0,
+        );
+
+        assert!(isatty(pty_master).unwrap());
+        assert!(isatty(pty_slave).unwrap());
+        ttyname(pty_master).unwrap();
+        ttyname(pty_slave).unwrap();
+
+        unsafe {
+            libc::close(pty_master);
+            libc::close(pty_slave);
+        }
+
+        // Pass a bad file descriptor
         assert_eq!(isatty(-1).unwrap_err().raw_os_error(), Some(libc::EBADF));
         assert_eq!(ttyname(-1).unwrap_err().raw_os_error(), Some(libc::EBADF));
     }
