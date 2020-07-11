@@ -1,11 +1,11 @@
-test_task:
+task:
   name: FreeBSD $FREEBSD_VERSION ($TOOLCHAIN)
 
-  freebsd_instance: &freebsd_instance
+  freebsd_instance:
     cpu: 1
     image_family: $FREEBSD_IMAGE
 
-  matrix: &freebsd_env_matrix
+  matrix:
     - env:
         FREEBSD_VERSION: 12.1
         FREEBSD_IMAGE: freebsd-12-1
@@ -34,32 +34,3 @@ test_task:
   test_script:
     - . $HOME/.cargo/env
     - cargo test
-
-# Based off of https://github.com/mozilla/grcov#grcov-with-travis
-grcov_task:
-  name: Grcov on FreeBSD $FREEBSD_VERSION ($TOOLCHAIN)
-
-  freebsd_instance: *freebsd_instance
-  matrix: *freebsd_env_matrix
-
-  env:
-    TARGET: x86_64-unknown-freebsd
-    TOOLCHAIN: nightly
-
-  install_script:
-    - pkg install -y curl
-    - curl -sSf https://sh.rustup.rs -o rustup.sh
-    - sh rustup.sh -y --profile default --default-toolchain $TOOLCHAIN
-    - cargo install grcov
-  grcov_script:
-    - . $HOME/.cargo/env
-    - |
-      export CARGO_INCREMENTAL=0
-      export RUSTFLAGS='-Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests -Cpanic=abort'
-      export RUSTDOCFLAGS='-Cpanic=abort'
-      cargo test --target=$TARGET
-    - |
-      set -e
-      zip -0 ccov.zip `find . \( -name "simple_libc*.gc*" \) -print`
-      ./grcov ccov.zip -s . -t lcov --llvm --branch --ignore-not-existing --ignore "/*" -o lcov.info
-    - JOB=coverage-grcov OS=freebsd bash <(curl -s https://codecov.io/bash) -e OS,TARGET,TOOLCHAIN,JOB -n "$TOOLCHAIN-$TARGET" -Z
