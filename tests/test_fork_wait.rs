@@ -2,7 +2,7 @@ use simple_libc::process::fork;
 use simple_libc::wait;
 
 #[test]
-fn test_fork() {
+fn test_fork_waitpid() {
     match fork().unwrap() {
         0 => std::process::exit(1),
         pid => {
@@ -14,6 +14,24 @@ fn test_fork() {
             assert_eq!(pid, wpid);
 
             assert_eq!(status, wait::ProcStatus::Exited(1));
+        }
+    }
+}
+
+#[test]
+fn test_fork_waitid() {
+    match fork().unwrap() {
+        0 => std::process::exit(1),
+        pid => {
+            let info =
+                wait::waitid(wait::WaitidSpec::Pid(pid), wait::WaitidOptions::EXITED)
+                    .unwrap()
+                    .unwrap();
+
+            assert_eq!(info.pid, pid);
+            assert_eq!(info.uid, simple_libc::process::getuid());
+
+            assert_eq!(info.status, wait::WaitidStatus::Exited(1));
         }
     }
 }
