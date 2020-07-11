@@ -355,5 +355,9 @@ mod tests {
     fn test_get_set_affinity() {
         let affinity = getaffinity(0).unwrap();
         setaffinity(0, &affinity).unwrap();
+
+        let pid = crate::process::getpid();
+        let affinity = getaffinity(pid).unwrap();
+        setaffinity(pid, &affinity).unwrap();
     }
 }
