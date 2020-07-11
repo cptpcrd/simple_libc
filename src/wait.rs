@@ -144,9 +144,20 @@ crate::attr_group! {
             WaitidSpec::Any => (libc::P_ALL, 0),
         };
 
-        crate::error::convert_nzero_ret(unsafe {
-            libc::waitid(idtype, id, &mut raw_info, options.bits())
-        })?;
+        #[cfg(target_os = "netbsd")]
+        let waitid_res = unsafe {
+            crate::externs::waitid(
+                idtype, id, &mut raw_info, options.bits(),
+            )
+        };
+        #[cfg(not(target_os = "netbsd"))]
+        let waitid_res = unsafe {
+            libc::waitid(
+                idtype, id, &mut raw_info, options.bits(),
+            )
+        };
+
+        crate::error::convert_nzero_ret(waitid_res)?;
 
         // On FreeBSD and DragonflyBSD, the siginfo_t struct defined in the libc crate
         // exposes the si_pid/si_uid/si_status fields.

@@ -23,6 +23,14 @@ extern "C" {
         ts: *const libc::timespec,
         sigmask: *const libc::sigset_t,
     ) -> libc::c_int;
+
+    #[cfg(target_os = "netbsd")]
+    pub fn waitid(
+        idtype: libc::idtype_t,
+        id: libc::id_t,
+        infop: *mut libc::siginfo_t,
+        options: libc::c_int,
+    ) -> libc::c_int;
 }
 
 #[cfg(any(
