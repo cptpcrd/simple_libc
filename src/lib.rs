@@ -911,13 +911,6 @@ mod tests {
         );
         drop(f);
 
-        let f = fs::File::open("/dev/tty").unwrap();
-        assert!(isatty(f.as_raw_fd()).unwrap());
-        assert_eq!(
-            ttyname(f.as_raw_fd()).unwrap(),
-            ffi::OsString::from("/dev/tty"),
-        );
-
         assert_eq!(isatty(-1).unwrap_err().raw_os_error(), Some(libc::EBADF));
         assert_eq!(ttyname(-1).unwrap_err().raw_os_error(), Some(libc::EBADF));
     }
