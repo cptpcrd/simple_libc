@@ -30,6 +30,11 @@ pub fn getpgid(pid: PidT) -> io::Result<PidT> {
 }
 
 #[inline]
+pub fn getsid(pid: PidT) -> io::Result<PidT> {
+    crate::error::convert_neg_ret(unsafe { libc::getsid(pid) })
+}
+
+#[inline]
 pub fn getpgrp() -> PidT {
     unsafe { libc::getpgrp() }
 }
@@ -771,5 +776,12 @@ mod tests {
 
         assert_eq!(getpgid(0).unwrap(), cur_pgid);
         assert_eq!(getpgid(getpid()).unwrap(), cur_pgid);
+    }
+
+    #[test]
+    fn test_sid() {
+        assert_eq!(getsid(1).unwrap(), 1);
+
+        assert_eq!(getsid(0).unwrap(), getsid(getpid()).unwrap());
     }
 }
