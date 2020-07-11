@@ -165,7 +165,7 @@ jobs:
           RUSTDOCFLAGS: -Cpanic=abort
 
       # Based off of https://github.com/mozilla/grcov#grcov-with-travis
-      - name: Download gcov
+      - name: Download grcov
         run: |
           case ${{ matrix.os }} in
             macos*)
