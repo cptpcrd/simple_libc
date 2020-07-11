@@ -428,10 +428,6 @@ pub fn gethostid() -> Long {
     unsafe { externs::gethostid() }
 }
 
-pub fn sethostid(hostid: Long) -> io::Result<()> {
-    error::convert_nzero_ret(unsafe { externs::sethostid(hostid) })
-}
-
 /// Attempts to read the current system hostname into the given slice.
 ///
 /// The result is null-terminated. Behavior in the case that the vector
