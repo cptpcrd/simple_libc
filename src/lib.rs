@@ -136,6 +136,40 @@ pub fn sysconf(name: Int) -> Option<Long> {
     }
 }
 
+pub fn pathconf_raw<P: AsRef<ffi::OsStr>>(path: P, name: Int) -> io::Result<Long> {
+    let c_path = ffi::CString::new(path.as_ref().as_bytes())?;
+
+    error::set_errno_success();
+    error::convert_if_errno_ret(unsafe { libc::pathconf(c_path.as_ptr(), name) })
+}
+
+pub fn pathconf<P: AsRef<ffi::OsStr>>(path: P, name: Int) -> Option<Long> {
+    let c_path = ffi::CString::new(path.as_ref().as_bytes()).ok()?;
+
+    let val = unsafe { libc::pathconf(c_path.as_ptr(), name) };
+
+    if val >= 0 {
+        Some(val)
+    } else {
+        None
+    }
+}
+
+pub fn fpathconf_raw(fd: Int, name: Int) -> io::Result<Long> {
+    error::set_errno_success();
+    error::convert_if_errno_ret(unsafe { libc::fpathconf(fd, name) })
+}
+
+pub fn fpathconf(fd: Int, name: Int) -> Option<Long> {
+    let val = unsafe { libc::fpathconf(fd, name) };
+
+    if val >= 0 {
+        Some(val)
+    } else {
+        None
+    }
+}
+
 /// Constrain a value to a particular range.
 ///
 /// This is included because sometimes when using `sysconf()`
@@ -889,5 +923,19 @@ mod tests {
     #[test]
     fn test_gethostid() {
         gethostid();
+    }
+
+    #[test]
+    fn test_pathconf() {
+        let f = fs::File::open("/").unwrap();
+
+        let val = pathconf("/", libc::_PC_NAME_MAX).unwrap();
+
+        assert_eq!(pathconf_raw("/", libc::_PC_NAME_MAX).unwrap(), val);
+        assert_eq!(fpathconf(f.as_raw_fd(), libc::_PC_NAME_MAX).unwrap(), val);
+        assert_eq!(
+            fpathconf_raw(f.as_raw_fd(), libc::_PC_NAME_MAX).unwrap(),
+            val,
+        );
     }
 }
