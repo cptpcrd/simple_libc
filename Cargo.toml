@@ -20,7 +20,6 @@ serde_full = ["serde", "strum_full"]
 [dependencies]
 libc = { version = "0.2", features = ["extra_traits"] }
 bitflags = "1.2"
-lazy_static = "1.4"
 
 strum = { version = "0.18", optional = true }
 strum_macros = { version = "0.18", optional = true }

@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::io;
 
-use lazy_static::lazy_static;
 pub use libc::{
     SIGABRT, SIGALRM, SIGBUS, SIGCHLD, SIGCONT, SIGFPE, SIGHUP, SIGILL, SIGINT, SIGKILL, SIGPIPE,
     SIGPROF, SIGQUIT, SIGSEGV, SIGSTOP, SIGSYS, SIGTERM, SIGTRAP, SIGTSTP, SIGTTIN, SIGTTOU,
@@ -21,8 +20,11 @@ pub fn can_catch(sig: Int) -> bool {
     }
 }
 
-lazy_static! {
-    static ref SIGNALS_BY_NAME: HashMap<&'static str, Int> = {
+fn get_signal_name_map() -> &'static HashMap<&'static str, Int> {
+    static mut SIG_NAME_MAP: Option<HashMap<&'static str, Int>> = None;
+    static INIT: std::sync::Once = std::sync::Once::new();
+
+    INIT.call_once(|| {
         let mut m = HashMap::new();
         m.insert("SIGABRT", SIGABRT);
         m.insert("SIGALRM", SIGALRM);
@@ -55,12 +57,16 @@ lazy_static! {
         #[cfg(target_os = "linux")]
         m.insert("SIGPOLL", SIGPOLL);
 
-        m
-    };
+        unsafe {
+            SIG_NAME_MAP = Some(m);
+        }
+    });
+
+    unsafe { SIG_NAME_MAP.as_ref().unwrap() }
 }
 
 pub fn sig_from_name(name: &str) -> Option<Int> {
-    SIGNALS_BY_NAME.get(name).copied()
+    get_signal_name_map().get(name).copied()
 }
 
 #[cfg(any(target_os = "linux", target_os = "freebsd", target_os = "netbsd"))]
