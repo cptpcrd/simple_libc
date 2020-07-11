@@ -193,7 +193,7 @@ pub fn getaffinity_raw(pid: PidT, mask: &mut [usize]) -> io::Result<()> {
     crate::error::convert_nzero_ret(unsafe {
         libc::sched_getaffinity(
             pid,
-            mask.len(),
+            mask.len() * std::mem::size_of::<usize>(),
             mask.as_mut_ptr() as *mut libc::c_void as *mut libc::cpu_set_t,
         )
     })
@@ -217,7 +217,7 @@ pub fn setaffinity_raw(pid: PidT, mask: &[usize]) -> io::Result<()> {
     crate::error::convert_nzero_ret(unsafe {
         libc::sched_setaffinity(
             pid,
-            mask.len(),
+            mask.len() * std::mem::size_of::<usize>(),
             mask.as_ptr() as *const libc::c_void as *const libc::cpu_set_t,
         )
     })
