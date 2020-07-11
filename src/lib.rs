@@ -127,9 +127,12 @@ pub fn sysconf_raw(name: Int) -> io::Result<Long> {
 /// no limit). To differentiate between these two
 /// possibilities, use `sysconf_raw()`.
 pub fn sysconf(name: Int) -> Option<Long> {
-    match sysconf_raw(name) {
-        Ok(ret) if ret >= 0 => Some(ret),
-        _ => None,
+    let val = unsafe { libc::sysconf(name) };
+
+    if val >= 0 {
+        Some(val)
+    } else {
+        None
     }
 }
 
@@ -799,5 +802,13 @@ mod tests {
     #[test]
     fn test_domainname() {
         getdomainname().unwrap();
+    }
+
+    #[test]
+    fn test_sysconf() {
+        assert_eq!(
+            sysconf(libc::_SC_NGROUPS_MAX),
+            sysconf_raw(libc::_SC_NGROUPS_MAX).ok(),
+        );
     }
 }
