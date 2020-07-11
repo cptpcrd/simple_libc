@@ -189,6 +189,11 @@ fn div_round_up(a: usize, b: usize) -> usize {
     if remainder == 0 { quotient } else { quotient + 1 }
 }
 
+#[inline]
+pub fn getcpu() -> usize {
+    unsafe { libc::sched_getcpu() as usize }
+}
+
 pub fn getaffinity_raw(pid: PidT, mask: &mut [usize]) -> io::Result<()> {
     crate::error::convert_nzero_ret(unsafe {
         libc::sched_getaffinity(
@@ -359,5 +364,13 @@ mod tests {
         let pid = crate::process::getpid();
         let affinity = getaffinity(pid).unwrap();
         setaffinity(pid, &affinity).unwrap();
+    }
+
+    #[test]
+    fn test_getcpu() {
+        let cpu = getcpu();
+        let affinity = getaffinity(0).unwrap();
+
+        assert!(affinity.has(cpu));
     }
 }
