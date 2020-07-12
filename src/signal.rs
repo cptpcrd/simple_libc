@@ -149,6 +149,13 @@ impl Sigset {
     }
 }
 
+impl AsRef<libc::sigset_t> for Sigset {
+    #[inline]
+    fn as_ref(&self) -> &libc::sigset_t {
+        &self.set
+    }
+}
+
 impl From<libc::sigset_t> for Sigset {
     #[inline]
     fn from(set: libc::sigset_t) -> Sigset {
