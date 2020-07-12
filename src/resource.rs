@@ -228,8 +228,8 @@ pub fn prlimit(
 ///
 /// 1. On some platforms, it may only be possible to *get* resource limits for other
 ///    processes, not set new ones. In that case, an `ENOTSUP` error will be returned if
-///    a) new limits are passed and b) the `pid` is not either 0 or the current process's
-///    PID.
+///    new limits are passed. (This is true even if `pid` is 0 or the current process's
+///    PID).
 /// 2. Getting the original limits and setting the new limits, as well as
 ///    getting/setting the soft limit and getting/setting the hard limit, may be
 ///    performed as separate operations. Besides the implications of this for performance
@@ -334,18 +334,9 @@ fn proc_rlimit_impl(
 ) -> io::Result<(Limit, Limit)> {
     use std::io::BufRead;
 
-    if let Some(lims) = new_limits {
-        if pid == 0 || pid == crate::process::getpid() {
-            // Fall back on getrlimit() and setrlimit()
-            let old_lims = getrlimit(resource)?;
-
-            setrlimit(resource, lims)?;
-
-            return Ok(old_lims);
-        } else {
-            // Can't set rlimits for other processes
-            return Err(io::Error::from_raw_os_error(libc::ENOTSUP));
-        }
+    if new_limits.is_some() {
+        // Can't set rlimits
+        return Err(io::Error::from_raw_os_error(libc::ENOTSUP));
     }
 
     let prefix = match resource {
@@ -605,11 +596,31 @@ mod tests {
 
             assert_eq!(getrlimit(res).unwrap(), limits);
 
-            assert_eq!(proc_rlimit(0, res, Some(limits)).unwrap(), limits);
-            assert_eq!(proc_rlimit(0, res, None).unwrap(), limits);
+            #[cfg(not(target_os = "dragonfly"))]
+            {
+                assert_eq!(proc_rlimit(0, res, Some(limits)).unwrap(), limits);
+                assert_eq!(proc_rlimit(0, res, None).unwrap(), limits);
 
-            assert_eq!(proc_rlimit(pid, res, Some(limits)).unwrap(), limits);
-            assert_eq!(proc_rlimit(pid, res, None).unwrap(), limits);
+                assert_eq!(proc_rlimit(pid, res, Some(limits)).unwrap(), limits);
+                assert_eq!(proc_rlimit(pid, res, None).unwrap(), limits);
+            }
+        }
+
+        #[cfg(target_os = "dragonfly")]
+        {
+            assert_eq!(
+                proc_rlimit(0, Resource::DATA, Some(limits))
+                    .unwrap_err()
+                    .raw_os_error(),
+                Some(libc::ENOTSUP),
+            );
+
+            assert_eq!(
+                proc_rlimit(pid, Resource::DATA, Some(limits))
+                    .unwrap_err()
+                    .raw_os_error(),
+                Some(libc::ENOTSUP),
+            );
         }
 
         assert_eq!(
