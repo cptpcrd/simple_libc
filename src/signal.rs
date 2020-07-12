@@ -66,6 +66,27 @@ fn get_signal_name_map() -> &'static HashMap<&'static str, Int> {
 }
 
 pub fn sig_from_name(name: &str) -> Option<Int> {
+    #[cfg(any(
+        target_os = "linux",
+        target_os = "freebsd",
+        target_os = "netbsd",
+    ))]
+    {
+        if name.starts_with("SIGRTMIN+") {
+            if let Ok(incr) = name[9..].parse::<Int>() {
+                if let Ok(range) = get_rtsig_range() {
+                    let sig = range.start() + incr;
+
+                    if range.contains(&sig) {
+                        return Some(sig);
+                    }
+                }
+            }
+
+            return None;
+        }
+    }
+
     get_signal_name_map().get(name).copied()
 }
 
@@ -188,6 +209,39 @@ mod tests {
 
         #[cfg(target_os = "linux")]
         assert_eq!(sig_from_name("SIGPOLL"), Some(SIGPOLL));
+
+        #[cfg(any(
+            target_os = "linux",
+            target_os = "freebsd",
+            target_os = "netbsd",
+        ))]
+        {
+            let (sigrtmin, sigrtmax) = get_rtsig_minmax().unwrap();
+
+            assert_eq!(sig_from_name("SIGRTMIN+0"), Some(sigrtmin));
+            assert_eq!(sig_from_name("SIGRTMIN+1"), Some(sigrtmin + 1));
+            assert_eq!(
+                sig_from_name(&("SIGRTMIN+".to_string() + &(sigrtmax - sigrtmin).to_string())),
+                Some(sigrtmax),
+            );
+
+            // Try going out of bounds
+            assert_eq!(sig_from_name("SIGRTMIN+-1"), None);
+            assert_eq!(
+                sig_from_name(&("SIGRTMIN+".to_string() + &(sigrtmax - sigrtmin + 1).to_string())),
+                None,
+            );
+        }
+
+        #[cfg(not(any(
+            target_os = "linux",
+            target_os = "freebsd",
+            target_os = "netbsd",
+        )))]
+        {
+            assert_eq!(sig_from_name("SIGRTMIN+0"), None);
+            assert_eq!(sig_from_name("SIGRTMIN+1"), None);
+        }
     }
 
     #[test]
