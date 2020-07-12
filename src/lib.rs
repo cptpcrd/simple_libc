@@ -694,18 +694,14 @@ pub fn openpty_raw(
     let mut master = 0;
     let mut slave = 0;
 
-    let termp = match termp.as_mut() {
-        Some(t) => t,
-        None => std::ptr::null_mut(),
-    };
-
-    let winp = match winp.as_mut() {
-        Some(t) => t,
-        None => std::ptr::null_mut(),
-    };
-
     error::convert_nzero_ret(unsafe {
-        libc::openpty(&mut master, &mut slave, std::ptr::null_mut(), termp, winp)
+        libc::openpty(
+            &mut master,
+            &mut slave,
+            std::ptr::null_mut(),
+            crate::internal::ptr_from_opt_mut(termp.as_mut()),
+            crate::internal::ptr_from_opt_mut(winp.as_mut()),
+        )
     })?;
 
     Ok((master, slave))

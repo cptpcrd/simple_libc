@@ -135,10 +135,7 @@ pub fn build_fdset_opt_slice(fds: &[Int], mut nfds: Int) -> (Option<FdSet>, Int)
 
 #[inline]
 fn raw_opt_fdset(set: Option<&mut FdSet>) -> *mut libc::fd_set {
-    match set {
-        Some(s) => &mut s.raw,
-        None => std::ptr::null_mut(),
-    }
+    crate::internal::ptr_from_opt_mut(set.map(|s| &mut s.raw))
 }
 
 pub fn pselect_raw(
@@ -157,10 +154,7 @@ pub fn pselect_raw(
         None => std::ptr::null(),
     };
 
-    let raw_sigmask = match sigmask {
-        Some(s) => &s.raw_set(),
-        None => std::ptr::null(),
-    };
+    let raw_sigmask = crate::internal::ptr_from_opt_ref(sigmask.as_ref().map(Sigset::as_ref));
 
     let n = crate::error::convert_neg_ret(unsafe {
         libc::pselect(

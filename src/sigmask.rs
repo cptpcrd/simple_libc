@@ -6,10 +6,7 @@ use crate::Int;
 fn sigmask(how: Int, set: Option<&Sigset>) -> io::Result<Sigset> {
     let oldset = Sigset::empty();
 
-    let raw_set = match set {
-        Some(s) => &s.raw_set(),
-        None => std::ptr::null(),
-    };
+    let raw_set = crate::internal::ptr_from_opt_ref(set.map(Sigset::as_ref));
 
     match unsafe { libc::pthread_sigmask(how, raw_set, &mut oldset.raw_set()) } {
         0 => Ok(oldset),

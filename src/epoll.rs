@@ -218,10 +218,7 @@ impl Epoll {
             None => -1,
         };
 
-        let raw_sigmask = match sigmask {
-            Some(s) => &s.raw_set(),
-            None => std::ptr::null(),
-        };
+        let raw_sigmask = crate::internal::ptr_from_opt_ref(sigmask.as_ref().map(crate::signal::Sigset::as_ref));
 
         let n = crate::error::convert_neg_ret(unsafe {
             libc::epoll_pwait(
