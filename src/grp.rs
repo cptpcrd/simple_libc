@@ -32,15 +32,11 @@ impl Group {
     ///    (or C functions that call them).
     /// 4. Calling `pwd::Passwd::list_groups_single_thread()`.
     pub unsafe fn list_single_thread() -> io::Result<Vec<Self>> {
-        let groups;
-        let err;
-
         // Only hold onto the reference for as long as we have to
-        {
-            let mut group_iter = Self::iter_single_thread_dangerous();
-            groups = group_iter.by_ref().collect();
-            err = group_iter.get_error();
-        }
+        let mut group_iter = Self::iter_single_thread_dangerous();
+        let groups = group_iter.by_ref().collect();
+        let err = group_iter.get_error();
+        drop(group_iter);
 
         match err {
             Some(e) => Err(e),

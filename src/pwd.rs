@@ -34,15 +34,11 @@ impl Passwd {
     ///    `getpwent()`, `getpwent_r()`, `endpwent()`, `getpwuid()`, `getpwnam()`
     ///    (or C functions that call them).
     pub unsafe fn list_single_thread() -> io::Result<Vec<Self>> {
-        let passwds;
-        let err;
-
         // Only hold onto the reference for as long as we have to
-        {
-            let mut passwd_iter = Self::iter_single_thread_dangerous();
-            passwds = passwd_iter.by_ref().collect();
-            err = passwd_iter.get_error();
-        }
+        let mut passwd_iter = Self::iter_single_thread_dangerous();
+        let passwds = passwd_iter.by_ref().collect();
+        let err = passwd_iter.get_error();
+        drop(passwd_iter);
 
         match err {
             Some(e) => Err(e),
