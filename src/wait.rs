@@ -2,7 +2,7 @@ use std::io;
 
 use bitflags::bitflags;
 
-use crate::{IdT, Int, PidT};
+use crate::{Int, PidT};
 
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
 pub enum ProcStatus {
@@ -95,7 +95,7 @@ crate::attr_group! {
     ))]
 
     use crate::constants;
-    use crate::UidT;
+    use crate::{IdT, UidT};
 
     #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
     pub enum WaitidSpec {
