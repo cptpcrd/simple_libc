@@ -217,6 +217,10 @@ mod tests {
                 Some(sigrtmax),
             );
 
+            // Bad number
+            assert_eq!(sig_from_name("SIGRTMIN+"), None);
+            assert_eq!(sig_from_name("SIGRTMIN+d"), None);
+
             // Try going out of bounds
             assert_eq!(sig_from_name("SIGRTMIN+-1"), None);
             assert_eq!(
