@@ -66,11 +66,7 @@ fn get_signal_name_map() -> &'static HashMap<&'static str, Int> {
 }
 
 pub fn sig_from_name(name: &str) -> Option<Int> {
-    #[cfg(any(
-        target_os = "linux",
-        target_os = "freebsd",
-        target_os = "netbsd",
-    ))]
+    #[cfg(any(target_os = "linux", target_os = "freebsd", target_os = "netbsd"))]
     {
         if name.starts_with("SIGRTMIN+") {
             if let Ok(incr) = name[9..].parse::<Int>() {
@@ -210,11 +206,7 @@ mod tests {
         #[cfg(target_os = "linux")]
         assert_eq!(sig_from_name("SIGPOLL"), Some(SIGPOLL));
 
-        #[cfg(any(
-            target_os = "linux",
-            target_os = "freebsd",
-            target_os = "netbsd",
-        ))]
+        #[cfg(any(target_os = "linux", target_os = "freebsd", target_os = "netbsd"))]
         {
             let (sigrtmin, sigrtmax) = get_rtsig_minmax().unwrap();
 
@@ -233,11 +225,7 @@ mod tests {
             );
         }
 
-        #[cfg(not(any(
-            target_os = "linux",
-            target_os = "freebsd",
-            target_os = "netbsd",
-        )))]
+        #[cfg(not(any(target_os = "linux", target_os = "freebsd", target_os = "netbsd")))]
         {
             assert_eq!(sig_from_name("SIGRTMIN+0"), None);
             assert_eq!(sig_from_name("SIGRTMIN+1"), None);
