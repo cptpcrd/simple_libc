@@ -321,7 +321,12 @@ pub fn build_grouplist_inplace(gid: GidT, groups: &mut Vec<GidT>) {
 }
 
 crate::attr_group! {
-    #![cfg(any(target_os = "linux", target_os = "freebsd", target_os = "openbsd", target_os = "dragonfly"))]
+    #![cfg(any(
+        target_os = "linux",
+        target_os = "freebsd",
+        target_os = "openbsd",
+        target_os = "dragonfly",
+    ))]
 
     pub fn getresuid() -> (UidT, UidT, UidT) {
         let mut ruid = 0;
@@ -393,7 +398,12 @@ crate::attr_group! {
 }
 
 crate::attr_group! {
-    #![cfg(not(any(target_os = "linux", target_os = "freebsd", target_os = "openbsd", target_os = "dragonfly")))]
+    #![cfg(not(any(
+        target_os = "linux",
+        target_os = "freebsd",
+        target_os = "openbsd",
+        target_os = "dragonfly",
+    )))]
 
     fn getreuid_impl() -> (UidT, UidT) {
         (getuid(), geteuid())
