@@ -6,6 +6,16 @@ use bitflags::bitflags;
 
 use crate::{Int, Short};
 
+#[cfg(target_os = "netbsd")]
+use crate::externs::pollts as libc_ppoll;
+#[cfg(any(
+    target_os = "linux",
+    target_os = "freebsd",
+    target_os = "openbsd",
+    target_os = "dragonfly",
+))]
+use libc::ppoll as libc_ppoll;
+
 bitflags! {
     #[repr(transparent)]
     pub struct Events: Short {
@@ -58,26 +68,6 @@ pub fn poll(fds: &mut [PollFd], timeout: Option<Duration>) -> io::Result<usize> 
     Ok(n as usize)
 }
 
-#[cfg(target_os = "netbsd")]
-const LIBC_PPOLL: unsafe extern "C" fn(
-    *mut libc::pollfd,
-    libc::nfds_t,
-    *const libc::timespec,
-    *const libc::sigset_t,
-) -> libc::c_int = crate::externs::pollts;
-#[cfg(any(
-    target_os = "linux",
-    target_os = "freebsd",
-    target_os = "openbsd",
-    target_os = "dragonfly",
-))]
-const LIBC_PPOLL: unsafe extern "C" fn(
-    *mut libc::pollfd,
-    libc::nfds_t,
-    *const libc::timespec,
-    *const libc::sigset_t,
-) -> libc::c_int = libc::ppoll;
-
 #[cfg(any(
     target_os = "linux",
     target_os = "freebsd",
@@ -102,7 +92,7 @@ pub fn ppoll(
         crate::internal::ptr_from_opt_ref(sigmask.as_ref().map(crate::signal::Sigset::as_ref));
 
     let n = crate::error::convert_neg_ret(unsafe {
-        LIBC_PPOLL(
+        libc_ppoll(
             fds.as_mut_ptr() as *mut libc::pollfd,
             fds.len() as libc::nfds_t,
             raw_timeout,
