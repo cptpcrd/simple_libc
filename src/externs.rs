@@ -12,11 +12,12 @@ extern "C" {
 
     #[cfg(any(target_os = "freebsd", target_os = "openbsd", target_os = "dragonfly"))]
     pub fn reboot(howto: libc::c_int) -> libc::c_int;
+}
 
-    #[cfg(target_os = "netbsd")]
+#[cfg(target_os = "netbsd")]
+extern "C" {
     pub fn reboot(howto: libc::c_int, bootstr: *mut libc::c_char) -> libc::c_int;
 
-    #[cfg(target_os = "netbsd")]
     pub fn pollts(
         fds: *mut libc::pollfd,
         nfds: libc::nfds_t,
@@ -24,7 +25,6 @@ extern "C" {
         sigmask: *const libc::sigset_t,
     ) -> libc::c_int;
 
-    #[cfg(target_os = "netbsd")]
     pub fn waitid(
         idtype: libc::idtype_t,
         id: libc::id_t,
