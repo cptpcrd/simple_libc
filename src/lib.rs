@@ -23,6 +23,7 @@ pub mod priority;
 pub mod process;
 pub mod pwd;
 pub mod resource;
+pub mod rusage;
 pub mod select;
 pub mod sigaction;
 pub mod sigmask;
