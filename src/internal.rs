@@ -80,6 +80,16 @@ pub fn minus_one_unsigned<T: MinusOneUnsigned>() -> T {
     T::minus_one()
 }
 
+#[inline]
+pub fn ptr_from_opt_ref<T>(val: Option<&T>) -> *const T {
+    val.map(|v| v as *const T).unwrap_or_else(std::ptr::null)
+}
+
+#[inline]
+pub fn ptr_from_opt_mut<T>(val: Option<&mut T>) -> *mut T {
+    val.map(|v| v as *mut T).unwrap_or_else(std::ptr::null_mut)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -119,5 +129,16 @@ mod tests {
         assert_eq!(minus_one_unsigned::<u64>(), (-1i64) as u64);
         assert_eq!(minus_one_unsigned::<u128>(), (-1i128) as u128);
         assert_eq!(minus_one_unsigned::<usize>(), (-1isize) as usize);
+    }
+
+    #[test]
+    fn test_ptr_from_opt_ref_mut() {
+        let mut a: u32 = 0;
+
+        assert_eq!(ptr_from_opt_ref(Some(&a)), &a);
+        assert_eq!(ptr_from_opt_mut(Some(&mut a)), &mut a as *mut u32);
+
+        assert!(ptr_from_opt_ref::<u32>(None).is_null());
+        assert!(ptr_from_opt_mut::<u32>(None).is_null());
     }
 }
