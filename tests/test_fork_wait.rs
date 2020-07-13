@@ -58,11 +58,7 @@ fn test_fork_waitid() {
     }
 }
 
-#[cfg(any(
-    target_os = "netbsd",
-    target_os = "freebsd",
-    target_os = "dragonfly",
-))]
+#[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
 #[test]
 fn test_fork_wait6() {
     match fork().unwrap() {
