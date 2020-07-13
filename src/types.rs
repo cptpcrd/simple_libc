@@ -98,3 +98,10 @@ crate::attr_group! {
         pub si_status: libc::c_int,
     }
 }
+
+#[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
+#[repr(C)]
+pub struct wrusage {
+    pub wru_self: libc::rusage,
+    pub wru_children: libc::rusage,
+}

@@ -293,44 +293,27 @@ crate::attr_group! {
         spec: WaitidSpec,
         options: WaitidOptions,
     ) -> io::Result<Option<(ProcStatus, WaitidInfo, Rusage, Rusage)>> {
+        let mut status = 0;
         let mut raw_info: libc::siginfo_t = unsafe { std::mem::zeroed() };
+        let mut wrusage: crate::types::wrusage = unsafe { std::mem::zeroed() };
 
         let (idtype, id) = spec.unpack();
 
-        let waitid_res = unsafe {
+        let pid = crate::error::convert_neg_ret(unsafe {
             crate::externs::wait6(
-                idtype, id, &mut raw_info, options.bits(),
+                idtype, id, &mut status, options.bits(), &mut wrusage, &mut raw_info
             )
-        };
+        })?;
 
-        crate::error::convert_nzero_ret(wait6_res)?;
+        if pid != 0 {
+            let info = WaitidInfo::from_raw_siginfo(&raw_info)?.unwrap();
 
-        // On FreeBSD and DragonflyBSD, the siginfo_t struct defined in the libc crate
-        // exposes the si_pid/si_uid/si_status fields.
-        #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
-        let wait_info = &raw_info;
-        // On Linux/NetBSD, we have to pull them out with the help of a special struct.
-        #[cfg(any(target_os = "linux", target_os = "netbsd"))]
-        let wait_info = unsafe {
-            &*(&raw_info as *const libc::siginfo_t as *const crate::types::waitpid_siginfo)
-        };
-
-        if raw_info.si_signo == libc::SIGCHLD && wait_info.si_pid != 0 {
-            let status = match raw_info.si_code {
-                constants::CLD_EXITED => WaitidStatus::Exited(wait_info.si_status),
-                constants::CLD_KILLED => WaitidStatus::Killed(wait_info.si_status),
-                constants::CLD_DUMPED => WaitidStatus::Dumped(wait_info.si_status),
-                constants::CLD_STOPPED => WaitidStatus::Stopped,
-                constants::CLD_TRAPPED => WaitidStatus::Trapped,
-                constants::CLD_CONTINUED => WaitidStatus::Continued,
-                _ => return Err(io::Error::from_raw_os_error(libc::EINVAL)),
-            };
-
-            Ok(Some(WaitidInfo {
-                pid: wait_info.si_pid,
-                uid: wait_info.si_uid,
-                status,
-            }))
+            Ok(Some((
+                ProcStatus::from_raw_status(status),
+                info,
+                Rusage::from(&wrusage.wru_self),
+                Rusage::from(&wrusage.wru_children),
+            )))
         } else {
             Ok(None)
         }

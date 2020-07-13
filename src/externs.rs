@@ -12,6 +12,16 @@ extern "C" {
 
     #[cfg(any(target_os = "freebsd", target_os = "openbsd", target_os = "dragonfly"))]
     pub fn reboot(howto: libc::c_int) -> libc::c_int;
+
+    #[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
+    pub fn wait6(
+        idtype: libc::idtype_t,
+        id: libc::id_t,
+        status: *mut libc::c_int,
+        options: libc::c_int,
+        wrusage: *mut crate::types::wrusage,
+        infop: *mut libc::siginfo_t,
+    ) -> libc::pid_t;
 }
 
 #[cfg(target_os = "netbsd")]
