@@ -122,8 +122,6 @@ mod tests {
     #[test]
     fn test_sub() {
         let rusage_a = get(Target::CurProc);
-        // Try to force a contact switch without changing anything
-        crate::process::setreuid2(None, None).unwrap();
         let rusage_b = get(Target::CurProc);
 
         assert!(rusage_b.checked_sub(rusage_a).is_some());
