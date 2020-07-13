@@ -129,9 +129,5 @@ mod tests {
         let _ = rusage_b - rusage_a;
 
         assert!(rusage_a.checked_sub(rusage_b).is_none());
-        std::panic::catch_unwind(|| {
-            let _ = rusage_a - rusage_b;
-        })
-        .unwrap_err();
     }
 }
