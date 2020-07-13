@@ -18,6 +18,23 @@ fn test_fork_waitpid() {
     }
 }
 
+#[test]
+fn test_fork_wait4() {
+    match fork().unwrap() {
+        0 => std::process::exit(1),
+        pid => {
+            let (wpid, status, _rusage) =
+                wait::wait4(wait::WaitpidSpec::Pid(pid), wait::WaitpidOptions::empty())
+                    .unwrap()
+                    .unwrap();
+
+            assert_eq!(pid, wpid);
+
+            assert_eq!(status, wait::ProcStatus::Exited(1));
+        }
+    }
+}
+
 #[cfg(any(
     target_os = "linux",
     target_os = "netbsd",
