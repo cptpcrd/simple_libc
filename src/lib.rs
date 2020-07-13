@@ -2,6 +2,7 @@ use std::cmp;
 use std::ffi;
 use std::fs;
 use std::io;
+
 use std::os::unix::prelude::*;
 
 mod constants;
@@ -28,6 +29,7 @@ pub mod select;
 pub mod sigaction;
 pub mod sigmask;
 pub mod signal;
+pub mod time;
 pub mod wait;
 
 #[cfg(any(

@@ -127,6 +127,11 @@ crate::attr_group! {
     pub const RB_POWERDOWN: Int = 0x1000;
     pub const RB_NOSYNC: Int = 0x0004;
     // END USED by power.rs
+
+    // BEGIN USED by time.rs
+    pub const CLOCK_UPTIME: libc::clockid_t = 5;
+    pub const CLOCK_BOOTTIME: libc::clockid_t = 6;
+    // END USED by time.rs
 }
 
 crate::attr_group! {
@@ -249,4 +254,5 @@ crate::attr_group! {
     #![cfg(target_os = "macos")]
 
     pub const XU_NGROUPS: crate::Int = 16;
+    pub const CLOCK_UPTIME_RAW: libc::clockid_t = 8;
 }
