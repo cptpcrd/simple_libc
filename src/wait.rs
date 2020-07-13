@@ -2,6 +2,7 @@ use std::io;
 
 use bitflags::bitflags;
 
+use crate::rusage::Rusage;
 use crate::{Int, PidT};
 
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
@@ -90,6 +91,27 @@ pub fn waitpid(
     Ok(match pid {
         0 => None,
         _ => Some((pid, ProcStatus::from_raw_status(status))),
+    })
+}
+
+pub fn wait4(
+    spec: WaitpidSpec,
+    options: WaitpidOptions,
+) -> io::Result<Option<(PidT, ProcStatus, Rusage)>> {
+    let mut status: Int = 0;
+    let mut rusage: libc::rusage = unsafe { std::mem::zeroed() };
+
+    let pid = crate::error::convert_neg_ret(unsafe {
+        libc::wait4(spec.to_wpid()?, &mut status, options.bits, &mut rusage)
+    })?;
+
+    Ok(match pid {
+        0 => None,
+        _ => Some((
+            pid,
+            ProcStatus::from_raw_status(status),
+            Rusage::from(&rusage),
+        )),
     })
 }
 
