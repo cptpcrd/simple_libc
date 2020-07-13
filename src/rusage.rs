@@ -12,6 +12,7 @@ pub enum Target {
     CurThread = libc::RUSAGE_THREAD as isize,
 }
 
+#[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq)]
 pub struct Rusage {
     pub utime: Duration,
     pub stime: Duration,
