@@ -69,7 +69,7 @@ fn test_fork_wait6() {
         0 => std::process::exit(1),
         pid => {
             let (status, info, _self_rusage, _child_rusage) =
-                wait::wait6(wait::WaitidSpec::Pid(pid), wait::WaitidOptions::empty())
+                wait::wait6(wait::WaitidSpec::Pid(pid), wait::WaitidOptions::EXITED)
                     .unwrap()
                     .unwrap();
 
