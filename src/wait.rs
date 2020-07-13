@@ -133,6 +133,16 @@ crate::attr_group! {
         Any,
     }
 
+    impl WaitidSpec {
+        fn unpack(&self) -> (libc::idtype_t, IdT) {
+            match *self {
+                Self::Pid(pid) => (libc::P_PID, pid as IdT),
+                Self::Pgid(pgid) => (libc::P_PGID, pgid as IdT),
+                Self::Any => (libc::P_ALL, 0),
+            }
+        }
+    }
+
     bitflags! {
         #[derive(Default)]
         pub struct WaitidOptions: Int {
@@ -167,11 +177,7 @@ crate::attr_group! {
     ) -> io::Result<Option<WaitidInfo>> {
         let mut raw_info: libc::siginfo_t = unsafe { std::mem::zeroed() };
 
-        let (idtype, id) = match spec {
-            WaitidSpec::Pid(pid) => (libc::P_PID, pid as IdT),
-            WaitidSpec::Pgid(pgid) => (libc::P_PGID, pgid as IdT),
-            WaitidSpec::Any => (libc::P_ALL, 0),
-        };
+        let (idtype, id) = spec.unpack();
 
         #[cfg(target_os = "netbsd")]
         let waitid_res = unsafe {
