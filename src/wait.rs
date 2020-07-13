@@ -45,6 +45,29 @@ pub enum WaitpidSpec {
     CurrentPgid,
 }
 
+impl WaitpidSpec {
+    fn to_wpid(&self) -> io::Result<PidT> {
+        match *self {
+            Self::Pid(pid) => {
+                if pid <= 0 {
+                    Err(io::Error::from_raw_os_error(libc::EINVAL))
+                } else {
+                    Ok(pid)
+                }
+            }
+            Self::Pgid(pgid) => {
+                if pgid <= 1 {
+                    Err(io::Error::from_raw_os_error(libc::EINVAL))
+                } else {
+                    Ok(-pgid)
+                }
+            }
+            Self::Any => Ok(-1),
+            Self::CurrentPgid => Ok(0),
+        }
+    }
+}
+
 bitflags! {
     #[derive(Default)]
     pub struct WaitpidOptions: Int {
@@ -58,27 +81,11 @@ pub fn waitpid(
     spec: WaitpidSpec,
     options: WaitpidOptions,
 ) -> io::Result<Option<(PidT, ProcStatus)>> {
-    let wpid = match spec {
-        WaitpidSpec::Pid(pid) => {
-            if pid <= 0 {
-                return Err(io::Error::from_raw_os_error(libc::EINVAL));
-            }
-            pid
-        }
-        WaitpidSpec::Pgid(pgid) => {
-            if pgid <= 1 {
-                return Err(io::Error::from_raw_os_error(libc::EINVAL));
-            }
-            -pgid
-        }
-        WaitpidSpec::Any => -1,
-        WaitpidSpec::CurrentPgid => 0,
-    };
-
     let mut status: Int = 0;
 
-    let pid =
-        crate::error::convert_neg_ret(unsafe { libc::waitpid(wpid, &mut status, options.bits) })?;
+    let pid = crate::error::convert_neg_ret(unsafe {
+        libc::waitpid(spec.to_wpid()?, &mut status, options.bits)
+    })?;
 
     Ok(match pid {
         0 => None,
