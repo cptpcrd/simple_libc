@@ -32,6 +32,37 @@ pub struct Rusage {
     pub nivcsw: u64,
 }
 
+impl Rusage {
+    fn checked_sub(self, rhs: Self) -> Option<Self> {
+        Some(Self {
+            utime: self.utime.checked_sub(rhs.utime)?,
+            stime: self.stime.checked_sub(rhs.stime)?,
+            maxrss: self.maxrss.checked_sub(rhs.maxrss)?,
+            ixrss: self.ixrss.checked_sub(rhs.ixrss)?,
+            idrss: self.idrss.checked_sub(rhs.idrss)?,
+            isrss: self.isrss.checked_sub(rhs.isrss)?,
+            minflt: self.minflt.checked_sub(rhs.minflt)?,
+            majflt: self.majflt.checked_sub(rhs.majflt)?,
+            nswap: self.nswap.checked_sub(rhs.nswap)?,
+            inblock: self.inblock.checked_sub(rhs.inblock)?,
+            oublock: self.oublock.checked_sub(rhs.oublock)?,
+            msgsnd: self.msgsnd.checked_sub(rhs.msgsnd)?,
+            msgrcv: self.msgrcv.checked_sub(rhs.msgrcv)?,
+            nsignals: self.nsignals.checked_sub(rhs.nsignals)?,
+            nvcsw: self.nvcsw.checked_sub(rhs.nvcsw)?,
+            nivcsw: self.nivcsw.checked_sub(rhs.nivcsw)?,
+        })
+    }
+}
+
+impl std::ops::Sub for Rusage {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self {
+        self.checked_sub(rhs).unwrap()
+    }
+}
+
 impl From<&libc::rusage> for Rusage {
     fn from(r: &libc::rusage) -> Self {
         Self {
@@ -88,5 +119,22 @@ mod tests {
         get(Target::CurProc);
         #[cfg(any(target_os = "linux", target_os = "openbsd", target_os = "freebsd"))]
         get(Target::CurThread);
+    }
+
+    #[test]
+    fn test_sub() {
+        let rusage_a = get(Target::CurProc);
+        // Try to force a contact switch without changing anything
+        crate::process::setreuid2(None, None).unwrap();
+        let rusage_b = get(Target::CurProc);
+
+        assert!(rusage_b.checked_sub(rusage_a).is_some());
+        let _ = rusage_b - rusage_a;
+
+        assert!(rusage_a.checked_sub(rusage_b).is_none());
+        std::panic::catch_unwind(|| {
+            let _ = rusage_a - rusage_b;
+        })
+        .unwrap_err();
     }
 }
