@@ -210,11 +210,49 @@ crate::attr_group! {
         Continued,
     }
 
+    impl WaitidStatus {
+        fn from_raw_code_status(code: Int, status: Int) -> io::Result<Self> {
+            match code {
+                constants::CLD_EXITED => Ok(WaitidStatus::Exited(status)),
+                constants::CLD_KILLED => Ok(WaitidStatus::Killed(status)),
+                constants::CLD_DUMPED => Ok(WaitidStatus::Dumped(status)),
+                constants::CLD_STOPPED => Ok(WaitidStatus::Stopped),
+                constants::CLD_TRAPPED => Ok(WaitidStatus::Trapped),
+                constants::CLD_CONTINUED => Ok(WaitidStatus::Continued),
+                _ => Err(io::Error::from_raw_os_error(libc::EINVAL)),
+            }
+        }
+    }
+
     #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
     pub struct WaitidInfo {
         pub pid: PidT,
         pub uid: UidT,
         pub status: WaitidStatus,
+    }
+
+    impl WaitidInfo {
+        fn from_raw_siginfo(raw_info: &libc::siginfo_t) -> io::Result<Option<Self>> {
+            // On FreeBSD and DragonflyBSD, the siginfo_t struct defined in the libc crate
+            // exposes the si_pid/si_uid/si_status fields.
+            #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
+            let wait_info = raw_info;
+            // On Linux/NetBSD, we have to pull them out with the help of a special struct.
+            #[cfg(any(target_os = "linux", target_os = "netbsd"))]
+            let wait_info = unsafe {
+                &*(raw_info as *const libc::siginfo_t as *const crate::types::waitpid_siginfo)
+            };
+
+            if raw_info.si_signo == libc::SIGCHLD && wait_info.si_pid != 0 {
+                Ok(Some(WaitidInfo {
+                    pid: wait_info.si_pid,
+                    uid: wait_info.si_uid,
+                    status: WaitidStatus::from_raw_code_status(raw_info.si_code, wait_info.si_status)?,
+                }))
+            } else {
+                Ok(None)
+            }
+        }
     }
 
     pub fn waitid(
@@ -240,35 +278,7 @@ crate::attr_group! {
 
         crate::error::convert_nzero_ret(waitid_res)?;
 
-        // On FreeBSD and DragonflyBSD, the siginfo_t struct defined in the libc crate
-        // exposes the si_pid/si_uid/si_status fields.
-        #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
-        let wait_info = &raw_info;
-        // On Linux/NetBSD, we have to pull them out with the help of a special struct.
-        #[cfg(any(target_os = "linux", target_os = "netbsd"))]
-        let wait_info = unsafe {
-            &*(&raw_info as *const libc::siginfo_t as *const crate::types::waitpid_siginfo)
-        };
-
-        if raw_info.si_signo == libc::SIGCHLD && wait_info.si_pid != 0 {
-            let status = match raw_info.si_code {
-                constants::CLD_EXITED => WaitidStatus::Exited(wait_info.si_status),
-                constants::CLD_KILLED => WaitidStatus::Killed(wait_info.si_status),
-                constants::CLD_DUMPED => WaitidStatus::Dumped(wait_info.si_status),
-                constants::CLD_STOPPED => WaitidStatus::Stopped,
-                constants::CLD_TRAPPED => WaitidStatus::Trapped,
-                constants::CLD_CONTINUED => WaitidStatus::Continued,
-                _ => return Err(io::Error::from_raw_os_error(libc::EINVAL)),
-            };
-
-            Ok(Some(WaitidInfo {
-                pid: wait_info.si_pid,
-                uid: wait_info.si_uid,
-                status,
-            }))
-        } else {
-            Ok(None)
-        }
+        WaitidInfo::from_raw_siginfo(&raw_info)
     }
 }
 
