@@ -57,3 +57,27 @@ fn test_fork_waitid() {
         }
     }
 }
+
+#[cfg(any(
+    target_os = "netbsd",
+    target_os = "freebsd",
+    target_os = "dragonfly",
+))]
+#[test]
+fn test_fork_wait6() {
+    match fork().unwrap() {
+        0 => std::process::exit(1),
+        pid => {
+            let (status, info, _self_rusage, _child_rusage) =
+                wait::wait6(wait::WaitidSpec::Pid(pid), wait::WaitidOptions::empty())
+                    .unwrap()
+                    .unwrap();
+
+            assert_eq!(info.pid, pid);
+            assert_eq!(info.uid, simple_libc::process::getuid());
+            assert_eq!(info.status, wait::WaitidStatus::Exited(1));
+
+            assert_eq!(status, wait::ProcStatus::Exited(1));
+        }
+    }
+}
