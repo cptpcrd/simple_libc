@@ -83,8 +83,9 @@ mod tests {
 
     #[test]
     fn test_get() {
-        get(Target::CurProc);
-        get(Target::CurThread);
         get(Target::Children);
+        get(Target::CurProc);
+        #[cfg(any(target_os = "linux", target_os = "openbsd", target_os = "freebsd"))]
+        get(Target::CurThread);
     }
 }
