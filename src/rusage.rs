@@ -104,9 +104,7 @@ fn get_raw(target: Target) -> libc::rusage {
 }
 
 pub fn get(target: Target) -> Rusage {
-    let raw_rusage = get_raw(target);
-
-    Rusage::from(&raw_rusage)
+    Rusage::from(&get_raw(target))
 }
 
 #[cfg(test)]
