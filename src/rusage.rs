@@ -121,8 +121,9 @@ mod tests {
 
     #[test]
     fn test_sub() {
-        let rusage_a = get(Target::CurProc);
-        let rusage_b = get(Target::CurProc);
+        let rusage_a = Rusage::default();
+        let mut rusage_b = Rusage::default();
+        rusage_b.nvcsw += 1;
 
         assert!(rusage_b.checked_sub(rusage_a).is_some());
         let _ = rusage_b - rusage_a;
