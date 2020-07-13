@@ -140,7 +140,7 @@ crate::attr_group! {
             const EXITED = libc::WEXITED;
             const NOHANG = libc::WNOHANG;
             const NOWAIT = libc::WNOWAIT;
-            const WSTOPPED = libc::WSTOPPED;
+            const STOPPED = libc::WSTOPPED;
         }
     }
 
