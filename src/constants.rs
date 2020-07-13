@@ -181,6 +181,10 @@ crate::attr_group! {
     pub const CLD_TRAPPED: Int = 4;
     pub const CLD_STOPPED: Int = 5;
     pub const CLD_CONTINUED: Int = 6;
+
+    pub const P_SID: libc::idtype_t = 5;
+    pub const P_UID: libc::idtype_t = 7;
+    pub const P_GID: libc::idtype_t = 8;
     // END USED BY wait.rs
 }
 
@@ -199,6 +203,11 @@ crate::attr_group! {
     pub const CLD_TRAPPED: Int = 4;
     pub const CLD_STOPPED: Int = 5;
     pub const CLD_CONTINUED: Int = 6;
+
+    pub const P_SID: libc::idtype_t = 3;
+    pub const P_UID: libc::idtype_t = 5;
+    pub const P_GID: libc::idtype_t = 6;
+    pub const P_JAILID: libc::idtype_t = 12;
     // END USED BY wait.rs
 }
 
@@ -228,6 +237,11 @@ crate::attr_group! {
     pub const CLD_TRAPPED: Int = 4;
     pub const CLD_STOPPED: Int = 5;
     pub const CLD_CONTINUED: Int = 6;
+
+    pub const P_SID: libc::idtype_t = 3;
+    pub const P_UID: libc::idtype_t = 5;
+    pub const P_GID: libc::idtype_t = 6;
+    pub const P_JAILID: libc::idtype_t = 12;
     // END USED BY wait.rs
 }
 

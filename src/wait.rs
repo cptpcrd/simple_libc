@@ -131,6 +131,29 @@ crate::attr_group! {
         Pid(PidT),
         Pgid(PidT),
         Any,
+        #[cfg(any(
+            target_os = "netbsd",
+            target_os = "freebsd",
+            target_os = "dragonfly",
+        ))]
+        Uid(UidT),
+        #[cfg(any(
+            target_os = "netbsd",
+            target_os = "freebsd",
+            target_os = "dragonfly",
+        ))]
+        Gid(crate::GidT),
+        #[cfg(any(
+            target_os = "netbsd",
+            target_os = "freebsd",
+            target_os = "dragonfly",
+        ))]
+        Sid(PidT),
+        #[cfg(any(
+            target_os = "freebsd",
+            target_os = "dragonfly",
+        ))]
+        Jailid(IdT),
     }
 
     impl WaitidSpec {
@@ -139,6 +162,29 @@ crate::attr_group! {
                 Self::Pid(pid) => (libc::P_PID, pid as IdT),
                 Self::Pgid(pgid) => (libc::P_PGID, pgid as IdT),
                 Self::Any => (libc::P_ALL, 0),
+                #[cfg(any(
+                    target_os = "netbsd",
+                    target_os = "freebsd",
+                    target_os = "dragonfly",
+                ))]
+                Self::Uid(uid) => (constants::P_UID, uid as IdT),
+                #[cfg(any(
+                    target_os = "netbsd",
+                    target_os = "freebsd",
+                    target_os = "dragonfly",
+                ))]
+                Self::Gid(gid) => (constants::P_GID, gid as IdT),
+                #[cfg(any(
+                    target_os = "netbsd",
+                    target_os = "freebsd",
+                    target_os = "dragonfly",
+                ))]
+                Self::Sid(sid) => (constants::P_SID, sid as IdT),
+                #[cfg(any(
+                    target_os = "freebsd",
+                    target_os = "dragonfly",
+                ))]
+                Self::Jailid(jailid) => (constants::P_JAILID, jailid),
             }
         }
     }
