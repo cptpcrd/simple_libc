@@ -143,7 +143,10 @@ mod tests {
 
         #[cfg(target_os = "netbsd")]
         {
-            assert!(crate::error::is_raw(&get_active_uptime().unwrap_err(), libc::ENOTSUP));
+            assert!(crate::error::is_raw(
+                &get_active_uptime().unwrap_err(),
+                libc::ENOTSUP,
+            ));
         }
     }
 }
