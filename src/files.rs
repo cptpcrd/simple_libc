@@ -121,36 +121,29 @@ pub fn fchmodat<N: AsRef<OsStr>>(
 
 pub fn fchownat_raw(
     dirfd: Option<RawFd>,
-    name: Option<&CStr>,
+    name: &CStr,
     owner: UidT,
     group: GidT,
     follow_symlinks: bool,
 ) -> io::Result<()> {
-    let (mut flags, name) = match name {
-        Some(n) => (0, n),
-        None => (libc::AT_EMPTY_PATH, unsafe {
-            CStr::from_ptr("\0".as_ptr() as *const Char)
-        }),
-    };
-
-    if !follow_symlinks {
-        flags |= libc::AT_SYMLINK_NOFOLLOW;
-    }
-
     crate::error::convert_nzero_ret(unsafe {
         libc::fchownat(
             dirfd.unwrap_or(libc::AT_FDCWD),
             name.as_ptr(),
             owner,
             group,
-            flags,
+            if follow_symlinks {
+                0
+            } else {
+                libc::AT_SYMLINK_NOFOLLOW
+            },
         )
     })
 }
 
 pub fn fchownat2_raw(
     dirfd: Option<RawFd>,
-    name: Option<&CStr>,
+    name: &CStr,
     owner: Option<UidT>,
     group: Option<GidT>,
     follow_symlinks: bool,
@@ -166,19 +159,14 @@ pub fn fchownat2_raw(
 
 pub fn fchownat<N: AsRef<OsStr>>(
     dirfd: Option<RawFd>,
-    name: Option<N>,
+    name: N,
     owner: UidT,
     group: GidT,
     follow_symlinks: bool,
 ) -> io::Result<()> {
-    let name = match name {
-        Some(n) => Some(CString::new(n.as_ref().as_bytes())?),
-        None => None,
-    };
-
     fchownat_raw(
         dirfd,
-        name.as_ref().map(CString::as_ref),
+        &CString::new(name.as_ref().as_bytes())?,
         owner,
         group,
         follow_symlinks,
@@ -187,7 +175,7 @@ pub fn fchownat<N: AsRef<OsStr>>(
 
 pub fn fchownat2<N: AsRef<OsStr>>(
     dirfd: Option<RawFd>,
-    name: Option<N>,
+    name: N,
     owner: Option<UidT>,
     group: Option<GidT>,
     follow_symlinks: bool,
@@ -266,10 +254,10 @@ mod tests {
 
         fstatat(None, path.join("link"), false).unwrap();
 
-        fchownat(None, Some(path.join("link")), uid, gid, false).unwrap();
+        fchownat(None, path.join("link"), uid, gid, false).unwrap();
 
-        fchownat2(None, Some(path.join("link")), None, Some(gid), false).unwrap();
-        fchownat2(None, Some(path.join("link")), Some(uid), None, false).unwrap();
+        fchownat2(None, path.join("link"), None, Some(gid), false).unwrap();
+        fchownat2(None, path.join("link"), Some(uid), None, false).unwrap();
 
         assert_eq!(
             fstatat(None, path.join("link"), true)
@@ -279,7 +267,7 @@ mod tests {
         );
 
         assert_eq!(
-            fchownat(None, Some(path.join("link")), uid, gid, true)
+            fchownat(None, path.join("link"), uid, gid, true)
                 .unwrap_err()
                 .raw_os_error(),
             Some(libc::ENOENT),
@@ -318,9 +306,9 @@ mod tests {
 
         fstatat(Some(fd), "link", false).unwrap();
 
-        fchownat(Some(fd), Some("link"), uid, gid, false).unwrap();
-        fchownat2(Some(fd), Some("link"), None, Some(gid), false).unwrap();
-        fchownat2(Some(fd), Some("link"), Some(uid), None, false).unwrap();
+        fchownat(Some(fd), "link", uid, gid, false).unwrap();
+        fchownat2(Some(fd), "link", None, Some(gid), false).unwrap();
+        fchownat2(Some(fd), "link", Some(uid), None, false).unwrap();
 
         assert_eq!(
             fstatat(Some(fd), "link", true).unwrap_err().raw_os_error(),
@@ -328,7 +316,7 @@ mod tests {
         );
 
         assert_eq!(
-            fchownat(Some(fd), Some("link"), uid, gid, true)
+            fchownat(Some(fd), "link", uid, gid, true)
                 .unwrap_err()
                 .raw_os_error(),
             Some(libc::ENOENT),
@@ -357,29 +345,9 @@ mod tests {
 
         fchmodat(None, &path, 0o600, true).unwrap();
 
-        fchownat(None, Some(&path), uid, gid, false).unwrap();
-        fchownat(None, Some(&path), uid, gid, true).unwrap();
-        fchownat2(None, Some(&path), None, Some(gid), false).unwrap();
-        fchownat2(None, Some(&path), Some(uid), None, false).unwrap();
-    }
-
-    #[test]
-    fn test_file_fd() {
-        let tmpf = NamedTempFile::new().unwrap();
-        let f = std::fs::File::open(tmpf.path()).unwrap();
-        let fd = f.as_raw_fd();
-
-        let uid = crate::process::geteuid();
-        let gid = crate::process::getegid();
-
-        fchownat::<String>(Some(fd), None, uid, gid, false).unwrap();
-        fchownat::<String>(Some(fd), None, uid, gid, true).unwrap();
-        fchownat2::<String>(Some(fd), None, None, Some(gid), false).unwrap();
-        fchownat2::<String>(Some(fd), None, Some(uid), None, false).unwrap();
-    }
-
-    #[test]
-    fn test_fchownat_none() {
-        fchownat2::<String>(None, None, None, None, false).unwrap();
+        fchownat(None, &path, uid, gid, false).unwrap();
+        fchownat(None, &path, uid, gid, true).unwrap();
+        fchownat2(None, &path, None, Some(gid), false).unwrap();
+        fchownat2(None, &path, Some(uid), None, false).unwrap();
     }
 }
