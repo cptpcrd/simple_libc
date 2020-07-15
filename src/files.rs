@@ -95,7 +95,7 @@ pub fn fchmodat_raw(
         libc::fchmodat(
             dirfd.unwrap_or(libc::AT_FDCWD),
             name.as_ptr(),
-            mode,
+            mode as libc::mode_t,
             if follow_symlinks {
                 0
             } else {
