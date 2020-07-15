@@ -13,6 +13,7 @@ mod types;
 pub mod error;
 pub mod exec;
 pub mod fcntl;
+pub mod files;
 pub mod grp;
 pub mod ioctl;
 pub mod lockf;
