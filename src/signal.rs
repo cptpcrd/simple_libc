@@ -81,6 +81,20 @@ pub fn sig_from_name(name: &str) -> Option<Int> {
 
             return None;
         }
+
+        if name.starts_with("SIGRTMAX-") {
+            if let Ok(decr) = name[9..].parse::<Int>() {
+                if let Ok(range) = get_rtsig_range() {
+                    let sig = range.end() - decr;
+
+                    if range.contains(&sig) {
+                        return Some(sig);
+                    }
+                }
+            }
+
+            return None;
+        }
     }
 
     get_signal_name_map().get(name).copied()
@@ -217,14 +231,29 @@ mod tests {
                 Some(sigrtmax),
             );
 
+            assert_eq!(sig_from_name("SIGRTMAX-0"), Some(sigrtmax));
+            assert_eq!(sig_from_name("SIGRTMAX-1"), Some(sigrtmax - 1));
+            assert_eq!(
+                sig_from_name(&("SIGRTMAX-".to_string() + &(sigrtmax - sigrtmin).to_string())),
+                Some(sigrtmin),
+            );
+
             // Bad number
             assert_eq!(sig_from_name("SIGRTMIN+"), None);
             assert_eq!(sig_from_name("SIGRTMIN+d"), None);
+
+            assert_eq!(sig_from_name("SIGRTMAX-"), None);
+            assert_eq!(sig_from_name("SIGRTMAX-d"), None);
 
             // Try going out of bounds
             assert_eq!(sig_from_name("SIGRTMIN+-1"), None);
             assert_eq!(
                 sig_from_name(&("SIGRTMIN+".to_string() + &(sigrtmax - sigrtmin + 1).to_string())),
+                None,
+            );
+            assert_eq!(sig_from_name("SIGRTMAX--1"), None);
+            assert_eq!(
+                sig_from_name(&("SIGRTMAX-".to_string() + &(sigrtmax - sigrtmin + 1).to_string())),
                 None,
             );
         }
@@ -233,6 +262,9 @@ mod tests {
         {
             assert_eq!(sig_from_name("SIGRTMIN+0"), None);
             assert_eq!(sig_from_name("SIGRTMIN+1"), None);
+
+            assert_eq!(sig_from_name("SIGRTMAX-0"), None);
+            assert_eq!(sig_from_name("SIGRTMAX-1"), None);
         }
     }
 
