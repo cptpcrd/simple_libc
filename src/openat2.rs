@@ -26,11 +26,11 @@ bitflags! {
 }
 
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
+#[non_exhaustive]
 pub struct OpenHow {
     pub flags: i32,
     pub mode: Option<u32>,
     pub resolve_flags: ResolveFlags,
-    _use_new: (),
 }
 
 impl OpenHow {
@@ -39,7 +39,6 @@ impl OpenHow {
             flags,
             mode: None,
             resolve_flags: ResolveFlags::empty(),
-            _use_new: (),
         }
     }
 
@@ -173,7 +172,6 @@ mod tests {
             flags: libc::O_RDONLY,
             mode: None,
             resolve_flags: ResolveFlags::empty(),
-            _use_new: (),
         });
 
         // The main purpose here is to test the handling of the 'mode' value.
