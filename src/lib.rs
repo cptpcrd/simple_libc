@@ -284,12 +284,7 @@ pub fn dup(oldfd: Int) -> io::Result<Int> {
 }
 
 pub fn dup2_inheritable(oldfd: Int, newfd: Int) -> io::Result<Int> {
-    if oldfd == newfd {
-        fcntl::set_inheritable(newfd, true)?;
-        Ok(newfd)
-    } else {
-        error::convert_neg_ret(unsafe { libc::dup2(oldfd, newfd) })
-    }
+    error::convert_neg_ret(unsafe { libc::dup2(oldfd, newfd) })
 }
 
 #[allow(clippy::needless_return)]
