@@ -891,9 +891,9 @@ mod tests {
         dup2(r.as_raw_fd(), r.as_raw_fd()).unwrap();
         assert!(!fcntl::is_inheritable(r.as_raw_fd()).unwrap());
 
-        // dup2_inheritable() will always make it inheritable.
+        // dup2_inheritable() will NOT make it inheritable.
         dup2_inheritable(r.as_raw_fd(), r.as_raw_fd()).unwrap();
-        assert!(fcntl::is_inheritable(r.as_raw_fd()).unwrap());
+        assert!(!fcntl::is_inheritable(r.as_raw_fd()).unwrap());
     }
 
     #[test]
