@@ -308,6 +308,8 @@ crate::attr_group! {
         if pid != 0 {
             let info = WaitidInfo::from_raw_siginfo(&raw_info)?.unwrap();
 
+            debug_assert_eq!(pid, info.pid);
+
             Ok(Some((
                 ProcStatus::from_raw_status(status),
                 info,
