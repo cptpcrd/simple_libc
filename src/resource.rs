@@ -141,6 +141,20 @@ pub fn deserialize_limit<'a, D: serde::Deserializer<'a>>(
     Ok(Option::<Limit>::deserialize(deserializer)?.unwrap_or(LIMIT_INFINITY))
 }
 
+pub fn compare_limits(val1: &Limit, val2: &Limit) -> std::cmp::Ordering {
+    if *val1 == LIMIT_INFINITY {
+        if *val2 == LIMIT_INFINITY {
+            std::cmp::Ordering::Equal
+        } else {
+            std::cmp::Ordering::Greater
+        }
+    } else if *val2 == LIMIT_INFINITY {
+        std::cmp::Ordering::Less
+    } else {
+        val1.cmp(val2)
+    }
+}
+
 pub fn min_limit(val1: Limit, val2: Limit) -> Limit {
     // If either value is infinity, use the other one.
     // Otherwise, just take the minimum.
@@ -745,6 +759,19 @@ mod tests {
 
         assert_eq!(nice_thresh_to_rlimit(-100), 40);
         assert_eq!(nice_thresh_to_rlimit(100), 1);
+    }
+
+    #[test]
+    fn test_compare_limits() {
+        use std::cmp::Ordering;
+
+        assert_eq!(compare_limits(&0, &0), Ordering::Equal);
+        assert_eq!(compare_limits(&1, &0), Ordering::Greater);
+        assert_eq!(compare_limits(&0, &1), Ordering::Less);
+
+        assert_eq!(compare_limits(&LIMIT_INFINITY, &LIMIT_INFINITY), Ordering::Equal);
+        assert_eq!(compare_limits(&LIMIT_INFINITY, &0), Ordering::Greater);
+        assert_eq!(compare_limits(&0, &LIMIT_INFINITY), Ordering::Less);
     }
 
     #[test]
