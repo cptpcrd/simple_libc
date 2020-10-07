@@ -638,12 +638,12 @@ impl FileCaps {
                 permitted: CapSet::from_bits_safe(
                     combine_raw_u32s(
                         u32::from_le_bytes(attrs[4..8].try_into().unwrap()),
-                        u32::from_le_bytes(attrs[8..12].try_into().unwrap()),
+                        u32::from_le_bytes(attrs[12..16].try_into().unwrap()),
                     )
                 ),
                 inheritable: CapSet::from_bits_safe(
                     combine_raw_u32s(
-                        u32::from_le_bytes(attrs[12..16].try_into().unwrap()),
+                        u32::from_le_bytes(attrs[8..12].try_into().unwrap()),
                         u32::from_le_bytes(attrs[16..20].try_into().unwrap()),
                     )
                 ),
@@ -655,12 +655,12 @@ impl FileCaps {
                 permitted: CapSet::from_bits_safe(
                     combine_raw_u32s(
                         u32::from_le_bytes(attrs[4..8].try_into().unwrap()),
-                        u32::from_le_bytes(attrs[8..12].try_into().unwrap()),
+                        u32::from_le_bytes(attrs[12..16].try_into().unwrap()),
                     )
                 ),
                 inheritable: CapSet::from_bits_safe(
                     combine_raw_u32s(
-                        u32::from_le_bytes(attrs[12..16].try_into().unwrap()),
+                        u32::from_le_bytes(attrs[8..12].try_into().unwrap()),
                         u32::from_le_bytes(attrs[16..20].try_into().unwrap()),
                     )
                 ),
