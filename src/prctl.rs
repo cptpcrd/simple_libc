@@ -152,6 +152,15 @@ pub enum Cap {
     #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_AUDIT_READ"))]
     #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_AUDIT_READ"))]
     AuditRead = constants::CAP_AUDIT_READ,
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_PERFMON"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_PERFMON"))]
+    PerfMon = constants::CAP_PERFMON,
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_BPF"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_BPF"))]
+    BPF = constants::CAP_BPF,
+    #[cfg_attr(any(feature = "strum", test), strum(serialize = "CAP_CHECKPOINT_RESTORE"))]
+    #[cfg_attr(any(feature = "serde", test), serde(rename = "CAP_CHECKPOINT_RESTORE"))]
+    CheckpointRestore = constants::CAP_CHECKPOINT_RESTORE,
 }
 
 impl Cap {
@@ -739,8 +748,8 @@ pub mod ambient {
     }
 
     #[inline]
-    pub fn is_set(cap: Cap) -> io::Result<bool> {
-        let x = unsafe {
+    pub fn is_set(cap: Cap) -> Option<bool> {
+        match unsafe {
             super::prctl(
                 libc::PR_CAP_AMBIENT,
                 libc::PR_CAP_AMBIENT_IS_SET as Ulong,
@@ -748,9 +757,10 @@ pub mod ambient {
                 0,
                 0,
             )
-        }?;
-
-        Ok(x != 0)
+        } {
+            Ok(x) => Some(x != 0),
+            Err(_) => None,
+        }
     }
 
     #[inline]
@@ -770,19 +780,31 @@ pub mod ambient {
 
     #[inline]
     pub fn is_supported() -> bool {
-        is_set(Cap::Chown).is_ok()
+        is_set(Cap::Chown).is_some()
     }
 
-    pub fn probe() -> io::Result<CapSet> {
+    pub fn probe() -> Option<CapSet> {
         let mut set = CapSet::empty();
 
         for cap in Cap::iter() {
-            if is_set(cap)? {
-                set.add(cap);
+            match is_set(cap) {
+                Some(true) => set.add(cap),
+                Some(false) => (),
+
+                // Unsupported capability encountered; none of the remaining ones will be supported
+                // either
+                _ => {
+                    if cap as isize == 0 {
+                        // Ambient capabilities aren't supported at all
+                        return None;
+                    } else {
+                        break;
+                    }
+                }
             }
         }
 
-        Ok(set)
+        Some(set)
     }
 }
 
@@ -800,28 +822,42 @@ pub mod bounding {
     }
 
     #[inline]
-    pub fn read(cap: Cap) -> io::Result<bool> {
-        let res = unsafe { super::prctl(libc::PR_CAPBSET_READ, cap as Ulong, 0, 0, 0) }?;
-
-        Ok(res != 0)
+    pub fn read(cap: Cap) -> Option<bool> {
+        match unsafe {
+            super::prctl(
+                libc::PR_CAPBSET_READ,
+                cap as Ulong,
+                0,
+                0,
+                0,
+            )
+        } {
+            Ok(x) => Some(x != 0),
+            Err(_) => None,
+        }
     }
 
     // Slightly easier to understand than read()
     #[inline]
-    pub fn is_set(cap: Cap) -> io::Result<bool> {
+    pub fn is_set(cap: Cap) -> Option<bool> {
         read(cap)
     }
 
-    pub fn probe() -> io::Result<CapSet> {
+    pub fn probe() -> CapSet {
         let mut set = CapSet::empty();
 
         for cap in Cap::iter() {
-            if read(cap)? {
-                set.add(cap);
+            match read(cap) {
+                Some(true) => set.add(cap),
+                Some(false) => (),
+
+                // Unsupported capability encountered; none of the remaining ones will be supported
+                // either
+                _ => break,
             }
         }
 
-        Ok(set)
+        set
     }
 }
 
@@ -1311,7 +1347,7 @@ mod tests {
 
     #[test]
     fn test_bounding() {
-        bounding::probe().unwrap();
+        bounding::probe();
         bounding::is_set(Cap::Chown).unwrap();
     }
 

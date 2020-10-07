@@ -59,11 +59,14 @@ crate::attr_group! {
     pub const CAP_WAKE_ALARM: isize = 35;
     pub const CAP_BLOCK_SUSPEND: isize = 36;
     pub const CAP_AUDIT_READ: isize = 37;
+    pub const CAP_PERFMON: isize = 38;
+    pub const CAP_BPF: isize = 39;
+    pub const CAP_CHECKPOINT_RESTORE: isize = 40;
 
     // *** WARNING WARNING WARNING ***
     // This MUST be set to the last capability from the above list!
     // This assumption is used to perform shortcuts in several places.
-    pub const CAP_MAX: isize = CAP_AUDIT_READ;
+    pub const CAP_MAX: isize = CAP_CHECKPOINT_RESTORE;
 
     // WARNING: Updating to newer versions may require significant
     // code changes to process/capabilities.rs
