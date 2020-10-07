@@ -769,7 +769,10 @@ mod tests {
         assert_eq!(compare_limits(&1, &0), Ordering::Greater);
         assert_eq!(compare_limits(&0, &1), Ordering::Less);
 
-        assert_eq!(compare_limits(&LIMIT_INFINITY, &LIMIT_INFINITY), Ordering::Equal);
+        assert_eq!(
+            compare_limits(&LIMIT_INFINITY, &LIMIT_INFINITY),
+            Ordering::Equal
+        );
         assert_eq!(compare_limits(&LIMIT_INFINITY, &0), Ordering::Greater);
         assert_eq!(compare_limits(&0, &LIMIT_INFINITY), Ordering::Less);
     }
